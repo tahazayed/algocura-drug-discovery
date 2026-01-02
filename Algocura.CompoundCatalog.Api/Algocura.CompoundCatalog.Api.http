@@ -1,0 +1,6 @@
+@Algocura.CompoundCatalog.Api_HostAddress = http://localhost:5055
+
+GET {{Algocura.CompoundCatalog.Api_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
