@@ -1,20 +1,22 @@
 using Algocura.CompoundCatalog.Api.Data;
+using Algocura.CompoundCatalog.Api.Messaging;
+using Azure.Identity;
+using Azure.Messaging.ServiceBus;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // -----------------------------------------------------------------------------
-// Application services
+// Controllers and common services
 // -----------------------------------------------------------------------------
 
 builder.Services.AddControllers();
-
 builder.Services.AddProblemDetails();
-
 builder.Services.AddHealthChecks();
 
 // -----------------------------------------------------------------------------
-// Entity Framework Core
+// Entity Framework Core InMemory
 // -----------------------------------------------------------------------------
 
 builder.Services.AddDbContext<CompoundCatalogDbContext>(options =>
@@ -39,17 +41,16 @@ builder.Services.AddOpenApi(options =>
                 The Algocura Compound Catalog API manages chemical compounds
                 used throughout the drug-discovery lifecycle.
 
-                The service supports:
+                Capabilities include:
 
                 - Compound registration
                 - Molecular metadata management
                 - Compound searching and filtering
-                - Compound lifecycle tracking
-                - Integration with enumeration, screening, docking,
-                  ADMET prediction, and candidate-prioritization services
-
-                This API is part of the Algocura cloud-native,
-                microservices-based drug-discovery platform.
+                - Compound status management
+                - Integration-event publishing
+                - Azure Service Bus integration
+                - Integration with screening, docking, ADMET, and
+                  candidate-prioritization services
                 """;
 
             document.Info.Contact = new()
@@ -67,27 +68,68 @@ builder.Services.AddOpenApi(options =>
 });
 
 // -----------------------------------------------------------------------------
+// Azure Service Bus options
+// -----------------------------------------------------------------------------
+
+builder.Services
+    .AddOptions<ServiceBusOptions>()
+    .Bind(builder.Configuration.GetSection(ServiceBusOptions.SectionName))
+    .Validate(
+        options => !string.IsNullOrWhiteSpace(options.TopicName),
+        "ServiceBus:TopicName is required.")
+    .Validate(
+        options =>
+            options.UseEmulator
+                ? !string.IsNullOrWhiteSpace(options.ConnectionString)
+                : !string.IsNullOrWhiteSpace(options.FullyQualifiedNamespace),
+        "ServiceBus:ConnectionString is required for the emulator, or " +
+        "ServiceBus:FullyQualifiedNamespace is required for Azure.")
+    .ValidateOnStart();
+
+// ServiceBusClient is registered once and reused for the application lifetime.
+// Azure SDK messaging clients are intended to be shared rather than created
+// for each request or message. :contentReference[oaicite:0]{index=0}
+
+builder.Services.AddSingleton<ServiceBusClient>(serviceProvider =>
+{
+    var options = serviceProvider
+        .GetRequiredService<IOptions<ServiceBusOptions>>()
+        .Value;
+
+    if (options.UseEmulator)
+    {
+        return new ServiceBusClient(options.ConnectionString);
+    }
+
+    return new ServiceBusClient(
+        options.FullyQualifiedNamespace,
+        new DefaultAzureCredential());
+});
+
+// Register the event publisher once.
+
+builder.Services.AddSingleton<IEventPublisher, ServiceBusEventPublisher>();
+
+// -----------------------------------------------------------------------------
 // Build application
 // -----------------------------------------------------------------------------
 
 var app = builder.Build();
 
 // -----------------------------------------------------------------------------
-// Error handling
+// Middleware
 // -----------------------------------------------------------------------------
 
 app.UseExceptionHandler();
 
-// -----------------------------------------------------------------------------
-// HTTPS
-// -----------------------------------------------------------------------------
-
-app.UseHttpsRedirection();
+if (!app.Environment.IsDevelopment())
+{
+    app.UseHttpsRedirection();
+}
 
 // -----------------------------------------------------------------------------
 // OpenAPI JSON
 //
-// Available at:
 // /openapi/v1.json
 // -----------------------------------------------------------------------------
 
@@ -96,7 +138,6 @@ app.MapOpenApi();
 // -----------------------------------------------------------------------------
 // Swagger UI
 //
-// Available at:
 // /swagger
 // -----------------------------------------------------------------------------
 
@@ -112,85 +153,85 @@ app.UseSwaggerUI(options =>
         "Algocura Compound Catalog API - Swagger";
 
     options.DisplayRequestDuration();
-
     options.EnableDeepLinking();
-
     options.EnableFilter();
-
     options.EnableTryItOutByDefault();
-
     options.ShowExtensions();
-
     options.ShowCommonExtensions();
 });
 
 // -----------------------------------------------------------------------------
 // ReDoc
 //
-// Available at:
 // /redoc
 // -----------------------------------------------------------------------------
 
 app.UseReDoc(options =>
 {
     options.RoutePrefix = "redoc";
-
     options.SpecUrl("/openapi/v1.json");
 
     options.DocumentTitle =
         "Algocura Compound Catalog API - ReDoc";
 
     options.ExpandResponses("200,201");
-
     options.RequiredPropsFirst();
-
-    options.EnableUntrustedSpec();
 });
 
 // -----------------------------------------------------------------------------
-// API controllers
+// Endpoints
 // -----------------------------------------------------------------------------
 
 app.MapControllers();
 
-// -----------------------------------------------------------------------------
-// Health endpoint
-//
-// Available at:
-// /health
-// -----------------------------------------------------------------------------
-
 app.MapHealthChecks("/health")
     .ExcludeFromDescription();
 
-// -----------------------------------------------------------------------------
-// Root endpoint
-// -----------------------------------------------------------------------------
+app.MapGet(
+        "/",
+        (
+            IOptions<ServiceBusOptions> serviceBusOptions,
+            IWebHostEnvironment environment) =>
+        {
+            var messagingOptions = serviceBusOptions.Value;
 
-app.MapGet("/", () => Results.Ok(new
-{
-    service = "Algocura Compound Catalog API",
-    version = "v1",
-    status = "Running",
-    documentation = new
-    {
-        swagger = "/swagger",
-        redoc = "/redoc",
-        openApi = "/openapi/v1.json"
-    },
-    health = "/health"
-}))
+            return Results.Ok(new
+            {
+                service = "Algocura Compound Catalog API",
+                version = "v1",
+                status = "Running",
+                environment = environment.EnvironmentName,
+
+                documentation = new
+                {
+                    swagger = "/swagger",
+                    redoc = "/redoc",
+                    openApi = "/openapi/v1.json"
+                },
+
+                health = "/health",
+
+                messaging = new
+                {
+                    provider = "Azure Service Bus",
+                    mode = messagingOptions.UseEmulator
+                        ? "Emulator"
+                        : "Azure",
+                    topic = messagingOptions.TopicName
+                }
+            });
+        })
     .WithName("GetServiceInformation")
     .WithSummary("Get service information")
     .WithDescription(
-        "Returns general information and documentation links for the service.")
+        "Returns service status, documentation links, and messaging configuration.")
     .Produces(StatusCodes.Status200OK);
 
 // -----------------------------------------------------------------------------
-// Seed the in-memory database
+// Initialize and seed the in-memory database
 // -----------------------------------------------------------------------------
 
-using (var scope = app.Services.CreateScope())
+await using (var scope = app.Services.CreateAsyncScope())
 {
     var services = scope.ServiceProvider;
 
@@ -203,10 +244,12 @@ using (var scope = app.Services.CreateScope())
         var dbContext =
             services.GetRequiredService<CompoundCatalogDbContext>();
 
+        await dbContext.Database.EnsureCreatedAsync();
+
         await CompoundCatalogSeeder.SeedAsync(dbContext);
 
         logger.LogInformation(
-            "Algocura Compound Catalog in-memory database initialized.");
+            "The Algocura Compound Catalog database was initialized.");
     }
     catch (Exception exception)
     {
@@ -222,4 +265,4 @@ using (var scope = app.Services.CreateScope())
 // Start application
 // -----------------------------------------------------------------------------
 
-app.Run();
+await app.RunAsync();

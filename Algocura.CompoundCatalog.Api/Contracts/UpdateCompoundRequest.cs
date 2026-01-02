@@ -1,5 +1,5 @@
-﻿using System.ComponentModel.DataAnnotations;
-using Algocura.CompoundCatalog.Api.Domain;
+﻿using Algocura.CompoundCatalog.Api.Domain;
+using System.ComponentModel.DataAnnotations;
 
 namespace Algocura.CompoundCatalog.Api.Contracts;
 

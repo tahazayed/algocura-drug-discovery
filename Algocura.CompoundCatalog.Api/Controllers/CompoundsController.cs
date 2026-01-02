@@ -1,7 +1,9 @@
 ﻿using Algocura.CompoundCatalog.Api.Contracts;
 using Algocura.CompoundCatalog.Api.Data;
 using Algocura.CompoundCatalog.Api.Domain;
+using Algocura.CompoundCatalog.Api.Events;
 using Algocura.CompoundCatalog.Api.Mapping;
+using Algocura.CompoundCatalog.Api.Messaging;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -15,6 +17,7 @@ namespace Algocura.CompoundCatalog.Api.Controllers;
 [Produces("application/json")]
 public sealed class CompoundsController(
     CompoundCatalogDbContext dbContext,
+    IEventPublisher eventPublisher,
     ILogger<CompoundsController> logger)
     : ControllerBase
 {
@@ -150,6 +153,22 @@ public sealed class CompoundsController(
         dbContext.Compounds.Add(compound);
         await dbContext.SaveChangesAsync(cancellationToken);
 
+        var integrationEvent = new CompoundRegistered
+        {
+            CompoundId = compound.Id,
+            Name = compound.Name,
+            CanonicalSmiles = compound.CanonicalSmiles,
+            InchiKey = compound.InchiKey,
+            MolecularWeight = compound.MolecularWeight,
+            MolecularFormula = compound.MolecularFormula,
+            Status = compound.Status
+        };
+
+        await eventPublisher.PublishAsync(
+            integrationEvent,
+            HttpContext.TraceIdentifier,
+            cancellationToken);
+
         logger.LogInformation(
             "Registered compound {CompoundId} with name {CompoundName}",
             compound.Id,
@@ -203,6 +222,8 @@ public sealed class CompoundsController(
                 detail: $"Another compound with InChIKey '{request.InchiKey}' already exists.");
         }
 
+        var previousStatus = compound.Status;
+
         compound.Name = request.Name.Trim();
         compound.CanonicalSmiles = request.CanonicalSmiles.Trim();
         compound.InchiKey = request.InchiKey?.Trim().ToUpperInvariant();
@@ -214,6 +235,33 @@ public sealed class CompoundsController(
         compound.UpdatedAtUtc = DateTimeOffset.UtcNow;
 
         await dbContext.SaveChangesAsync(cancellationToken);
+
+        await eventPublisher.PublishAsync(
+    new CompoundUpdated
+    {
+        CompoundId = compound.Id,
+        Name = compound.Name,
+        CanonicalSmiles = compound.CanonicalSmiles,
+        InchiKey = compound.InchiKey,
+        MolecularWeight = compound.MolecularWeight,
+        MolecularFormula = compound.MolecularFormula,
+        Status = compound.Status
+    },
+    HttpContext.TraceIdentifier,
+    cancellationToken);
+
+        if (previousStatus != compound.Status)
+        {
+            await eventPublisher.PublishAsync(
+                new CompoundStatusChanged
+                {
+                    CompoundId = compound.Id,
+                    PreviousStatus = previousStatus,
+                    CurrentStatus = compound.Status
+                },
+                HttpContext.TraceIdentifier,
+                cancellationToken);
+        }
 
         return Ok(compound.ToResponse());
     }
@@ -241,8 +289,19 @@ public sealed class CompoundsController(
                 detail: $"No compound with ID '{id}' was found.");
         }
 
+        var deletedEvent = new CompoundDeleted
+        {
+            CompoundId = compound.Id,
+            Name = compound.Name
+        };
+
         dbContext.Compounds.Remove(compound);
         await dbContext.SaveChangesAsync(cancellationToken);
+
+        await eventPublisher.PublishAsync(
+            deletedEvent,
+            HttpContext.TraceIdentifier,
+            cancellationToken);
 
         logger.LogInformation(
             "Deleted compound {CompoundId}",

@@ -1,0 +1,51 @@
+services:
+  sqlserver:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    container_name: sqlserver
+    environment:
+      ACCEPT_EULA: "Y"
+      MSSQL_SA_PASSWORD: "DontLogin!Passw0rd"
+    volumes:
+      - servicebus-sql-data:/var/opt/mssql
+    restart: unless-stopped
+
+  servicebus:
+    image: mcr.microsoft.com/azure-messaging/servicebus-emulator:latest
+    container_name: servicebus-emulator
+    environment:
+      ACCEPT_EULA: "Y"
+      SQL_SERVER: "sqlserver"
+      MSSQL_SA_PASSWORD: "DontLogin!Passw0rd"
+    ports:
+      - "5672:5672"
+      - "5300:5300"
+    depends_on:
+      - sqlserver
+    restart: unless-stopped
+
+  compound-catalog-api:
+    build:
+      context: ./Algocura.CompoundCatalog.Api
+      dockerfile: Dockerfile
+      target: final
+    container_name: compound-catalog-api
+    ports:
+      - "7001:8080"
+    environment:
+      ASPNETCORE_ENVIRONMENT: "Development"
+
+      ServiceBus__UseEmulator: "true"
+      ServiceBus__ConnectionString: "Endpoint=sb://servicebus;SharedAccessKeyName=RootManageSharedAccessKey;SharedAccessKey=SAS_KEY_VALUE;UseDevelopmentEmulator=true;"
+      ServiceBus__FullyQualifiedNamespace: ""
+      ServiceBus__TopicName: "topic.1"
+
+      Logging__LogLevel__Default: "Information"
+      Logging__LogLevel__Microsoft__AspNetCore: "Warning"
+      Logging__LogLevel__Microsoft__EntityFrameworkCore: "Information"
+      Logging__LogLevel__Azure__Messaging__ServiceBus: "Information"
+    depends_on:
+      - servicebus
+    restart: unless-stopped
+
+volumes:
+  servicebus-sql-data:
