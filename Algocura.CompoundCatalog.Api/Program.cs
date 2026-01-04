@@ -16,14 +16,35 @@ builder.Services.AddProblemDetails();
 builder.Services.AddHealthChecks();
 
 // -----------------------------------------------------------------------------
-// Entity Framework Core InMemory
+// Entity Framework Core
 // -----------------------------------------------------------------------------
+
+var connectionString =
+    builder.Configuration.GetConnectionString("CompoundCatalogDatabase")
+    ?? throw new InvalidOperationException(
+        "Connection string 'CompoundCatalogDatabase' was not found.");
 
 builder.Services.AddDbContext<CompoundCatalogDbContext>(options =>
 {
-    options.UseInMemoryDatabase("AlgocuraCompoundCatalog");
-});
+    options.UseSqlServer(
+        connectionString,
+        sqlServerOptions =>
+        {
+            sqlServerOptions.EnableRetryOnFailure(
+                maxRetryCount: 5,
+                maxRetryDelay: TimeSpan.FromSeconds(10),
+                errorNumbersToAdd: null);
 
+            sqlServerOptions.MigrationsAssembly(
+                typeof(Program).Assembly.FullName);
+        });
+
+    if (builder.Environment.IsDevelopment())
+    {
+        options.EnableDetailedErrors();
+        options.EnableSensitiveDataLogging();
+    }
+});
 // -----------------------------------------------------------------------------
 // OpenAPI document generation
 // -----------------------------------------------------------------------------
@@ -115,6 +136,13 @@ builder.Services.AddSingleton<IEventPublisher, ServiceBusEventPublisher>();
 // -----------------------------------------------------------------------------
 
 var app = builder.Build();
+// -----------------------------------------------------------------------------
+// Seed database
+// -----------------------------------------------------------------------------
+await DatabaseInitializer.InitializeAsync(
+    app.Services,
+    app.Logger,
+    app.Lifetime.ApplicationStopping);
 
 // -----------------------------------------------------------------------------
 // Middleware
