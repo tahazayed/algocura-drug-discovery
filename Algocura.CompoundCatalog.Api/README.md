@@ -1,8 +1,40 @@
 # Algocura Compound Catalog API
 
-The **Algocura Compound Catalog API** is a RESTful microservice that manages chemical compounds used throughout the Algocura Drug Discovery Platform.
+The **Algocura Compound Catalog API** is a cloud-native RESTful microservice that serves as the authoritative source for chemical compound metadata within the Algocura Drug Discovery Platform.
 
-It provides CRUD operations, search and filtering capabilities, publishes integration events, and serves as the authoritative source for compound metadata used by downstream services.
+It provides CRUD operations, search and filtering capabilities, publishes integration events through Azure Service Bus, and enables downstream microservices to consume consistent compound information.
+
+For an overview of the complete platform architecture, see the [Solution README](../README.md).
+
+---
+
+# Architecture
+
+The Compound Catalog API manages the lifecycle of chemical compounds. It persists compound data in SQL Server using Entity Framework Core and publishes integration events through Azure Service Bus to notify downstream services of changes.
+
+```text
+                   Client Applications
+                           │
+                           ▼
+                  ASP.NET Core API
+                           │
+                    CompoundsController
+                           │
+        ┌──────────────────┴──────────────────┐
+        │                                     │
+        ▼                                     ▼
+ Entity Framework Core                 Integration Events
+ (CompoundCatalogDbContext)             (IEventPublisher)
+        │                                     │
+        ▼                                     ▼
+    SQL Server                      Azure Service Bus
+                                              │
+                                              ▼
+                    Screening API
+                    AI Discovery API
+                    Workflow API
+                    Notification API
+```
 
 ---
 
@@ -38,9 +70,22 @@ It provides CRUD operations, search and filtering capabilities, publishes integr
 
 ---
 
+# Dependencies
+
+This service depends on the following infrastructure components.
+
+| Component | Purpose |
+|-----------|---------|
+| SQL Server | Persistent storage for compound data |
+| Azure Service Bus | Integration event publishing |
+| Docker | Local containerized development |
+| OpenAPI | Interactive API documentation |
+
+---
+
 # Project Structure
 
-```
+```text
 Algocura.CompoundCatalog.Api
 │
 ├── Contracts
@@ -56,99 +101,33 @@ Algocura.CompoundCatalog.Api
 ├── Messaging
 ├── OpenApi
 ├── Program.cs
-└── Dockerfile
+├── Dockerfile
+└── README.md
 ```
 
 ---
 
-# Compound Lifecycle
+# Configuration
 
-The catalog supports the following lifecycle states:
+The service uses the standard ASP.NET Core configuration system.
 
-| Status | Description |
-|---------|-------------|
-| Draft | Initial registration |
-| Registered | Available in catalog |
-| UnderEvaluation | Being evaluated |
-| Selected | Selected for downstream workflow |
-| Rejected | Evaluation failed |
-| Archived | Historical record |
+Configuration is loaded from:
 
----
-
-# REST API
-
-Base URL
-
-```
-/api/v1/compounds
+```text
+appsettings.json
+appsettings.Development.json
+Environment Variables
 ```
 
-## Search compounds
+Common configuration includes:
 
-```
-GET /api/v1/compounds
-```
+- SQL Server connection string
+- Azure Service Bus configuration
+- Logging
+- OpenAPI
+- Health Checks
 
-Optional query parameters
-
-| Parameter | Description |
-|-----------|-------------|
-| search | Search by name, InChIKey, molecular formula or SMILES |
-| status | Compound lifecycle status |
-| skip | Records to skip |
-| take | Maximum records |
-
-Example
-
-```
-GET /api/v1/compounds?search=aspirin&status=Registered
-```
-
----
-
-## Get compound
-
-```
-GET /api/v1/compounds/{id}
-```
-
----
-
-## Register compound
-
-```
-POST /api/v1/compounds
-```
-
----
-
-## Update compound
-
-```
-PUT /api/v1/compounds/{id}
-```
-
----
-
-## Delete compound
-
-```
-DELETE /api/v1/compounds/{id}
-```
-
----
-
-# Integration Events
-
-The service publishes the following events:
-
-- CompoundRegistered
-- CompoundUpdated
-- CompoundStatusChanged
-- CompoundDeleted
-
-These events are published through the configured `IEventPublisher`.
+Sensitive configuration should be provided through environment variables, Azure Key Vault, or .NET User Secrets during local development.
 
 ---
 
@@ -156,41 +135,114 @@ These events are published through the configured `IEventPublisher`.
 
 The service uses SQL Server with Entity Framework Core migrations.
 
-Database initialization performs:
+During application startup the database is automatically initialized by:
 
-1. Apply pending migrations
-2. Seed reference compounds
-3. Start accepting requests
-
-Seeding is handled by:
-
+```text
+DatabaseInitializer
 ```
+
+Initialization performs the following steps:
+
+1. Apply pending Entity Framework Core migrations.
+2. Seed reference compound data.
+3. Start the application.
+
+Reference data is seeded by:
+
+```text
 CompoundCatalogSeeder
 ```
 
-Database startup is managed by:
+---
 
+# Compound Lifecycle
+
+The catalog supports the following lifecycle states.
+
+| Status | Description |
+|---------|-------------|
+| Draft | Initial registration |
+| Registered | Available in the catalog |
+| UnderEvaluation | Being evaluated |
+| Selected | Selected for downstream workflows |
+| Rejected | Evaluation failed |
+| Archived | Historical record |
+
+---
+
+# API Overview
+
+Base URL
+
+```text
+/api/v1/compounds
 ```
-DatabaseInitializer
-```
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/api/v1/compounds` | Search compounds with filtering and pagination. |
+| GET | `/api/v1/compounds/{id}` | Retrieve a compound by identifier. |
+| POST | `/api/v1/compounds` | Register a new compound. |
+| PUT | `/api/v1/compounds/{id}` | Update an existing compound. |
+| DELETE | `/api/v1/compounds/{id}` | Delete a compound. |
+
+## Query Parameters
+
+### GET /api/v1/compounds
+
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| search | string | Search by Name, Canonical SMILES, InChIKey, or Molecular Formula. |
+| status | CompoundStatus | Filter by lifecycle status. |
+| skip | int | Number of records to skip. |
+| take | int | Maximum number of records returned (default: 50). |
+
+---
+
+# OpenAPI
+
+Interactive API documentation is available when the service is running locally.
+
+| Resource | URL |
+|----------|-----|
+| Swagger UI | http://localhost:7001/swagger |
+| OpenAPI Specification | http://localhost:7001/openapi/v1.json |
+| Health Endpoint | http://localhost:7001/health |
+
+The generated OpenAPI specification is the authoritative source for request and response schemas.
+
+---
+
+# Integration Events
+
+The service publishes the following integration events through the configured `IEventPublisher`.
+
+| Event | Description |
+|------|-------------|
+| CompoundRegistered | Published when a compound is created. |
+| CompoundUpdated | Published when compound metadata is updated. |
+| CompoundStatusChanged | Published when the lifecycle status changes. |
+| CompoundDeleted | Published when a compound is removed. |
+
+These events enable loose coupling between the Compound Catalog API and downstream microservices.
 
 ---
 
 # Running Locally
 
-Restore packages
+Restore packages.
 
 ```bash
 dotnet restore
 ```
 
-Build
+Build the project.
 
 ```bash
 dotnet build
 ```
 
-Run
+Run the application.
 
 ```bash
 dotnet run
@@ -200,19 +252,19 @@ dotnet run
 
 # Running with Docker
 
-Build
+Build the container.
 
 ```bash
 docker compose build
 ```
 
-Run
+Start the application and supporting infrastructure.
 
 ```bash
 docker compose up -d
 ```
 
-Stop
+Stop the environment.
 
 ```bash
 docker compose down
@@ -220,31 +272,9 @@ docker compose down
 
 ---
 
-# OpenAPI
-
-Swagger
-
-```
-http://localhost:7001/swagger
-```
-
-OpenAPI document
-
-```
-http://localhost:7001/openapi/v1.json
-```
-
-Health endpoint
-
-```
-http://localhost:7001/health
-```
-
----
-
 # Testing
 
-Run all unit tests
+Run all unit tests.
 
 ```bash
 dotnet test
@@ -252,7 +282,7 @@ dotnet test
 
 Current test coverage includes:
 
-- DbContext
+- Entity Framework Core DbContext
 - Database initialization
 - Seed data
 - Controller endpoints
@@ -261,24 +291,29 @@ Current test coverage includes:
 
 # Logging
 
-The service uses the built-in ASP.NET Core logging abstractions and emits structured logs for:
+The service uses `Microsoft.Extensions.Logging` for structured logging.
 
-- Compound registration
-- Updates
-- Deletions
+Logging includes:
+
+- Application startup
 - Database initialization
-- Migration execution
-- Event publication
+- Entity Framework Core migrations
+- Compound creation
+- Compound updates
+- Compound deletion
+- Integration event publication
+- Unhandled exceptions
 
 ---
 
 # Security
 
-The API currently targets development scenarios.
+The current implementation is intended for local development.
 
 Future enhancements include:
 
 - Microsoft Entra ID authentication
+- JWT Bearer authentication
 - Role-based authorization
 - API versioning
 - Rate limiting
@@ -288,8 +323,7 @@ Future enhancements include:
 
 # Future Enhancements
 
-- Advanced chemical structure search
-- Similarity search
+- Chemical structure similarity search
 - Molecular fingerprint indexing
 - Bulk import/export
 - Versioned compounds
@@ -298,6 +332,17 @@ Future enhancements include:
 - Event replay
 - GraphQL endpoint
 - OData support
+- Distributed caching
+- Metrics and distributed tracing
+
+---
+
+# Related Documentation
+
+| Document | Description |
+|----------|-------------|
+| [Solution README](../README.md) | Overall platform architecture and microservices |
+| OpenAPI Specification | http://localhost:7001/openapi/v1.json |
 
 ---
 
