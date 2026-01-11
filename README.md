@@ -12,9 +12,9 @@ This repository contains multiple independently deployable microservices. Each s
 
 | Service | Documentation |
 |----------|---------------|
-| Compound Catalog API | [Algocura.CompoundCatalog.Api](./Algocura.CompoundCatalog.Api/README.md) |
+| Compound Catalog API | [Algocura.CompoundCatalog.Api](./Algocura.CompoundCatalog.Api/README.md)
 | Screening API | [Algocura.Screening.Api](./Algocura.Screening.Api/README.md) 
-| AI Discovery API | Coming Soon |
+| AI Discovery API |  [Algocura.AIDiscovery.Api](./Algocura.AIDiscovery.Api/README.md)
 | Assay Management API | Coming Soon |
 | Workflow API | Coming Soon |
 | Notification API | Coming Soon |
@@ -72,9 +72,9 @@ This repository contains multiple independently deployable microservices. Each s
 
 | Service | Responsibility | Documentation |
 |----------|----------------|---------------|
-| Compound Catalog API | Master repository for chemical compounds and lifecycle management | [README](./Algocura.CompoundCatalog.Api/README.md)
-| Screening API | Virtual screening, candidate evaluation, ranking, and synchronization | [README](./Algocura.Screening.Api/README.md) 
-| AI Discovery API | AI/ML prediction and prioritization | Coming Soon |
+| Compound Catalog API | Master repository for chemical compounds and lifecycle management | [README](./Algocura.CompoundCatalog.Api/README.md) |
+| Screening API | Virtual screening, candidate evaluation, ranking, and synchronization | [README](./Algocura.Screening.Api/README.md) |
+| AI Discovery API | AI/ML prediction and prioritization | [README](./Algocura.AIDiscovery.Api/README.md) |
 | Assay Management API | Biological assay management | Coming Soon |
 | Workflow API | Drug discovery workflow orchestration | Coming Soon |
 | Search API | Compound and experiment search | Coming Soon |
@@ -89,26 +89,37 @@ This repository contains multiple independently deployable microservices. Each s
 
 The platform follows an event-driven architecture using Azure Service Bus.
 
-Current event flow:
-
 Compound Catalog API
-
-- CompoundRegistered
-- CompoundUpdated
-- CompoundDeleted
-- CompoundStatusChanged
-
-↓
-
-Azure Service Bus
-
-↓
-
-Screening API
-
-- Synchronizes compounds
-- Maintains local compound projection
-- Performs virtual screenings
+    │
+    ├── CompoundRegistered
+    ├── CompoundUpdated
+    ├── CompoundDeleted
+    ├── CompoundStatusChanged
+    └── CompoundCatalogSnapshot
+             │
+             ▼
+      Azure Service Bus
+             │
+             ▼
+      Screening API
+             │
+             ├── Synchronizes compound catalog
+             ├── Maintains local compound projection
+             ├── Executes virtual screenings
+             ├── ScreeningCompleted
+             └── CompletedScreeningSnapshot
+                        │
+                        ▼
+                 Azure Service Bus
+                        │
+                        ▼
+                AI Discovery API
+                        │
+                        ├── Synchronizes compound projections
+                        ├── Synchronizes completed screening snapshots
+                        ├── Executes AI prediction models
+                        ├── Ranks lead compounds
+                        └── Produces prediction results
 
 Future services will subscribe to the same integration events without introducing direct dependencies between services.
 
@@ -174,6 +185,7 @@ Algocura.DrugDiscovery
 │   └── README.md
 │
 ├── Algocura.AIDiscovery.Api
+│   └── README.md
 ├── Algocura.AssayManagement.Api
 ├── Algocura.Workflow.Api
 ├── Algocura.Notification.Api
@@ -196,6 +208,7 @@ Local development uses Docker Compose to provision:
 - Azurite Storage Emulator
 - Compound Catalog API
 - Screening API
+- AI Discovery API
 
 The Service Bus emulator provisions:
 
@@ -206,6 +219,7 @@ The Service Bus emulator provisions:
 ## Subscriptions
 - compound-catalog-api
 - screening-api
+- ai-discovery-api
 
 Additional microservices will be added to the compose environment as they are implemented.
 
@@ -234,7 +248,7 @@ Additional microservices will be added to the compose environment as they are im
 |----------|--------|---------------|--------------|
 | Compound Catalog API | Master repository for compounds and lifecycle management | ✅ Implemented | [README](./Algocura.CompoundCatalog.Api/README.md) | 2026-01-04 |
 | Screening API | Virtual screening, candidate evaluation, ranking, and synchronization | ✅ Implemented | [README](./Algocura.Screening.Api/README.md) | 2026-01-09 |
-| AI Discovery API | 🚧 Planned | — | — |
+| AI Discovery API | AI-assisted compound prioritization, prediction models, screening projection synchronization, and lead ranking | [README](./Algocura.AIDiscovery.Api/README.md) | 2026-01-10 |
 | Assay Management API | 🚧 Planned | — | — |
 | Workflow API | 🚧 Planned | — | — |
 | Notification API | 🚧 Planned | — | — |

@@ -1,7 +1,10 @@
 <Solution>
   <Folder Name="/Solution Items/">
     <File Path="compose.yaml" />
+    <File Path="README.md" />
   </Folder>
+  <Project Path="Algocura.AIDiscovery.Api.Tests/Algocura.AIDiscovery.Api.Tests.csproj" />
+  <Project Path="Algocura.AIDiscovery.Api/Algocura.AIDiscovery.Api.csproj" />
   <Project Path="Algocura.CompoundCatalog.Api.Tests/Algocura.CompoundCatalog.Api.Tests.csproj" />
   <Project Path="Algocura.CompoundCatalog.Api/Algocura.CompoundCatalog.Api.csproj" />
   <Project Path="Algocura.Screening.Api.Tests/Algocura.Screening.Api.Tests.csproj" />

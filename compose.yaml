@@ -171,6 +171,37 @@ services:
         condition: service_completed_successfully
     
     restart: unless-stopped
+
+  ai-discovery-api:
+    build:
+      context: ./Algocura.AIDiscovery.Api
+      dockerfile: Dockerfile
+      target: final
+
+    image: algocura/algocura-ai-discovery-api:dev
+    container_name: ai-discovery-api    
+    ports:
+      - "7003:8080"
+    environment:
+      ASPNETCORE_ENVIRONMENT: "Development"
+      ASPNETCORE_URLS: http://+:8080
+      ConnectionStrings__AIDiscoveryDatabase: "Server=sqlserver,1433;Database=AlgocuraAIDiscovery;User Id=sa;Password=DontLogin!Passw0rd;TrustServerCertificate=True;Encrypt=False;ConnectRetryCount=5;ConnectRetryInterval=5"
+      ServiceBus__UseEmulator: "true"
+      ServiceBus__ConnectionString: "Endpoint=sb://servicebus-emulator;SharedAccessKeyName=RootManageSharedAccessKey;SharedAccessKey=SAS_KEY_VALUE;UseDevelopmentEmulator=true;"
+      ServiceBus__FullyQualifiedNamespace: ""
+      ServiceBus__TopicName: "algocura-events"
+      ServiceBus__SubscriptionName: "ai-discovery-api"      
+      Logging__LogLevel__Default: "Information"
+      Logging__LogLevel__Microsoft__AspNetCore: "Warning"
+      Logging__LogLevel__Microsoft__EntityFrameworkCore: "Information"
+      Logging__LogLevel__Azure__Messaging__ServiceBus: "Information"      
+    depends_on:
+      sqlserver:
+        condition: service_healthy
+      servicebus-wait:
+        condition: service_completed_successfully
+    
+    restart: unless-stopped
         
 volumes:
   sqlserver-data:

@@ -29,6 +29,14 @@
                                     "DeadLetteringOnMessageExpiration": false,
                                     "MaxDeliveryCount": 10
                                 }
+                            },
+							{
+                                "Name": "ai-discovery-api",
+                                "Properties": {
+                                    "DefaultMessageTimeToLive": "PT1H",
+                                    "DeadLetteringOnMessageExpiration": false,
+                                    "MaxDeliveryCount": 10
+                                }
                             }
                         ]
                     }                   
