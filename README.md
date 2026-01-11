@@ -13,7 +13,7 @@ This repository contains multiple independently deployable microservices. Each s
 | Service | Documentation |
 |----------|---------------|
 | Compound Catalog API | [Algocura.CompoundCatalog.Api](./Algocura.CompoundCatalog.Api/README.md) |
-| Screening API | Coming Soon |
+| Screening API | [Algocura.Screening.Api](./Algocura.Screening.Api/README.md) 
 | AI Discovery API | Coming Soon |
 | Assay Management API | Coming Soon |
 | Workflow API | Coming Soon |
@@ -72,8 +72,8 @@ This repository contains multiple independently deployable microservices. Each s
 
 | Service | Responsibility | Documentation |
 |----------|----------------|---------------|
-| Compound Catalog API | Master repository for chemical compounds and lifecycle management | [README](./Algocura.CompoundCatalog.Api/README.md) |
-| Screening API | Virtual screening and candidate selection | Coming Soon |
+| Compound Catalog API | Master repository for chemical compounds and lifecycle management | [README](./Algocura.CompoundCatalog.Api/README.md)
+| Screening API | Virtual screening, candidate evaluation, ranking, and synchronization | [README](./Algocura.Screening.Api/README.md) 
 | AI Discovery API | AI/ML prediction and prioritization | Coming Soon |
 | Assay Management API | Biological assay management | Coming Soon |
 | Workflow API | Drug discovery workflow orchestration | Coming Soon |
@@ -87,22 +87,30 @@ This repository contains multiple independently deployable microservices. Each s
 
 # Event-Driven Architecture
 
-The platform uses Azure Service Bus for asynchronous communication between services.
+The platform follows an event-driven architecture using Azure Service Bus.
 
-Typical integration events include:
+Current event flow:
+
+Compound Catalog API
 
 - CompoundRegistered
 - CompoundUpdated
 - CompoundDeleted
 - CompoundStatusChanged
-- ScreeningStarted
-- ScreeningCompleted
-- AssayCreated
-- AssayCompleted
-- PredictionCompleted
-- WorkflowCompleted
 
-Each microservice publishes domain events without directly depending on other services.
+↓
+
+Azure Service Bus
+
+↓
+
+Screening API
+
+- Synchronizes compounds
+- Maintains local compound projection
+- Performs virtual screenings
+
+Future services will subscribe to the same integration events without introducing direct dependencies between services.
 
 ---
 
@@ -153,7 +161,7 @@ No databases are shared between services.
 
 # Solution Structure
 
-```
+```text
 Algocura.DrugDiscovery
 │
 ├── README.md
@@ -163,6 +171,8 @@ Algocura.DrugDiscovery
 │   └── README.md
 │
 ├── Algocura.Screening.Api
+│   └── README.md
+│
 ├── Algocura.AIDiscovery.Api
 ├── Algocura.AssayManagement.Api
 ├── Algocura.Workflow.Api
@@ -179,13 +189,23 @@ Algocura.DrugDiscovery
 
 # Infrastructure
 
-The local development environment uses Docker Compose to provision:
+Local development uses Docker Compose to provision:
 
 - SQL Server
 - Azure Service Bus Emulator
 - Azurite Storage Emulator
 - Compound Catalog API
-- Supporting infrastructure services
+- Screening API
+
+The Service Bus emulator provisions:
+
+## Topic
+- algocura-events
+
+
+## Subscriptions
+- compound-catalog-api
+- screening-api
 
 Additional microservices will be added to the compose environment as they are implemented.
 
@@ -212,8 +232,8 @@ Additional microservices will be added to the compose environment as they are im
 
 | Service | Status | Documentation | Last Updated |
 |----------|--------|---------------|--------------|
-| Compound Catalog API | ✅ Implemented | [README](./Algocura.CompoundCatalog.Api/README.md) | 2026-01-04 |
-| Screening API | 🚧 Planned | — | — |
+| Compound Catalog API | Master repository for compounds and lifecycle management | ✅ Implemented | [README](./Algocura.CompoundCatalog.Api/README.md) | 2026-01-04 |
+| Screening API | Virtual screening, candidate evaluation, ranking, and synchronization | ✅ Implemented | [README](./Algocura.Screening.Api/README.md) | 2026-01-09 |
 | AI Discovery API | 🚧 Planned | — | — |
 | Assay Management API | 🚧 Planned | — | — |
 | Workflow API | 🚧 Planned | — | — |

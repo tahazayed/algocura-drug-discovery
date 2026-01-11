@@ -4,4 +4,6 @@
   </Folder>
   <Project Path="Algocura.CompoundCatalog.Api.Tests/Algocura.CompoundCatalog.Api.Tests.csproj" />
   <Project Path="Algocura.CompoundCatalog.Api/Algocura.CompoundCatalog.Api.csproj" />
+  <Project Path="Algocura.Screening.Api.Tests/Algocura.Screening.Api.Tests.csproj" />
+  <Project Path="Algocura.Screening.Api/Algocura.Screening.Api.csproj" />
 </Solution>

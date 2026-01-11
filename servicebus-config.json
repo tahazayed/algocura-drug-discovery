@@ -1,0 +1,42 @@
+{
+    "UserConfig": {
+        "Namespaces": [
+            {
+                "Name": "sbemulatorns",
+                "Queues": [
+                ],
+                "Topics": [
+                    {
+                        "Name": "algocura-events",
+                        "Properties": {
+                            "DefaultMessageTimeToLive": "PT1H",
+                            "DuplicateDetectionHistoryTimeWindow": "PT20S",
+                            "RequiresDuplicateDetection": false
+                        },
+                        "Subscriptions": [
+                            {
+                                "Name": "screening-api",
+                                "Properties": {
+                                    "DefaultMessageTimeToLive": "PT1H",
+                                    "DeadLetteringOnMessageExpiration": false,
+                                    "MaxDeliveryCount": 10
+                                }
+                            },
+							{
+                                "Name": "compound-catalog-api",
+                                "Properties": {
+                                    "DefaultMessageTimeToLive": "PT1H",
+                                    "DeadLetteringOnMessageExpiration": false,
+                                    "MaxDeliveryCount": 10
+                                }
+                            }
+                        ]
+                    }                   
+                ]
+            }
+        ],
+        "Logging": {
+            "Type": "Console"
+        }
+    }
+}
