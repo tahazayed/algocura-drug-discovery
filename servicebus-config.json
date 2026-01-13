@@ -1,50 +1,66 @@
 {
-    "UserConfig": {
-        "Namespaces": [
-            {
-                "Name": "sbemulatorns",
-                "Queues": [
-                ],
-                "Topics": [
-                    {
-                        "Name": "algocura-events",
-                        "Properties": {
-                            "DefaultMessageTimeToLive": "PT1H",
-                            "DuplicateDetectionHistoryTimeWindow": "PT20S",
-                            "RequiresDuplicateDetection": false
-                        },
-                        "Subscriptions": [
-                            {
-                                "Name": "screening-api",
-                                "Properties": {
-                                    "DefaultMessageTimeToLive": "PT1H",
-                                    "DeadLetteringOnMessageExpiration": false,
-                                    "MaxDeliveryCount": 10
-                                }
-                            },
-							{
-                                "Name": "compound-catalog-api",
-                                "Properties": {
-                                    "DefaultMessageTimeToLive": "PT1H",
-                                    "DeadLetteringOnMessageExpiration": false,
-                                    "MaxDeliveryCount": 10
-                                }
-                            },
-							{
-                                "Name": "ai-discovery-api",
-                                "Properties": {
-                                    "DefaultMessageTimeToLive": "PT1H",
-                                    "DeadLetteringOnMessageExpiration": false,
-                                    "MaxDeliveryCount": 10
-                                }
-                            }
-                        ]
-                    }                   
-                ]
-            }
+  "UserConfig": {
+    "Namespaces": [
+      {
+        "Name": "sbemulatorns",
+        "Queues": [
         ],
-        "Logging": {
-            "Type": "Console"
-        }
+        "Topics": [
+          {
+            "Name": "algocura-events",
+            "Properties": {
+              "DefaultMessageTimeToLive": "PT1H",
+              "DuplicateDetectionHistoryTimeWindow": "PT20S",
+              "RequiresDuplicateDetection": false
+            },
+            "Subscriptions": [
+              {
+                "Name": "target-discovery-api",
+                "Properties": {
+                  "DefaultMessageTimeToLive": "PT1H",
+                  "DeadLetteringOnMessageExpiration": false,
+                  "MaxDeliveryCount": 10
+                }
+              },
+              {
+                "Name": "chemical-design-api",
+                "Properties": {
+                  "DefaultMessageTimeToLive": "PT1H",
+                  "DeadLetteringOnMessageExpiration": false,
+                  "MaxDeliveryCount": 10
+                }
+              },
+              {
+                "Name": "screening-api",
+                "Properties": {
+                  "DefaultMessageTimeToLive": "PT1H",
+                  "DeadLetteringOnMessageExpiration": false,
+                  "MaxDeliveryCount": 10
+                }
+              },
+              {
+                "Name": "compound-catalog-api",
+                "Properties": {
+                  "DefaultMessageTimeToLive": "PT1H",
+                  "DeadLetteringOnMessageExpiration": false,
+                  "MaxDeliveryCount": 10
+                }
+              },
+              {
+                "Name": "ai-discovery-api",
+                "Properties": {
+                  "DefaultMessageTimeToLive": "PT1H",
+                  "DeadLetteringOnMessageExpiration": false,
+                  "MaxDeliveryCount": 10
+                }
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "Logging": {
+      "Type": "Console"
     }
+  }
 }

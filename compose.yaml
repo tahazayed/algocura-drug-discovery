@@ -106,7 +106,109 @@ services:
 
         echo "Service Bus Emulator is ready."
     restart: "no"
-    
+
+  literature-intelligence-api:
+    build:
+      context: ./Algocura.LiteratureIntelligence.Api
+      dockerfile: Dockerfile
+      target: final
+
+    image: algocura/literature-intelligence-api:dev
+    container_name: literature-intelligence-api
+
+    ports:
+      - "7001:8080"
+
+    environment:
+      ASPNETCORE_ENVIRONMENT: "Development"
+      ASPNETCORE_URLS: http://+:8080
+      ConnectionStrings__LiteratureIntelligenceDatabase: "Server=sqlserver,1433;Database=AlgocuraLiteratureIntelligence;User Id=sa;Password=DontLogin!Passw0rd;TrustServerCertificate=True;Encrypt=False;ConnectRetryCount=5;ConnectRetryInterval=5"
+
+      ServiceBus__UseEmulator: "true"
+      ServiceBus__ConnectionString: "Endpoint=sb://servicebus-emulator;SharedAccessKeyName=RootManageSharedAccessKey;SharedAccessKey=SAS_KEY_VALUE;UseDevelopmentEmulator=true;"
+      ServiceBus__FullyQualifiedNamespace: ""
+      ServiceBus__TopicName: "algocura-events"
+      ServiceBus__SubscriptionName: "target-discovery-api"
+      Logging__LogLevel__Default: "Information"
+      Logging__LogLevel__Microsoft__AspNetCore: "Warning"
+      Logging__LogLevel__Microsoft__EntityFrameworkCore: "Information"
+      Logging__LogLevel__Azure__Messaging__ServiceBus: "Information"
+    depends_on:
+      sqlserver:
+        condition: service_healthy
+      servicebus-wait:
+        condition: service_completed_successfully
+
+    restart: unless-stopped
+
+  target-discovery-api:
+    build:
+      context: ./Algocura.TargetDiscovery.Api
+      dockerfile: Dockerfile
+      target: final
+
+    image: algocura/target-discovery-api:dev
+    container_name: target-discovery-api
+
+    ports:
+      - "7002:8080"
+
+    environment:
+      ASPNETCORE_ENVIRONMENT: "Development"
+      ASPNETCORE_URLS: http://+:8080
+      ConnectionStrings__TargetDiscoveryDatabase: "Server=sqlserver,1433;Database=AlgocuraTargetDiscovery;User Id=sa;Password=DontLogin!Passw0rd;TrustServerCertificate=True;Encrypt=False;ConnectRetryCount=5;ConnectRetryInterval=5"
+
+      ServiceBus__UseEmulator: "true"
+      ServiceBus__ConnectionString: "Endpoint=sb://servicebus-emulator;SharedAccessKeyName=RootManageSharedAccessKey;SharedAccessKey=SAS_KEY_VALUE;UseDevelopmentEmulator=true;"
+      ServiceBus__FullyQualifiedNamespace: ""
+      ServiceBus__TopicName: "algocura-events"
+      ServiceBus__SubscriptionName: "target-discovery-api"
+      Logging__LogLevel__Default: "Information"
+      Logging__LogLevel__Microsoft__AspNetCore: "Warning"
+      Logging__LogLevel__Microsoft__EntityFrameworkCore: "Information"
+      Logging__LogLevel__Azure__Messaging__ServiceBus: "Information"
+    depends_on:
+      sqlserver:
+        condition: service_healthy
+      servicebus-wait:
+        condition: service_completed_successfully
+
+    restart: unless-stopped
+
+  chemical-design-api:
+    build:
+      context: ./Algocura.ChemicalDesign.Api
+      dockerfile: Dockerfile
+      target: final
+
+    image: algocura/chemical-design-api:dev
+    container_name: chemical-design-api
+
+    ports:
+      - "7003:8080"
+
+    environment:
+      ASPNETCORE_ENVIRONMENT: "Development"
+      ASPNETCORE_URLS: http://+:8080
+      ConnectionStrings__ChemicalDesignDatabase: "Server=sqlserver,1433;Database=AlgocuraChemicalDesign;User Id=sa;Password=DontLogin!Passw0rd;TrustServerCertificate=True;Encrypt=False;ConnectRetryCount=5;ConnectRetryInterval=5"
+
+      ServiceBus__UseEmulator: "true"
+      ServiceBus__ConnectionString: "Endpoint=sb://servicebus-emulator;SharedAccessKeyName=RootManageSharedAccessKey;SharedAccessKey=SAS_KEY_VALUE;UseDevelopmentEmulator=true;"
+      ServiceBus__FullyQualifiedNamespace: ""
+      ServiceBus__TopicName: "algocura-events"
+      ServiceBus__SubscriptionName: "chemical-design-api"
+      Logging__LogLevel__Default: "Information"
+      Logging__LogLevel__Microsoft__AspNetCore: "Warning"
+      Logging__LogLevel__Microsoft__EntityFrameworkCore: "Information"
+      Logging__LogLevel__Azure__Messaging__ServiceBus: "Information"
+    depends_on:
+      sqlserver:
+        condition: service_healthy
+      servicebus-wait:
+        condition: service_completed_successfully
+
+    restart: unless-stopped
+
   compound-catalog-api:
     build:
       context: ./Algocura.CompoundCatalog.Api
@@ -117,7 +219,7 @@ services:
     container_name: compound-catalog-api
 
     ports:
-      - "7001:8080"
+      - "7004:8080"
 
     environment:
       ASPNETCORE_ENVIRONMENT: "Development"
@@ -150,7 +252,7 @@ services:
     image: algocura/algocura-screening-api:dev
     container_name: screening-api    
     ports:
-      - "7002:8080"
+      - "7005:8080"
     environment:
       ASPNETCORE_ENVIRONMENT: "Development"
       ASPNETCORE_URLS: http://+:8080
@@ -181,7 +283,7 @@ services:
     image: algocura/algocura-ai-discovery-api:dev
     container_name: ai-discovery-api    
     ports:
-      - "7003:8080"
+      - "7006:8080"
     environment:
       ASPNETCORE_ENVIRONMENT: "Development"
       ASPNETCORE_URLS: http://+:8080

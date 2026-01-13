@@ -2,11 +2,18 @@
   <Folder Name="/Solution Items/">
     <File Path="compose.yaml" />
     <File Path="README.md" />
+    <File Path="servicebus-config.json" />
   </Folder>
   <Project Path="Algocura.AIDiscovery.Api.Tests/Algocura.AIDiscovery.Api.Tests.csproj" />
   <Project Path="Algocura.AIDiscovery.Api/Algocura.AIDiscovery.Api.csproj" />
+  <Project Path="Algocura.ChemicalDesign.Api.Tests/Algocura.ChemicalDesign.Api.Tests.csproj" />
+  <Project Path="Algocura.ChemicalDesign.Api/Algocura.ChemicalDesign.Api.csproj" />
   <Project Path="Algocura.CompoundCatalog.Api.Tests/Algocura.CompoundCatalog.Api.Tests.csproj" />
   <Project Path="Algocura.CompoundCatalog.Api/Algocura.CompoundCatalog.Api.csproj" />
+  <Project Path="Algocura.LiteratureIntelligence.Api.Tests/Algocura.LiteratureIntelligence.Api.Tests.csproj" />
+  <Project Path="Algocura.LiteratureIntelligence.Api/Algocura.LiteratureIntelligence.Api.csproj" />
   <Project Path="Algocura.Screening.Api.Tests/Algocura.Screening.Api.Tests.csproj" />
   <Project Path="Algocura.Screening.Api/Algocura.Screening.Api.csproj" />
+  <Project Path="Algocura.TargetDiscovery.Api.Tests/Algocura.TargetDiscovery.Api.Tests.csproj" />
+  <Project Path="Algocura.TargetDiscovery.Api/Algocura.TargetDiscovery.Api.csproj" />
 </Solution>
