@@ -1,5 +1,3 @@
-using Microsoft.EntityFrameworkCore;
-
 namespace Algocura.TargetDiscovery.Api.Data;
 
 public static class DatabaseInitializer

@@ -53,6 +53,30 @@
                   "DeadLetteringOnMessageExpiration": false,
                   "MaxDeliveryCount": 10
                 }
+              },
+              {
+                "Name": "assay-management-api",
+                "Properties": {
+                  "DefaultMessageTimeToLive": "PT1H",
+                  "DeadLetteringOnMessageExpiration": false,
+                  "MaxDeliveryCount": 10
+                }
+              },
+              {
+                "Name": "workflow-api",
+                "Properties": {
+                  "DefaultMessageTimeToLive": "PT1H",
+                  "DeadLetteringOnMessageExpiration": false,
+                  "MaxDeliveryCount": 10
+                }
+              },
+              {
+                "Name": "notification-api",
+                "Properties": {
+                  "DefaultMessageTimeToLive": "PT1H",
+                  "DeadLetteringOnMessageExpiration": false,
+                  "MaxDeliveryCount": 10
+                }
               }
             ]
           }

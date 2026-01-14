@@ -250,7 +250,7 @@ services:
       target: final
 
     image: algocura/algocura-screening-api:dev
-    container_name: screening-api    
+    container_name: screening-api
     ports:
       - "7005:8080"
     environment:
@@ -281,7 +281,7 @@ services:
       target: final
 
     image: algocura/algocura-ai-discovery-api:dev
-    container_name: ai-discovery-api    
+    container_name: ai-discovery-api
     ports:
       - "7006:8080"
     environment:
@@ -293,6 +293,99 @@ services:
       ServiceBus__FullyQualifiedNamespace: ""
       ServiceBus__TopicName: "algocura-events"
       ServiceBus__SubscriptionName: "ai-discovery-api"      
+      Logging__LogLevel__Default: "Information"
+      Logging__LogLevel__Microsoft__AspNetCore: "Warning"
+      Logging__LogLevel__Microsoft__EntityFrameworkCore: "Information"
+      Logging__LogLevel__Azure__Messaging__ServiceBus: "Information"      
+    depends_on:
+      sqlserver:
+        condition: service_healthy
+      servicebus-wait:
+        condition: service_completed_successfully
+    
+    restart: unless-stopped
+
+  assay-management-api:
+    build:
+      context: ./Algocura.AssayManagement.Api
+      dockerfile: Dockerfile
+      target: final
+
+    image: algocura/algocura-assay-management-api:dev
+    container_name: assay-management-api
+    ports:
+      - "7007:8080"
+    environment:
+      ASPNETCORE_ENVIRONMENT: "Development"
+      ASPNETCORE_URLS: http://+:8080
+      ConnectionStrings__AssayManagementDatabase: "Server=sqlserver,1433;Database=AlgocuraAssayManagement;User Id=sa;Password=DontLogin!Passw0rd;TrustServerCertificate=True;Encrypt=False;ConnectRetryCount=5;ConnectRetryInterval=5"
+      ServiceBus__UseEmulator: "true"
+      ServiceBus__ConnectionString: "Endpoint=sb://servicebus-emulator;SharedAccessKeyName=RootManageSharedAccessKey;SharedAccessKey=SAS_KEY_VALUE;UseDevelopmentEmulator=true;"
+      ServiceBus__FullyQualifiedNamespace: ""
+      ServiceBus__TopicName: "algocura-events"
+      ServiceBus__SubscriptionName: "assay-management-api"      
+      Logging__LogLevel__Default: "Information"
+      Logging__LogLevel__Microsoft__AspNetCore: "Warning"
+      Logging__LogLevel__Microsoft__EntityFrameworkCore: "Information"
+      Logging__LogLevel__Azure__Messaging__ServiceBus: "Information"      
+    depends_on:
+      sqlserver:
+        condition: service_healthy
+      servicebus-wait:
+        condition: service_completed_successfully
+    
+    restart: unless-stopped
+
+  workflow-api:
+    build:
+      context: ./Algocura.Workflow.Api
+      dockerfile: Dockerfile
+      target: final
+
+    image: algocura/algocura-workflow-api:dev
+    container_name: workflow-api
+    ports:
+      - "7008:8080"
+    environment:
+      ASPNETCORE_ENVIRONMENT: "Development"
+      ASPNETCORE_URLS: http://+:8080
+      ConnectionStrings__WorkflowDatabase: "Server=sqlserver,1433;Database=AlgocuraWorkflow;User Id=sa;Password=DontLogin!Passw0rd;TrustServerCertificate=True;Encrypt=False;ConnectRetryCount=5;ConnectRetryInterval=5"
+      ServiceBus__UseEmulator: "true"
+      ServiceBus__ConnectionString: "Endpoint=sb://servicebus-emulator;SharedAccessKeyName=RootManageSharedAccessKey;SharedAccessKey=SAS_KEY_VALUE;UseDevelopmentEmulator=true;"
+      ServiceBus__FullyQualifiedNamespace: ""
+      ServiceBus__TopicName: "algocura-events"
+      ServiceBus__SubscriptionName: "workflow-api"      
+      Logging__LogLevel__Default: "Information"
+      Logging__LogLevel__Microsoft__AspNetCore: "Warning"
+      Logging__LogLevel__Microsoft__EntityFrameworkCore: "Information"
+      Logging__LogLevel__Azure__Messaging__ServiceBus: "Information"      
+    depends_on:
+      sqlserver:
+        condition: service_healthy
+      servicebus-wait:
+        condition: service_completed_successfully
+    
+    restart: unless-stopped
+        
+  notification-api:
+    build:
+      context: ./Algocura.Notification.Api
+      dockerfile: Dockerfile
+      target: final
+
+    image: algocura/algocura-notification-api:dev
+    container_name: notification-api
+    ports:
+      - "7009:8080"
+    environment:
+      ASPNETCORE_ENVIRONMENT: "Development"
+      ASPNETCORE_URLS: http://+:8080
+      ConnectionStrings__NotificationDatabase: "Server=sqlserver,1433;Database=AlgocuraNotification;User Id=sa;Password=DontLogin!Passw0rd;TrustServerCertificate=True;Encrypt=False;ConnectRetryCount=5;ConnectRetryInterval=5"
+      ServiceBus__UseEmulator: "true"
+      ServiceBus__ConnectionString: "Endpoint=sb://servicebus-emulator;SharedAccessKeyName=RootManageSharedAccessKey;SharedAccessKey=SAS_KEY_VALUE;UseDevelopmentEmulator=true;"
+      ServiceBus__FullyQualifiedNamespace: ""
+      ServiceBus__TopicName: "algocura-events"
+      ServiceBus__SubscriptionName: "notification-api"      
       Logging__LogLevel__Default: "Information"
       Logging__LogLevel__Microsoft__AspNetCore: "Warning"
       Logging__LogLevel__Microsoft__EntityFrameworkCore: "Information"

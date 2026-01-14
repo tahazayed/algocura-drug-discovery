@@ -2,7 +2,7 @@
 
 The **Algocura Drug Discovery Platform** is a cloud-native, event-driven microservices platform designed to support an end-to-end computational drug discovery workflow.
 
-The platform begins with scientific literature analysis and target hypothesis generation, continues through target discovery and chemical design, and then proceeds to compound registration, screening, and AI-assisted candidate prioritization. Literature Intelligence, Target Discovery, Chemical Design, Compound Catalog, Screening, and AI Discovery are currently implemented.
+The platform begins with scientific literature analysis and target hypothesis generation, continues through target discovery and chemical design, and then proceeds to compound registration, screening, and AI-assisted candidate prioritization. Literature Intelligence, Target Discovery, Chemical Design, Compound Catalog, Screening, Assay Management, AI Discovery, Workflow, and Notification are currently implemented.
 
 Each microservice owns its data and communicates asynchronously through Azure Service Bus while exposing REST APIs for synchronous operations.
 
@@ -20,9 +20,9 @@ This repository contains multiple independently deployable microservices. Each s
 | Compound Catalog API | [Algocura.CompoundCatalog.Api](./Algocura.CompoundCatalog.Api/README.md) |
 | Screening API | [Algocura.Screening.Api](./Algocura.Screening.Api/README.md) |
 | AI Discovery API | [Algocura.AIDiscovery.Api](./Algocura.AIDiscovery.Api/README.md) |
-| Assay Management API | Coming Soon |
-| Workflow API | Coming Soon |
-| Notification API | Coming Soon |
+| Assay Management API | [Algocura.AssayManagement.Api](./Algocura.AssayManagement.Api/README.md) |
+| Workflow API | [Algocura.Workflow.Api](./Algocura.Workflow.Api/README.md) |
+| Notification API | [Algocura.Notification.Api](./Algocura.Notification.Api/README.md) |
 | Reporting API | Coming Soon |
 | Search API | Coming Soon |
 | Audit API | Coming Soon |
@@ -43,6 +43,8 @@ Compound Catalog API
         ↓
 Screening API
         ↓
+Assay Management API
+        ↓
 AI Discovery API
 ```
 
@@ -55,7 +57,9 @@ The workflow is designed to support the following progression:
 5. Identify chemical substructures, scaffolds, and candidate structures.
 6. Register candidate compounds.
 7. Execute virtual or experimental screening workflows.
-8. Rank and prioritize lead compounds using AI-assisted analysis.
+8. Create and execute biological or analytical assays.
+9. Capture measurements, replicates, quality-control data, and compound-level results.
+10. Rank and prioritize lead compounds using AI-assisted analysis.
 
 ---
 
@@ -118,10 +122,10 @@ The workflow is designed to support the following progression:
 | Compound Catalog API | Master repository for chemical compounds and lifecycle management | [README](./Algocura.CompoundCatalog.Api/README.md) |
 | Screening API | Virtual screening, candidate evaluation, ranking, and synchronization | [README](./Algocura.Screening.Api/README.md) |
 | AI Discovery API | AI-assisted compound prioritization, prediction models, screening projection synchronization, and lead ranking | [README](./Algocura.AIDiscovery.Api/README.md) |
-| Assay Management API | Biological assay management | Coming Soon |
-| Workflow API | Drug discovery workflow orchestration | Coming Soon |
+| Assay Management API | Completed-screening synchronization, assay creation, measurements, replicates, quality control, result calculation, publication, and synchronization | [README](./Algocura.AssayManagement.Api/README.md) |
+| Workflow API | End-to-end workflow creation, stage tracking, event correlation, orchestration state, failure handling, cancellation, idempotent event processing, and synchronization | [README](./Algocura.Workflow.Api/README.md) |
 | Search API | Compound and experiment search | Coming Soon |
-| Notification API | Email, Teams, and event notifications | Coming Soon |
+| Notification API | Event-driven notification rules, manual notifications, delivery attempts, dispatch state, cancellation, and synchronization | [README](./Algocura.Notification.Api/README.md) |
 | Reporting API | Analytics and reporting | Coming Soon |
 | Audit API | Audit trail and compliance | Coming Soon |
 | Identity API | Authentication and authorization | Coming Soon |
@@ -200,20 +204,61 @@ Literature Intelligence API
                                               ├── Synchronizes compound catalog
                                               ├── Maintains local compound projection
                                               ├── Executes screening workflows
-                                              ├── ScreeningCompleted
-                                              └── CompletedScreeningSnapshot
+                                              ├── Publishes ScreeningCompleted
+                                              └── Publishes CompletedScreeningSnapshot
                                                          │
                                                          ▼
                                                   Azure Service Bus
                                                          │
                                                          ▼
-                                                AI Discovery API
+                                           Assay Management API
                                                          │
-                                                         ├── Synchronizes compound projections
+                                                         ├── Consumes CompletedScreeningSnapshot
                                                          ├── Synchronizes completed screenings
-                                                         ├── Executes prediction models
-                                                         ├── Ranks lead compounds
-                                                         └── Produces prediction results
+                                                         ├── Creates assays
+                                                         ├── Records compound measurements and replicates
+                                                         ├── Applies quality-control status
+                                                         ├── Calculates compound-level assay results
+                                                         ├── Publishes AssayCreated
+                                                         ├── Publishes AssayCompleted
+                                                         └── Publishes AssaySnapshot
+                                                                    │
+                                                                    ▼
+                                                             Azure Service Bus
+                                                                    │
+                                                                    ▼
+                                                           AI Discovery API
+                                                                    │
+                                                                    ├── Synchronizes compound projections
+                                                                    ├── Synchronizes completed screenings
+                                                                    ├── Consumes AssaySnapshot
+                                                                    ├── Executes prediction models
+                                                                    ├── Ranks lead compounds
+                                                                    └── Produces prediction results
+
+All platform services
+        │
+        │ Integration events with workflowId
+        │ or workflow GUID as CorrelationId
+        ▼
+Azure Service Bus
+        │
+        ├───────────────────────────────────────────────┐
+        ▼                                               ▼
+Workflow API                                  Notification API
+        │                                               │
+        ├── Consumes platform snapshot                 ├── Consumes matching platform events
+        │   and completion events                      ├── Applies enabled notification rules
+        ├── Correlates events to workflows             ├── Creates notification records
+        ├── Tracks seven workflow stages               ├── Creates delivery records
+        ├── Stores processed event receipts            ├── Dispatches through configured channels
+        ├── Prevents duplicate processing              ├── Records delivery attempts
+        ├── Records external entity identifiers        ├── Tracks delivery and failure status
+        ├── Tracks failures and cancellations          ├── Publishes NotificationDelivered
+        ├── Publishes WorkflowCreated                  ├── Publishes NotificationDeliveryFailed
+        ├── Publishes WorkflowStageCompleted           └── Publishes NotificationSnapshot
+        ├── Publishes WorkflowCompleted
+        └── Publishes WorkflowSnapshot
 ```
 
 Synchronization endpoints allow downstream services to rebuild local projections after deployment, database recreation, or subscription loss without introducing direct database dependencies.
@@ -306,6 +351,145 @@ It is not ChemAxon and is not a chemically validated search engine. It must be r
 
 ---
 
+# Assay Management Workflow
+
+The Assay Management API currently supports:
+
+```text
+Consume CompletedScreeningSnapshot
+        ↓
+Synchronize completed screening
+        ↓
+Create assay
+        ↓
+Add compound measurements
+        ↓
+Record replicates and controls
+        ↓
+Apply quality-control status
+        ↓
+Calculate compound-level assay results
+        ↓
+Complete assay
+        ↓
+Publish AssaySnapshot
+        ↓
+AI Discovery API
+```
+
+The current assay-result calculator is a deterministic prototype. It calculates mean values, sample standard deviation, replicate count, a confidence score, and a simple activity outcome.
+
+The data model includes IC50, EC50, Ki, and Kd fields, but the current implementation does not calculate scientifically validated dose-response or binding constants. Those calculations require validated analytical models, curve fitting, and experimental review.
+
+---
+
+# Workflow Orchestration
+
+The Workflow API currently supports:
+
+```text
+Create discovery workflow
+        ↓
+Initialize seven workflow stages
+        ↓
+Start workflow
+        ↓
+Track Literature Intelligence
+        ↓
+Track Target Discovery
+        ↓
+Track Chemical Design
+        ↓
+Track Compound Catalog
+        ↓
+Track Screening
+        ↓
+Track Assay Management
+        ↓
+Track AI Discovery
+        ↓
+Complete workflow
+```
+
+The Workflow API owns orchestration state only. It does not directly call another service's database and does not perform scientific calculations.
+
+Each workflow contains the following stages:
+
+```text
+LiteratureIntelligence
+TargetDiscovery
+ChemicalDesign
+CompoundCatalog
+Screening
+AssayManagement
+AiDiscovery
+```
+
+Each stage can be:
+
+```text
+Pending
+InProgress
+Completed
+Failed
+Skipped
+```
+
+Each workflow can be:
+
+```text
+Draft
+InProgress
+Completed
+Failed
+Cancelled
+```
+
+The Workflow API consumes platform events and advances the corresponding workflow stage. Incoming events must provide either a `workflowId` property in the payload or the workflow GUID as the Azure Service Bus `CorrelationId`.
+
+Processed event IDs are stored in `WorkflowEventReceipts`, which provides idempotent event handling and prevents the same integration event from advancing a workflow more than once.
+
+---
+
+# Notification Workflow
+
+The Notification API currently supports:
+
+```text
+Consume platform event
+        ↓
+Match enabled notification rules
+        ↓
+Create notification
+        ↓
+Create delivery record
+        ↓
+Dispatch notification
+        ↓
+Record delivery attempt
+        ↓
+Update delivered, partially delivered, or failed status
+        ↓
+Publish notification status event
+```
+
+The service can consume any event on `algocura-events` when an enabled rule matches its `eventType`.
+
+Supported notification channels in the current model are:
+
+```text
+Email
+MicrosoftTeams
+Webhook
+InApplication
+```
+
+The current `LoggingNotificationDispatcher` is a deterministic prototype. It records delivery activity in application logs and returns a simulated provider message identifier.
+
+It does not send real email, Microsoft Teams messages, or webhooks. Production use requires approved provider integrations such as Microsoft Graph, Azure Communication Services, SendGrid, or Teams webhooks.
+
+---
+
 # Data Ownership
 
 Each microservice owns its own database.
@@ -330,6 +514,12 @@ AI Discovery API
     SQL Server
 
 Assay Management API
+    SQL Server
+
+Workflow API
+    SQL Server
+
+Notification API
     SQL Server
 
 Reporting API
@@ -361,6 +551,9 @@ Services maintain only the local projections required for their responsibilities
 | Health Monitoring | ASP.NET Core Health Checks |
 | Literature Analysis | Deterministic prototype with future biomedical NLP integration |
 | Chemical Structure Search | Deterministic prototype with future ChemAxon or validated cheminformatics integration |
+| Assay Analysis | Deterministic result calculator with future validated dose-response and binding analysis |
+| Workflow Orchestration | Event-correlated state machine with idempotent event receipts |
+| Notification Delivery | Deterministic logging dispatcher with future provider-specific integrations |
 | AI Inference | Deterministic prototype with future trained-model integration |
 
 ---
@@ -392,8 +585,14 @@ Algocura.DrugDiscovery
 │   └── README.md
 │
 ├── Algocura.AssayManagement.Api
+│   └── README.md
+│
 ├── Algocura.Workflow.Api
+│   └── README.md
+│
 ├── Algocura.Notification.Api
+│   └── README.md
+│
 ├── Algocura.Reporting.Api
 ├── Algocura.Search.Api
 ├── Algocura.Audit.Api
@@ -421,7 +620,10 @@ Local development uses Docker Compose to provision the following infrastructure 
 - Chemical Design API
 - Compound Catalog API
 - Screening API
+- Assay Management API
 - AI Discovery API
+- Workflow API
+- Notification API
 
 Additional microservices will be added to the Docker Compose environment as they are implemented.
 
@@ -440,12 +642,15 @@ target-discovery-api
 chemical-design-api
 compound-catalog-api
 screening-api
+assay-management-api
 ai-discovery-api
+workflow-api
+notification-api
 ```
 
 Each consuming service owns a dedicated subscription. This allows services to process events independently while sharing the same integration-event topic.
 
-The `target-discovery-api` subscription is used by the Target Discovery API, and the `chemical-design-api` subscription is used by the implemented Chemical Design API.
+The `target-discovery-api`, `chemical-design-api`, `compound-catalog-api`, `screening-api`, `assay-management-api`, `ai-discovery-api`, `workflow-api`, and `notification-api` subscriptions are used by their corresponding implemented consumers.
 
 ---
 
@@ -485,6 +690,35 @@ The platform currently supports:
 - Virtual screening management
 - Screening candidate ranking
 - Completed screening synchronization
+- Completed-screening projection synchronization
+- Assay creation and lifecycle management
+- Compound measurement capture
+- Replicate tracking
+- Assay quality-control status
+- Z-prime factor storage
+- Compound-level assay result calculation
+- Mean and sample-standard-deviation calculation
+- Assay outcome classification
+- Assay publication and synchronization
+- AssaySnapshot handoff to AI Discovery
+- End-to-end discovery workflow creation
+- Seven-stage workflow initialization
+- Workflow start, cancellation, failure, and completion handling
+- Workflow stage progression
+- Event-to-workflow correlation
+- Idempotent workflow event processing
+- External entity tracking by workflow stage
+- Workflow snapshot publication
+- Workflow synchronization endpoints
+- Event-driven notification rule management
+- Notification template token replacement
+- Manual notification creation
+- Notification delivery tracking
+- Delivery-attempt history
+- Notification dispatch and retry state
+- Notification cancellation
+- Notification delivery status events
+- Notification synchronization endpoints
 - AI-assisted prototype prediction workflows
 - Candidate scoring and prioritization
 - OpenAPI documentation
@@ -504,6 +738,8 @@ The platform currently supports:
 - Database per service
 - Local projection ownership
 - Idempotent event consumption
+- Workflow correlation using workflow identifiers
+- Event-receipt deduplication
 - Explicit synchronization endpoints
 - RESTful APIs
 - OpenAPI-first development
@@ -527,9 +763,9 @@ The platform currently supports:
 | Compound Catalog API | Master repository for compounds and lifecycle management | ✅ Implemented | [README](./Algocura.CompoundCatalog.Api/README.md) | 2026-01-04 |
 | Screening API | Virtual screening, candidate evaluation, ranking, and synchronization | ✅ Implemented | [README](./Algocura.Screening.Api/README.md) | 2026-01-09 |
 | AI Discovery API | Prediction workflows, candidate prioritization, and lead ranking | ✅ Implemented | [README](./Algocura.AIDiscovery.Api/README.md) | 2026-01-10 |
-| Assay Management API | Biological assay management | 🚧 Planned | — | — |
-| Workflow API | Drug discovery workflow orchestration | 🚧 Planned | — | — |
-| Notification API | Email, Teams, and event notifications | 🚧 Planned | — | — |
+| Assay Management API | Completed-screening synchronization, assay measurements, quality control, result calculation, publication, and synchronization | ✅ Implemented | [README](./Algocura.AssayManagement.Api/README.md) | 2026-01-12 |
+| Workflow API | End-to-end workflow orchestration, stage tracking, event correlation, idempotent processing, failure handling, cancellation, and synchronization | ✅ Implemented | [README](./Algocura.Workflow.Api/README.md) | 2026-01-13 |
+| Notification API | Event-driven notification rules, manual notifications, delivery tracking, dispatch state, cancellation, and synchronization | ✅ Implemented | [README](./Algocura.Notification.Api/README.md) | 2026-01-13 |
 | Reporting API | Analytics and reporting | 🚧 Planned | — | — |
 | Search API | Compound and experiment search | 🚧 Planned | — | — |
 | Audit API | Audit trail and compliance | 🚧 Planned | — | — |
