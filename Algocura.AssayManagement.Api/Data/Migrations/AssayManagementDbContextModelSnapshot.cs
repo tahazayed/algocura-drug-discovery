@@ -31,6 +31,12 @@ namespace Algocura.AssayManagement.Api.Data.Migrations
                         .HasPrecision(18, 4)
                         .HasColumnType("decimal(18,4)");
 
+                    b.Property<DateTimeOffset?>("ApprovedAtUtc")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<Guid?>("ApprovedByUserId")
+                        .HasColumnType("uniqueidentifier");
+
                     b.Property<int>("AssayType")
                         .HasColumnType("int");
 
@@ -41,8 +47,14 @@ namespace Algocura.AssayManagement.Api.Data.Migrations
                     b.Property<DateTimeOffset?>("CompletedAtUtc")
                         .HasColumnType("datetimeoffset");
 
+                    b.Property<Guid?>("CompletedByUserId")
+                        .HasColumnType("uniqueidentifier");
+
                     b.Property<DateTimeOffset>("CreatedAtUtc")
                         .HasColumnType("datetimeoffset");
+
+                    b.Property<Guid?>("CreatedByUserId")
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("MeasurementUnit")
                         .IsRequired()
@@ -54,12 +66,18 @@ namespace Algocura.AssayManagement.Api.Data.Migrations
                         .HasMaxLength(200)
                         .HasColumnType("nvarchar(200)");
 
+                    b.Property<Guid?>("OwnerUserId")
+                        .HasColumnType("uniqueidentifier");
+
                     b.Property<string>("Protocol")
                         .HasMaxLength(2000)
                         .HasColumnType("nvarchar(2000)");
 
                     b.Property<DateTimeOffset?>("PublishedAtUtc")
                         .HasColumnType("datetimeoffset");
+
+                    b.Property<Guid?>("PublishedByUserId")
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("QualityControlNotes")
                         .HasMaxLength(1000)
@@ -77,15 +95,22 @@ namespace Algocura.AssayManagement.Api.Data.Migrations
                     b.Property<DateTimeOffset>("UpdatedAtUtc")
                         .HasColumnType("datetimeoffset");
 
+                    b.Property<Guid?>("UpdatedByUserId")
+                        .HasColumnType("uniqueidentifier");
+
                     b.Property<decimal?>("ZPrimeFactor")
                         .HasPrecision(5, 4)
                         .HasColumnType("decimal(5,4)");
 
                     b.HasKey("Id");
 
+                    b.HasIndex("CreatedByUserId");
+
                     b.HasIndex("ScreeningId");
 
                     b.HasIndex("Status");
+
+                    b.HasIndex("UpdatedByUserId");
 
                     b.ToTable("Assays");
                 });
@@ -110,6 +135,18 @@ namespace Algocura.AssayManagement.Api.Data.Migrations
                         .HasMaxLength(50)
                         .HasColumnType("nvarchar(50)");
 
+                    b.Property<DateTimeOffset?>("CorrectedAtUtc")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<Guid?>("CorrectedByUserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTimeOffset>("CreatedAtUtc")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<Guid?>("CreatedByUserId")
+                        .HasColumnType("uniqueidentifier");
+
                     b.Property<bool>("IsControl")
                         .HasColumnType("bit");
 
@@ -119,14 +156,27 @@ namespace Algocura.AssayManagement.Api.Data.Migrations
                     b.Property<DateTimeOffset>("RecordedAtUtc")
                         .HasColumnType("datetimeoffset");
 
+                    b.Property<Guid?>("RecordedByUserId")
+                        .HasColumnType("uniqueidentifier");
+
                     b.Property<int>("ReplicateNumber")
                         .HasColumnType("int");
+
+                    b.Property<DateTimeOffset>("UpdatedAtUtc")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<Guid?>("UpdatedByUserId")
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<decimal>("Value")
                         .HasPrecision(18, 6)
                         .HasColumnType("decimal(18,6)");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("CreatedByUserId");
+
+                    b.HasIndex("UpdatedByUserId");
 
                     b.HasIndex("AssayId", "CompoundId", "ReplicateNumber", "Concentration");
 
@@ -136,6 +186,12 @@ namespace Algocura.AssayManagement.Api.Data.Migrations
             modelBuilder.Entity("Algocura.AssayManagement.Api.Domain.AssayResult", b =>
                 {
                     b.Property<Guid>("Id")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTimeOffset?>("ApprovedAtUtc")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<Guid?>("ApprovedByUserId")
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<Guid>("AssayId")
@@ -150,6 +206,9 @@ namespace Algocura.AssayManagement.Api.Data.Migrations
 
                     b.Property<DateTimeOffset>("CreatedAtUtc")
                         .HasColumnType("datetimeoffset");
+
+                    b.Property<Guid?>("CreatedByUserId")
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<decimal?>("Ec50")
                         .HasPrecision(18, 6)
@@ -180,11 +239,27 @@ namespace Algocura.AssayManagement.Api.Data.Migrations
                     b.Property<bool>("SelectedForAi")
                         .HasColumnType("bit");
 
+                    b.Property<DateTimeOffset?>("SelectedForAiAtUtc")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<Guid?>("SelectedForAiByUserId")
+                        .HasColumnType("uniqueidentifier");
+
                     b.Property<decimal>("StandardDeviation")
                         .HasPrecision(18, 6)
                         .HasColumnType("decimal(18,6)");
 
+                    b.Property<DateTimeOffset>("UpdatedAtUtc")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<Guid?>("UpdatedByUserId")
+                        .HasColumnType("uniqueidentifier");
+
                     b.HasKey("Id");
+
+                    b.HasIndex("CreatedByUserId");
+
+                    b.HasIndex("UpdatedByUserId");
 
                     b.HasIndex("AssayId", "CompoundId")
                         .IsUnique();
@@ -200,6 +275,12 @@ namespace Algocura.AssayManagement.Api.Data.Migrations
                     b.Property<DateTimeOffset>("CompletedAtUtc")
                         .HasColumnType("datetimeoffset");
 
+                    b.Property<DateTimeOffset>("CreatedAtUtc")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<Guid?>("CreatedByUserId")
+                        .HasColumnType("uniqueidentifier");
+
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasMaxLength(200)
@@ -210,8 +291,14 @@ namespace Algocura.AssayManagement.Api.Data.Migrations
                         .HasMaxLength(100)
                         .HasColumnType("nvarchar(100)");
 
+                    b.Property<Guid?>("SourceCreatedByUserId")
+                        .HasColumnType("uniqueidentifier");
+
                     b.Property<DateTimeOffset>("SourceUpdatedAtUtc")
                         .HasColumnType("datetimeoffset");
+
+                    b.Property<Guid?>("SourceUpdatedByUserId")
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<int>("Status")
                         .HasColumnType("int");
@@ -219,7 +306,17 @@ namespace Algocura.AssayManagement.Api.Data.Migrations
                     b.Property<DateTimeOffset>("SynchronizedAtUtc")
                         .HasColumnType("datetimeoffset");
 
+                    b.Property<DateTimeOffset>("UpdatedAtUtc")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<Guid?>("UpdatedByUserId")
+                        .HasColumnType("uniqueidentifier");
+
                     b.HasKey("ScreeningId");
+
+                    b.HasIndex("CreatedByUserId");
+
+                    b.HasIndex("UpdatedByUserId");
 
                     b.ToTable("Screenings");
                 });
@@ -230,6 +327,12 @@ namespace Algocura.AssayManagement.Api.Data.Migrations
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<Guid>("CompoundId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTimeOffset>("CreatedAtUtc")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<Guid?>("CreatedByUserId")
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<int>("Rank")
@@ -245,7 +348,23 @@ namespace Algocura.AssayManagement.Api.Data.Migrations
                     b.Property<bool>("Selected")
                         .HasColumnType("bit");
 
+                    b.Property<Guid?>("SourceCreatedByUserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid?>("SourceUpdatedByUserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTimeOffset>("UpdatedAtUtc")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<Guid?>("UpdatedByUserId")
+                        .HasColumnType("uniqueidentifier");
+
                     b.HasKey("Id");
+
+                    b.HasIndex("CreatedByUserId");
+
+                    b.HasIndex("UpdatedByUserId");
 
                     b.HasIndex("ScreeningId", "CompoundId")
                         .IsUnique();

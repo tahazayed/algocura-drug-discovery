@@ -1,3 +1,5 @@
+using Algocura.Platform.Auditing.DependencyInjection;
+using Algocura.Platform.Auditing.Interceptors;
 using Algocura.Workflow.Api.Data;
 using Algocura.Workflow.Api.Messaging;
 using Algocura.Workflow.Api.Messaging.Consumers;
@@ -43,6 +45,28 @@ builder.Services.AddOpenApi(options =>
     });
 });
 
+// -----------------------------------------------------------------------------
+// Auditing
+// -----------------------------------------------------------------------------
+
+builder.Services.AddAlgocuraAuditing(options =>
+{
+    options.ServiceName =
+        "Algocura.Workflow.Api";
+
+    options.StampCreatedAndUpdatedFields =
+        true;
+
+    // Enable after registering a Service Bus audit publisher
+    // or implementing a transactional outbox.
+    options.PublishEntityAuditEvents =
+        false;
+});
+
+// -----------------------------------------------------------------------------
+// Database
+// -----------------------------------------------------------------------------
+
 var connectionString =
     builder.Configuration
         .GetConnectionString("WorkflowDatabase")
@@ -50,14 +74,28 @@ var connectionString =
         "ConnectionStrings:WorkflowDatabase is required.");
 
 builder.Services.AddDbContext<WorkflowDbContext>(
-    options =>
+    (serviceProvider, options) =>
+    {
         options.UseSqlServer(
             connectionString,
             sqlServerOptions =>
                 sqlServerOptions.EnableRetryOnFailure(
-                    5,
-                    TimeSpan.FromSeconds(10),
-                    null)));
+                    maxRetryCount: 5,
+                    maxRetryDelay:
+                        TimeSpan.FromSeconds(10),
+                    errorNumbersToAdd: null));
+
+        options.AddInterceptors(
+            serviceProvider.GetRequiredService<
+                AuditableEntityInterceptor>(),
+            serviceProvider.GetRequiredService<
+                EntityAuditEventInterceptor>());
+
+        if (builder.Environment.IsDevelopment())
+        {
+            options.EnableDetailedErrors();
+        }
+    });
 
 builder.Services.AddScoped<
     IWorkflowStateMachine,
@@ -177,6 +215,13 @@ app.MapGet(
                             serviceBus.TopicName,
                         subscription =
                             serviceBus.SubscriptionName
+                    },
+                    auditing = new
+                    {
+                        entityStamping =
+                            true,
+                        eventPublishing =
+                            false
                     }
                 });
         })

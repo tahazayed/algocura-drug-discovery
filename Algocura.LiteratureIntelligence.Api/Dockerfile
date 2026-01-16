@@ -6,18 +6,28 @@ FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
 
 WORKDIR /src
 
-COPY ["Algocura.LiteratureIntelligence.Api.csproj", "./"]
+# Copy project files first to preserve the NuGet restore cache.
+COPY ["Algocura.LiteratureIntelligence.Api/Algocura.LiteratureIntelligence.Api.csproj", "Algocura.LiteratureIntelligence.Api/"]
 
-RUN dotnet restore "Algocura.LiteratureIntelligence.Api.csproj"
+COPY ["Algocura.Platform.Auditing/Algocura.Platform.Auditing.csproj", "Algocura.Platform.Auditing/"]
 
+# Restore inside the Linux container.
+RUN dotnet restore \
+    "Algocura.LiteratureIntelligence.Api/Algocura.LiteratureIntelligence.Api.csproj"
+
+# Copy source files. The repository-root .dockerignore prevents host
+# bin/obj files from overwriting the Linux restore output.
 COPY . .
 
-RUN dotnet publish "Algocura.LiteratureIntelligence.Api.csproj" \
+WORKDIR /src/Algocura.LiteratureIntelligence.Api
+
+RUN dotnet publish \
+    "Algocura.LiteratureIntelligence.Api.csproj" \
     --configuration Release \
     --output /app/publish \
     --no-restore \
     /p:UseAppHost=false
-	
+
 
 # -----------------------------------------------------------------------------
 # Runtime stage
@@ -30,7 +40,6 @@ WORKDIR /app
 EXPOSE 8080
 
 ENV ASPNETCORE_HTTP_PORTS=8080
-
 ENV ASPNETCORE_ENVIRONMENT=Development
 
 COPY --from=build /app/publish .

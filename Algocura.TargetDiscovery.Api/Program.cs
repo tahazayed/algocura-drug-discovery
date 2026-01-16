@@ -1,3 +1,5 @@
+using Algocura.Platform.Auditing.DependencyInjection;
+using Algocura.Platform.Auditing.Interceptors;
 using Algocura.TargetDiscovery.Api.Data;
 using Algocura.TargetDiscovery.Api.Messaging;
 using Algocura.TargetDiscovery.Api.Messaging.Consumers;
@@ -41,6 +43,24 @@ builder.Services.AddOpenApi(options =>
 });
 
 // -----------------------------------------------------------------------------
+// Auditing
+// -----------------------------------------------------------------------------
+
+builder.Services.AddAlgocuraAuditing(options =>
+{
+    options.ServiceName =
+        "Algocura.TargetDiscovery.Api";
+
+    options.StampCreatedAndUpdatedFields =
+        true;
+
+    // Enable after registering a Service Bus audit publisher
+    // or a transactional outbox.
+    options.PublishEntityAuditEvents =
+        false;
+});
+
+// -----------------------------------------------------------------------------
 // Database
 // -----------------------------------------------------------------------------
 
@@ -50,14 +70,27 @@ var databaseConnectionString =
         "ConnectionStrings:TargetDiscoveryDatabase is required.");
 
 builder.Services.AddDbContext<TargetDiscoveryDbContext>(
-    options =>
+    (serviceProvider, options) =>
+    {
         options.UseSqlServer(
             databaseConnectionString,
             sqlServerOptions =>
                 sqlServerOptions.EnableRetryOnFailure(
                     maxRetryCount: 5,
                     maxRetryDelay: TimeSpan.FromSeconds(10),
-                    errorNumbersToAdd: null)));
+                    errorNumbersToAdd: null));
+
+        options.AddInterceptors(
+            serviceProvider.GetRequiredService<
+                AuditableEntityInterceptor>(),
+            serviceProvider.GetRequiredService<
+                EntityAuditEventInterceptor>());
+
+        if (builder.Environment.IsDevelopment())
+        {
+            options.EnableDetailedErrors();
+        }
+    });
 
 // -----------------------------------------------------------------------------
 // Application services
@@ -104,8 +137,12 @@ builder.Services.AddSingleton<ServiceBusClient>(
                 new DefaultAzureCredential());
     });
 
-builder.Services.AddSingleton<IEventPublisher, ServiceBusEventPublisher>();
-builder.Services.AddHostedService<LiteratureIntelligenceEventsConsumer>();
+builder.Services.AddSingleton<
+    IEventPublisher,
+    ServiceBusEventPublisher>();
+
+builder.Services.AddHostedService<
+    LiteratureIntelligenceEventsConsumer>();
 
 // -----------------------------------------------------------------------------
 // Application pipeline
@@ -179,6 +216,11 @@ app.MapGet(
                         mode = options.UseEmulator ? "Emulator" : "Azure",
                         topic = options.TopicName,
                         subscription = options.SubscriptionName
+                    },
+                    auditing = new
+                    {
+                        entityStamping = true,
+                        eventPublishing = false
                     }
                 });
         })

@@ -44,7 +44,11 @@
 
 	</ItemGroup>
 	<ItemGroup>
-	  <Folder Include="Data\Migrations\" />
-	  <Folder Include="Migrations\" />
+		<ProjectReference Include="..\Algocura.Platform.Auditing\Algocura.Platform.Auditing.csproj" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<Folder Include="Data\Migrations\" />
+		<Folder Include="Migrations\" />
 	</ItemGroup>
 </Project>

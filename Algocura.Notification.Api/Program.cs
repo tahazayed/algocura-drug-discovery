@@ -3,6 +3,8 @@ using Algocura.Notification.Api.Messaging;
 using Algocura.Notification.Api.Messaging.Consumers;
 using Algocura.Notification.Api.Messaging.Publishers;
 using Algocura.Notification.Api.Services;
+using Algocura.Platform.Auditing.DependencyInjection;
+using Algocura.Platform.Auditing.Interceptors;
 using Azure.Identity;
 using Azure.Messaging.ServiceBus;
 using Microsoft.EntityFrameworkCore;
@@ -27,18 +29,56 @@ builder.Services.AddOpenApi(options =>
     });
 });
 
+// -----------------------------------------------------------------------------
+// Auditing
+// -----------------------------------------------------------------------------
+
+builder.Services.AddAlgocuraAuditing(options =>
+{
+    options.ServiceName =
+        "Algocura.Notification.Api";
+
+    options.StampCreatedAndUpdatedFields =
+        true;
+
+    // Enable after registering a Service Bus audit publisher
+    // or implementing a transactional outbox.
+    options.PublishEntityAuditEvents =
+        false;
+});
+
+// -----------------------------------------------------------------------------
+// Database
+// -----------------------------------------------------------------------------
+
 var connectionString =
     builder.Configuration.GetConnectionString("NotificationDatabase")
     ?? throw new InvalidOperationException(
         "ConnectionStrings:NotificationDatabase is required.");
 
-builder.Services.AddDbContext<NotificationDbContext>(options =>
-    options.UseSqlServer(
-        connectionString,
-        sql => sql.EnableRetryOnFailure(
-            5,
-            TimeSpan.FromSeconds(10),
-            null)));
+builder.Services.AddDbContext<NotificationDbContext>(
+    (serviceProvider, options) =>
+    {
+        options.UseSqlServer(
+            connectionString,
+            sql =>
+                sql.EnableRetryOnFailure(
+                    maxRetryCount: 5,
+                    maxRetryDelay:
+                        TimeSpan.FromSeconds(10),
+                    errorNumbersToAdd: null));
+
+        options.AddInterceptors(
+            serviceProvider.GetRequiredService<
+                AuditableEntityInterceptor>(),
+            serviceProvider.GetRequiredService<
+                EntityAuditEventInterceptor>());
+
+        if (builder.Environment.IsDevelopment())
+        {
+            options.EnableDetailedErrors();
+        }
+    });
 
 builder.Services.AddScoped<INotificationComposer, DefaultNotificationComposer>();
 builder.Services.AddScoped<INotificationDispatcher, LoggingNotificationDispatcher>();
@@ -105,30 +145,35 @@ app.MapHealthChecks("/health").ExcludeFromDescription();
 app.MapGet("/", (
         IHostEnvironment environment,
         IOptions<ServiceBusOptions> serviceBusOptions) =>
+{
+    var options = serviceBusOptions.Value;
+    return Results.Ok(new
     {
-        var options = serviceBusOptions.Value;
-        return Results.Ok(new
+        service = "Algocura Notification API",
+        version = "v1",
+        status = "Running",
+        environment = environment.EnvironmentName,
+        documentation = new
         {
-            service = "Algocura Notification API",
-            version = "v1",
-            status = "Running",
-            environment = environment.EnvironmentName,
-            documentation = new
-            {
-                swagger = "/swagger",
-                redoc = "/redoc",
-                openApi = "/openapi/v1.json"
-            },
-            health = "/health",
-            messaging = new
-            {
-                provider = "Azure Service Bus",
-                mode = options.UseEmulator ? "Emulator" : "Azure",
-                topic = options.TopicName,
-                subscription = options.SubscriptionName
-            }
-        });
-    })
+            swagger = "/swagger",
+            redoc = "/redoc",
+            openApi = "/openapi/v1.json"
+        },
+        health = "/health",
+        messaging = new
+        {
+            provider = "Azure Service Bus",
+            mode = options.UseEmulator ? "Emulator" : "Azure",
+            topic = options.TopicName,
+            subscription = options.SubscriptionName
+        },
+        auditing = new
+        {
+            entityStamping = true,
+            eventPublishing = false
+        }
+    });
+})
     .WithName("GetServiceInformation")
     .ExcludeFromDescription();
 

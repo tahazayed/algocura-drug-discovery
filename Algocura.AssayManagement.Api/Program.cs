@@ -3,6 +3,8 @@ using Algocura.AssayManagement.Api.Messaging;
 using Algocura.AssayManagement.Api.Messaging.Consumers;
 using Algocura.AssayManagement.Api.Messaging.Publishers;
 using Algocura.AssayManagement.Api.Services;
+using Algocura.Platform.Auditing.DependencyInjection;
+using Algocura.Platform.Auditing.Interceptors;
 using Azure.Identity;
 using Azure.Messaging.ServiceBus;
 using Microsoft.EntityFrameworkCore;
@@ -41,6 +43,24 @@ builder.Services.AddOpenApi(options =>
 });
 
 // -----------------------------------------------------------------------------
+// Auditing
+// -----------------------------------------------------------------------------
+
+builder.Services.AddAlgocuraAuditing(options =>
+{
+    options.ServiceName =
+        "Algocura.AssayManagement.Api";
+
+    options.StampCreatedAndUpdatedFields =
+        true;
+
+    // Enable after registering a Service Bus audit publisher
+    // or implementing a transactional outbox.
+    options.PublishEntityAuditEvents =
+        false;
+});
+
+// -----------------------------------------------------------------------------
 // Database
 // -----------------------------------------------------------------------------
 
@@ -50,14 +70,28 @@ var databaseConnectionString =
         "ConnectionStrings:AssayManagementDatabase is required.");
 
 builder.Services.AddDbContext<AssayManagementDbContext>(
-    options =>
+    (serviceProvider, options) =>
+    {
         options.UseSqlServer(
             databaseConnectionString,
             sqlServerOptions =>
                 sqlServerOptions.EnableRetryOnFailure(
                     maxRetryCount: 5,
-                    maxRetryDelay: TimeSpan.FromSeconds(10),
-                    errorNumbersToAdd: null)));
+                    maxRetryDelay:
+                        TimeSpan.FromSeconds(10),
+                    errorNumbersToAdd: null));
+
+        options.AddInterceptors(
+            serviceProvider.GetRequiredService<
+                AuditableEntityInterceptor>(),
+            serviceProvider.GetRequiredService<
+                EntityAuditEventInterceptor>());
+
+        if (builder.Environment.IsDevelopment())
+        {
+            options.EnableDetailedErrors();
+        }
+    });
 
 // -----------------------------------------------------------------------------
 // Application services
@@ -176,6 +210,11 @@ app.MapGet(
                         mode = options.UseEmulator ? "Emulator" : "Azure",
                         topic = options.TopicName,
                         subscription = options.SubscriptionName
+                    },
+                    auditing = new
+                    {
+                        entityStamping = true,
+                        eventPublishing = false
                     }
                 });
         })

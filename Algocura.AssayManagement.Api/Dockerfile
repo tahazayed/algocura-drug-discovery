@@ -6,13 +6,23 @@ FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
 
 WORKDIR /src
 
-COPY ["Algocura.AssayManagement.Api.csproj", "./"]
+# Copy project files first to preserve the NuGet restore cache.
+COPY ["Algocura.AssayManagement.Api/Algocura.AssayManagement.Api.csproj", "Algocura.AssayManagement.Api/"]
 
-RUN dotnet restore "Algocura.AssayManagement.Api.csproj"
+COPY ["Algocura.Platform.Auditing/Algocura.Platform.Auditing.csproj", "Algocura.Platform.Auditing/"]
 
+# Restore inside the Linux container.
+RUN dotnet restore \
+    "Algocura.AssayManagement.Api/Algocura.AssayManagement.Api.csproj"
+
+# Copy source files. The repository-root .dockerignore prevents host
+# bin/obj files from overwriting the Linux restore output.
 COPY . .
 
-RUN dotnet publish "Algocura.AssayManagement.Api.csproj" \
+WORKDIR /src/Algocura.AssayManagement.Api
+
+RUN dotnet publish \
+    "Algocura.AssayManagement.Api.csproj" \
     --configuration Release \
     --output /app/publish \
     --no-restore \
@@ -30,7 +40,6 @@ WORKDIR /app
 EXPOSE 8080
 
 ENV ASPNETCORE_HTTP_PORTS=8080
-
 ENV ASPNETCORE_ENVIRONMENT=Development
 
 COPY --from=build /app/publish .

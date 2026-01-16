@@ -362,3 +362,4 @@ public sealed class CompoundEventsConsumer : BackgroundService
         base.Dispose();
     }
 }
+

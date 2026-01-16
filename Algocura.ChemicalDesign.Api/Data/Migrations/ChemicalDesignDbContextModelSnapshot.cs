@@ -35,6 +35,9 @@ namespace Algocura.ChemicalDesign.Api.Data.Migrations
                     b.Property<DateTimeOffset>("CreatedAtUtc")
                         .HasColumnType("datetimeoffset");
 
+                    b.Property<Guid?>("CreatedByUserId")
+                        .HasColumnType("uniqueidentifier");
+
                     b.Property<Guid>("DesignProjectId")
                         .HasColumnType("uniqueidentifier");
 
@@ -62,6 +65,9 @@ namespace Algocura.ChemicalDesign.Api.Data.Migrations
                     b.Property<DateTimeOffset?>("SelectedAtUtc")
                         .HasColumnType("datetimeoffset");
 
+                    b.Property<Guid?>("SelectedByUserId")
+                        .HasColumnType("uniqueidentifier");
+
                     b.Property<string>("SelectionRationale")
                         .HasMaxLength(500)
                         .HasColumnType("nvarchar(500)");
@@ -79,7 +85,12 @@ namespace Algocura.ChemicalDesign.Api.Data.Migrations
                     b.Property<DateTimeOffset>("UpdatedAtUtc")
                         .HasColumnType("datetimeoffset");
 
+                    b.Property<Guid?>("UpdatedByUserId")
+                        .HasColumnType("uniqueidentifier");
+
                     b.HasKey("Id");
+
+                    b.HasIndex("CreatedByUserId");
 
                     b.HasIndex("DesignProjectId");
 
@@ -88,6 +99,8 @@ namespace Algocura.ChemicalDesign.Api.Data.Migrations
                     b.HasIndex("Status");
 
                     b.HasIndex("StructureSearchJobId");
+
+                    b.HasIndex("UpdatedByUserId");
 
                     b.ToTable("CandidateStructures");
                 });
@@ -100,8 +113,14 @@ namespace Algocura.ChemicalDesign.Api.Data.Migrations
                     b.Property<DateTimeOffset?>("CompletedAtUtc")
                         .HasColumnType("datetimeoffset");
 
+                    b.Property<Guid?>("CompletedByUserId")
+                        .HasColumnType("uniqueidentifier");
+
                     b.Property<DateTimeOffset>("CreatedAtUtc")
                         .HasColumnType("datetimeoffset");
+
+                    b.Property<Guid?>("CreatedByUserId")
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("DesiredModulation")
                         .IsRequired()
@@ -117,6 +136,9 @@ namespace Algocura.ChemicalDesign.Api.Data.Migrations
                         .HasMaxLength(2000)
                         .HasColumnType("nvarchar(2000)");
 
+                    b.Property<Guid?>("OwnerUserId")
+                        .HasColumnType("uniqueidentifier");
+
                     b.Property<int>("Status")
                         .HasColumnType("int");
 
@@ -126,11 +148,18 @@ namespace Algocura.ChemicalDesign.Api.Data.Migrations
                     b.Property<DateTimeOffset>("UpdatedAtUtc")
                         .HasColumnType("datetimeoffset");
 
+                    b.Property<Guid?>("UpdatedByUserId")
+                        .HasColumnType("uniqueidentifier");
+
                     b.HasKey("Id");
+
+                    b.HasIndex("CreatedByUserId");
 
                     b.HasIndex("Status");
 
                     b.HasIndex("TargetAssessmentId");
+
+                    b.HasIndex("UpdatedByUserId");
 
                     b.ToTable("DesignProjects");
                 });
@@ -144,6 +173,12 @@ namespace Algocura.ChemicalDesign.Api.Data.Migrations
                         .IsRequired()
                         .HasMaxLength(2000)
                         .HasColumnType("nvarchar(2000)");
+
+                    b.Property<DateTimeOffset>("CreatedAtUtc")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<Guid?>("CreatedByUserId")
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("InchiKey")
                         .HasMaxLength(27)
@@ -167,11 +202,21 @@ namespace Algocura.ChemicalDesign.Api.Data.Migrations
                         .HasMaxLength(100)
                         .HasColumnType("nvarchar(100)");
 
+                    b.Property<DateTimeOffset>("UpdatedAtUtc")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<Guid?>("UpdatedByUserId")
+                        .HasColumnType("uniqueidentifier");
+
                     b.HasKey("Id");
+
+                    b.HasIndex("CreatedByUserId");
 
                     b.HasIndex("InchiKey")
                         .IsUnique()
                         .HasFilter("[InchiKey] IS NOT NULL");
+
+                    b.HasIndex("UpdatedByUserId");
 
                     b.ToTable("ChemicalLibrary");
                 });
@@ -183,6 +228,9 @@ namespace Algocura.ChemicalDesign.Api.Data.Migrations
 
                     b.Property<DateTimeOffset>("CreatedAtUtc")
                         .HasColumnType("datetimeoffset");
+
+                    b.Property<Guid?>("CreatedByUserId")
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<Guid>("DesignProjectId")
                         .HasColumnType("uniqueidentifier");
@@ -206,9 +254,19 @@ namespace Algocura.ChemicalDesign.Api.Data.Migrations
                         .HasMaxLength(50)
                         .HasColumnType("nvarchar(50)");
 
+                    b.Property<DateTimeOffset>("UpdatedAtUtc")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<Guid?>("UpdatedByUserId")
+                        .HasColumnType("uniqueidentifier");
+
                     b.HasKey("Id");
 
+                    b.HasIndex("CreatedByUserId");
+
                     b.HasIndex("DesignProjectId");
+
+                    b.HasIndex("UpdatedByUserId");
 
                     b.ToTable("QueryStructures");
                 });
@@ -221,6 +279,12 @@ namespace Algocura.ChemicalDesign.Api.Data.Migrations
                     b.Property<string>("Conditions")
                         .HasMaxLength(1000)
                         .HasColumnType("nvarchar(1000)");
+
+                    b.Property<DateTimeOffset>("CreatedAtUtc")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<Guid?>("CreatedByUserId")
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<decimal>("EstimatedYieldPercent")
                         .HasPrecision(6, 2)
@@ -249,7 +313,17 @@ namespace Algocura.ChemicalDesign.Api.Data.Migrations
                     b.Property<Guid>("SynthesisRouteId")
                         .HasColumnType("uniqueidentifier");
 
+                    b.Property<DateTimeOffset>("UpdatedAtUtc")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<Guid?>("UpdatedByUserId")
+                        .HasColumnType("uniqueidentifier");
+
                     b.HasKey("Id");
+
+                    b.HasIndex("CreatedByUserId");
+
+                    b.HasIndex("UpdatedByUserId");
 
                     b.HasIndex("SynthesisRouteId", "StepNumber")
                         .IsUnique();
@@ -266,6 +340,12 @@ namespace Algocura.ChemicalDesign.Api.Data.Migrations
                         .IsRequired()
                         .HasMaxLength(50)
                         .HasColumnType("nvarchar(50)");
+
+                    b.Property<DateTimeOffset>("CreatedAtUtc")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<Guid?>("CreatedByUserId")
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("DesiredModulation")
                         .IsRequired()
@@ -295,8 +375,14 @@ namespace Algocura.ChemicalDesign.Api.Data.Migrations
                         .HasMaxLength(2000)
                         .HasColumnType("nvarchar(2000)");
 
+                    b.Property<Guid?>("SourceCreatedByUserId")
+                        .HasColumnType("uniqueidentifier");
+
                     b.Property<DateTimeOffset>("SourceUpdatedAtUtc")
                         .HasColumnType("datetimeoffset");
+
+                    b.Property<Guid?>("SourceUpdatedByUserId")
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<DateTimeOffset>("SynchronizedAtUtc")
                         .HasColumnType("datetimeoffset");
@@ -308,11 +394,21 @@ namespace Algocura.ChemicalDesign.Api.Data.Migrations
                     b.Property<Guid>("TargetHypothesisId")
                         .HasColumnType("uniqueidentifier");
 
+                    b.Property<DateTimeOffset>("UpdatedAtUtc")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<Guid?>("UpdatedByUserId")
+                        .HasColumnType("uniqueidentifier");
+
                     b.HasKey("TargetAssessmentId");
+
+                    b.HasIndex("CreatedByUserId");
 
                     b.HasIndex("DiseaseName");
 
                     b.HasIndex("GeneSymbol");
+
+                    b.HasIndex("UpdatedByUserId");
 
                     b.ToTable("SelectedTargets");
                 });
@@ -325,8 +421,14 @@ namespace Algocura.ChemicalDesign.Api.Data.Migrations
                     b.Property<DateTimeOffset?>("CompletedAtUtc")
                         .HasColumnType("datetimeoffset");
 
+                    b.Property<Guid?>("CompletedByUserId")
+                        .HasColumnType("uniqueidentifier");
+
                     b.Property<DateTimeOffset>("CreatedAtUtc")
                         .HasColumnType("datetimeoffset");
+
+                    b.Property<Guid?>("CreatedByUserId")
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<Guid>("DesignProjectId")
                         .HasColumnType("uniqueidentifier");
@@ -362,11 +464,18 @@ namespace Algocura.ChemicalDesign.Api.Data.Migrations
                     b.Property<DateTimeOffset>("UpdatedAtUtc")
                         .HasColumnType("datetimeoffset");
 
+                    b.Property<Guid?>("UpdatedByUserId")
+                        .HasColumnType("uniqueidentifier");
+
                     b.HasKey("Id");
+
+                    b.HasIndex("CreatedByUserId");
 
                     b.HasIndex("DesignProjectId");
 
                     b.HasIndex("QueryStructureId");
+
+                    b.HasIndex("UpdatedByUserId");
 
                     b.ToTable("StructureSearchJobs");
                 });
@@ -376,11 +485,20 @@ namespace Algocura.ChemicalDesign.Api.Data.Migrations
                     b.Property<Guid>("Id")
                         .HasColumnType("uniqueidentifier");
 
+                    b.Property<DateTimeOffset?>("ApprovedAtUtc")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<Guid?>("ApprovedByUserId")
+                        .HasColumnType("uniqueidentifier");
+
                     b.Property<Guid>("CandidateStructureId")
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<DateTimeOffset>("CreatedAtUtc")
                         .HasColumnType("datetimeoffset");
+
+                    b.Property<Guid?>("CreatedByUserId")
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("Description")
                         .HasMaxLength(1000)
@@ -404,9 +522,16 @@ namespace Algocura.ChemicalDesign.Api.Data.Migrations
                     b.Property<DateTimeOffset>("UpdatedAtUtc")
                         .HasColumnType("datetimeoffset");
 
+                    b.Property<Guid?>("UpdatedByUserId")
+                        .HasColumnType("uniqueidentifier");
+
                     b.HasKey("Id");
 
                     b.HasIndex("CandidateStructureId");
+
+                    b.HasIndex("CreatedByUserId");
+
+                    b.HasIndex("UpdatedByUserId");
 
                     b.ToTable("SynthesisRoutes");
                 });

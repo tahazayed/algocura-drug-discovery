@@ -1,3 +1,4 @@
+using Algocura.Platform.Auditing.Abstractions;
 using System.ComponentModel.DataAnnotations;
 
 namespace Algocura.AssayManagement.Api.Domain;
@@ -55,6 +56,8 @@ public enum AssayOutcome
 }
 
 public sealed class CompletedScreeningProjection
+    : IAuditableEntity,
+      IProjectionAuditMetadata
 {
     public Guid ScreeningId { get; set; }
 
@@ -72,12 +75,26 @@ public sealed class CompletedScreeningProjection
 
     public DateTimeOffset SynchronizedAtUtc { get; set; }
 
+    public Guid? SourceCreatedByUserId { get; set; }
+
+    public Guid? SourceUpdatedByUserId { get; set; }
+
+    public Guid? CreatedByUserId { get; set; }
+
+    public Guid? UpdatedByUserId { get; set; }
+
+    public DateTimeOffset CreatedAtUtc { get; set; }
+
+    public DateTimeOffset UpdatedAtUtc { get; set; }
+
     public List<CompletedScreeningResultProjection> Results { get; set; } = [];
 
     public List<Assay> Assays { get; set; } = [];
 }
 
 public sealed class CompletedScreeningResultProjection
+    : IAuditableEntity,
+      IProjectionAuditMetadata
 {
     public Guid Id { get; set; }
 
@@ -92,9 +109,25 @@ public sealed class CompletedScreeningResultProjection
     public bool Selected { get; set; }
 
     public CompletedScreeningProjection? Screening { get; set; }
+
+    public Guid? SourceCreatedByUserId { get; set; }
+
+    public Guid? SourceUpdatedByUserId { get; set; }
+
+    public Guid? CreatedByUserId { get; set; }
+
+    public Guid? UpdatedByUserId { get; set; }
+
+    public DateTimeOffset CreatedAtUtc { get; set; }
+
+    public DateTimeOffset UpdatedAtUtc { get; set; }
 }
 
 public sealed class Assay
+    : IAuditableEntity,
+      IOwnedEntity,
+      ICompletedEntity,
+      IApprovedEntity
 {
     public Guid Id { get; set; }
 
@@ -125,13 +158,27 @@ public sealed class Assay
     [MaxLength(1000)]
     public string? QualityControlNotes { get; set; }
 
-    public DateTimeOffset CreatedAtUtc { get; set; }
+    public Guid? OwnerUserId { get; set; }
 
-    public DateTimeOffset UpdatedAtUtc { get; set; }
+    public Guid? CompletedByUserId { get; set; }
 
     public DateTimeOffset? CompletedAtUtc { get; set; }
 
+    public Guid? ApprovedByUserId { get; set; }
+
+    public DateTimeOffset? ApprovedAtUtc { get; set; }
+
+    public Guid? PublishedByUserId { get; set; }
+
     public DateTimeOffset? PublishedAtUtc { get; set; }
+
+    public Guid? CreatedByUserId { get; set; }
+
+    public Guid? UpdatedByUserId { get; set; }
+
+    public DateTimeOffset CreatedAtUtc { get; set; }
+
+    public DateTimeOffset UpdatedAtUtc { get; set; }
 
     public CompletedScreeningProjection? Screening { get; set; }
 
@@ -141,6 +188,7 @@ public sealed class Assay
 }
 
 public sealed class AssayMeasurement
+    : IAuditableEntity
 {
     public Guid Id { get; set; }
 
@@ -163,10 +211,26 @@ public sealed class AssayMeasurement
 
     public DateTimeOffset RecordedAtUtc { get; set; }
 
+    public Guid? RecordedByUserId { get; set; }
+
+    public Guid? CorrectedByUserId { get; set; }
+
+    public DateTimeOffset? CorrectedAtUtc { get; set; }
+
     public Assay? Assay { get; set; }
+
+    public Guid? CreatedByUserId { get; set; }
+
+    public Guid? UpdatedByUserId { get; set; }
+
+    public DateTimeOffset CreatedAtUtc { get; set; }
+
+    public DateTimeOffset UpdatedAtUtc { get; set; }
 }
 
 public sealed class AssayResult
+    : IAuditableEntity,
+      IApprovedEntity
 {
     public Guid Id { get; set; }
 
@@ -194,8 +258,21 @@ public sealed class AssayResult
 
     public bool SelectedForAi { get; set; }
 
-    public DateTimeOffset CreatedAtUtc { get; set; }
+    public Guid? SelectedForAiByUserId { get; set; }
+
+    public DateTimeOffset? SelectedForAiAtUtc { get; set; }
+
+    public Guid? ApprovedByUserId { get; set; }
+
+    public DateTimeOffset? ApprovedAtUtc { get; set; }
 
     public Assay? Assay { get; set; }
-}
 
+    public Guid? CreatedByUserId { get; set; }
+
+    public Guid? UpdatedByUserId { get; set; }
+
+    public DateTimeOffset CreatedAtUtc { get; set; }
+
+    public DateTimeOffset UpdatedAtUtc { get; set; }
+}

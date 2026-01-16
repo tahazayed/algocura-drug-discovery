@@ -1,4 +1,5 @@
 using Algocura.ChemicalDesign.Api.Domain;
+using Algocura.Platform.Auditing.Abstractions;
 using Microsoft.EntityFrameworkCore;
 
 namespace Algocura.ChemicalDesign.Api.Data;
@@ -256,5 +257,57 @@ public sealed class ChemicalDesignDbContext(
                     .HasFilter(
                         "[InchiKey] IS NOT NULL");
             });
+
+        ConfigureAuditableEntities(
+            modelBuilder);
+    }
+
+    private static void ConfigureAuditableEntities(
+        ModelBuilder modelBuilder)
+    {
+        var auditableEntityTypes =
+            modelBuilder.Model
+                .GetEntityTypes()
+                .Where(
+                    entityType =>
+                        typeof(IAuditableEntity)
+                            .IsAssignableFrom(
+                                entityType.ClrType))
+                .ToArray();
+
+        foreach (var entityType in auditableEntityTypes)
+        {
+            var entity =
+                modelBuilder.Entity(
+                    entityType.ClrType);
+
+            entity.Property<Guid?>(
+                    nameof(
+                        IAuditableEntity.CreatedByUserId))
+                .IsRequired(false);
+
+            entity.Property<Guid?>(
+                    nameof(
+                        IAuditableEntity.UpdatedByUserId))
+                .IsRequired(false);
+
+            entity.Property<DateTimeOffset>(
+                    nameof(
+                        IAuditableEntity.CreatedAtUtc))
+                .IsRequired();
+
+            entity.Property<DateTimeOffset>(
+                    nameof(
+                        IAuditableEntity.UpdatedAtUtc))
+                .IsRequired();
+
+            entity.HasIndex(
+                nameof(
+                    IAuditableEntity.CreatedByUserId));
+
+            entity.HasIndex(
+                nameof(
+                    IAuditableEntity.UpdatedByUserId));
+        }
     }
 }

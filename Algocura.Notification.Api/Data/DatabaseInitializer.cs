@@ -1,4 +1,3 @@
-using Algocura.Notification.Api.Domain;
 using Microsoft.EntityFrameworkCore;
 
 namespace Algocura.Notification.Api.Data;
@@ -16,65 +15,69 @@ public static class DatabaseInitializer
         {
             try
             {
-                await using var scope = services.CreateAsyncScope();
-                var db = scope.ServiceProvider.GetRequiredService<NotificationDbContext>();
+                await using var scope =
+                    services.CreateAsyncScope();
 
-                await db.Database.MigrateAsync(cancellationToken);
+                var dbContext =
+                    scope.ServiceProvider
+                        .GetRequiredService<
+                            NotificationDbContext>();
 
-                if (!await db.NotificationRules.AnyAsync(cancellationToken))
-                {
-                    var now = DateTimeOffset.UtcNow;
+                logger.LogInformation(
+                    "Applying Notification database migrations.");
 
-                    db.NotificationRules.AddRange(
-                        new NotificationRule
-                        {
-                            Id = Guid.NewGuid(),
-                            Name = "Assay Completion Notification",
-                            EventType = "AssayCompleted",
-                            Channel = NotificationChannel.InApplication,
-                            Recipient = "discovery-team",
-                            SubjectTemplate = "{{eventType}} received",
-                            BodyTemplate = "Event {{eventId}} from {{source}} was received.",
-                            Priority = NotificationPriority.High,
-                            Enabled = true,
-                            CreatedAtUtc = now,
-                            UpdatedAtUtc = now
-                        },
-                        new NotificationRule
-                        {
-                            Id = Guid.NewGuid(),
-                            Name = "Target Selection Notification",
-                            EventType = "TargetSelected",
-                            Channel = NotificationChannel.InApplication,
-                            Recipient = "discovery-team",
-                            SubjectTemplate = "Target selected",
-                            BodyTemplate = "Target selection event {{eventId}} was received.",
-                            Priority = NotificationPriority.Normal,
-                            Enabled = true,
-                            CreatedAtUtc = now,
-                            UpdatedAtUtc = now
-                        });
+                await dbContext.Database.MigrateAsync(
+                    cancellationToken);
 
-                    await db.SaveChangesAsync(cancellationToken);
-                }
+                logger.LogInformation(
+                    "Running Notification seed process.");
 
-                logger.LogInformation("Notification database initialization completed.");
+                await NotificationSeeder.SeedAsync(
+                    dbContext,
+                    cancellationToken);
+
+                logger.LogInformation(
+                    "Notification database initialization completed.");
+
                 return;
             }
-            catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+            catch (OperationCanceledException)
+                when (cancellationToken.IsCancellationRequested)
             {
+                logger.LogWarning(
+                    "Notification database initialization was cancelled.");
+
                 throw;
             }
-            catch (Exception exception) when (attempt < maximumAttempts)
+            catch (Exception exception)
+                when (attempt < maximumAttempts)
             {
-                var delay = TimeSpan.FromSeconds(attempt * 2);
+                var delay =
+                    TimeSpan.FromSeconds(
+                        attempt * 2);
+
                 logger.LogWarning(
                     exception,
-                    "Notification initialization attempt {Attempt} of {MaximumAttempts} failed. Retrying in {DelaySeconds} seconds.",
+                    "Notification database initialization attempt " +
+                    "{Attempt} of {MaximumAttempts} failed. " +
+                    "Retrying in {DelaySeconds} seconds.",
                     attempt,
                     maximumAttempts,
                     delay.TotalSeconds);
-                await Task.Delay(delay, cancellationToken);
+
+                await Task.Delay(
+                    delay,
+                    cancellationToken);
+            }
+            catch (Exception exception)
+            {
+                logger.LogCritical(
+                    exception,
+                    "Notification database initialization failed " +
+                    "after {MaximumAttempts} attempts.",
+                    maximumAttempts);
+
+                throw;
             }
         }
     }

@@ -16,8 +16,12 @@
   <Project Path="Algocura.LiteratureIntelligence.Api/Algocura.LiteratureIntelligence.Api.csproj" />
   <Project Path="Algocura.Notification.Api.Tests/Algocura.Notification.Api.Tests.csproj" />
   <Project Path="Algocura.Notification.Api/Algocura.Notification.Api.csproj" />
+  <Project Path="Algocura.Platform.Auditing.Tests/Algocura.Platform.Auditing.Tests.csproj" />
+  <Project Path="Algocura.Platform.Auditing/Algocura.Platform.Auditing.csproj" />
   <Project Path="Algocura.Screening.Api.Tests/Algocura.Screening.Api.Tests.csproj" />
   <Project Path="Algocura.Screening.Api/Algocura.Screening.Api.csproj" />
+  <Project Path="Algocura.Search.Api.Tests/Algocura.Search.Api.Tests.csproj" />
+  <Project Path="Algocura.Search.Api/Algocura.Search.Api.csproj" />
   <Project Path="Algocura.TargetDiscovery.Api.Tests/Algocura.TargetDiscovery.Api.Tests.csproj" />
   <Project Path="Algocura.TargetDiscovery.Api/Algocura.TargetDiscovery.Api.csproj" />
   <Project Path="Algocura.Workflow.Api.Tests/Algocura.Workflow.Api.Tests.csproj" />

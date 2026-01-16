@@ -109,8 +109,8 @@ services:
 
   literature-intelligence-api:
     build:
-      context: ./Algocura.LiteratureIntelligence.Api
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: Algocura.LiteratureIntelligence.Api/Dockerfile
       target: final
 
     image: algocura/literature-intelligence-api:dev
@@ -143,8 +143,8 @@ services:
 
   target-discovery-api:
     build:
-      context: ./Algocura.TargetDiscovery.Api
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: Algocura.TargetDiscovery.Api/Dockerfile
       target: final
 
     image: algocura/target-discovery-api:dev
@@ -177,8 +177,8 @@ services:
 
   chemical-design-api:
     build:
-      context: ./Algocura.ChemicalDesign.Api
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: Algocura.ChemicalDesign.Api/Dockerfile
       target: final
 
     image: algocura/chemical-design-api:dev
@@ -211,8 +211,8 @@ services:
 
   compound-catalog-api:
     build:
-      context: ./Algocura.CompoundCatalog.Api
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: Algocura.CompoundCatalog.Api/Dockerfile
       target: final
 
     image: algocura/compound-catalog-api:dev
@@ -245,8 +245,8 @@ services:
 
   screening-api:
     build:
-      context: ./Algocura.Screening.Api
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: Algocura.Screening.Api/Dockerfile
       target: final
 
     image: algocura/algocura-screening-api:dev
@@ -276,8 +276,8 @@ services:
 
   ai-discovery-api:
     build:
-      context: ./Algocura.AIDiscovery.Api
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: Algocura.AIDiscovery.Api/Dockerfile
       target: final
 
     image: algocura/algocura-ai-discovery-api:dev
@@ -307,8 +307,8 @@ services:
 
   assay-management-api:
     build:
-      context: ./Algocura.AssayManagement.Api
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: Algocura.AssayManagement.Api/Dockerfile
       target: final
 
     image: algocura/algocura-assay-management-api:dev
@@ -338,8 +338,8 @@ services:
 
   workflow-api:
     build:
-      context: ./Algocura.Workflow.Api
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: Algocura.Workflow.Api/Dockerfile
       target: final
 
     image: algocura/algocura-workflow-api:dev
@@ -369,8 +369,8 @@ services:
         
   notification-api:
     build:
-      context: ./Algocura.Notification.Api
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: Algocura.Notification.Api/Dockerfile
       target: final
 
     image: algocura/algocura-notification-api:dev
@@ -386,6 +386,37 @@ services:
       ServiceBus__FullyQualifiedNamespace: ""
       ServiceBus__TopicName: "algocura-events"
       ServiceBus__SubscriptionName: "notification-api"      
+      Logging__LogLevel__Default: "Information"
+      Logging__LogLevel__Microsoft__AspNetCore: "Warning"
+      Logging__LogLevel__Microsoft__EntityFrameworkCore: "Information"
+      Logging__LogLevel__Azure__Messaging__ServiceBus: "Information"      
+    depends_on:
+      sqlserver:
+        condition: service_healthy
+      servicebus-wait:
+        condition: service_completed_successfully
+    
+    restart: unless-stopped
+        
+  search-api:
+    build:
+      context: .
+      dockerfile: Algocura.Search.Api/Dockerfile
+      target: final
+
+    image: algocura/algocura-search-api:dev
+    container_name: search-api
+    ports:
+      - "7010:8080"
+    environment:
+      ASPNETCORE_ENVIRONMENT: "Development"
+      ASPNETCORE_URLS: http://+:8080
+      ConnectionStrings__SearchDatabase: "Server=sqlserver,1433;Database=AlgocuraSearch;User Id=sa;Password=DontLogin!Passw0rd;TrustServerCertificate=True;Encrypt=False;ConnectRetryCount=5;ConnectRetryInterval=5"
+      ServiceBus__UseEmulator: "true"
+      ServiceBus__ConnectionString: "Endpoint=sb://servicebus-emulator;SharedAccessKeyName=RootManageSharedAccessKey;SharedAccessKey=SAS_KEY_VALUE;UseDevelopmentEmulator=true;"
+      ServiceBus__FullyQualifiedNamespace: ""
+      ServiceBus__TopicName: "algocura-events"
+      ServiceBus__SubscriptionName: "search-api"      
       Logging__LogLevel__Default: "Information"
       Logging__LogLevel__Microsoft__AspNetCore: "Warning"
       Logging__LogLevel__Microsoft__EntityFrameworkCore: "Information"

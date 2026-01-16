@@ -44,10 +44,26 @@ namespace Algocura.Screening.Api.Data.Migrations
                         .HasMaxLength(250)
                         .HasColumnType("nvarchar(250)");
 
+                    b.Property<DateTimeOffset>("CreatedAtUtc")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<Guid?>("CreatedByUserId")
+                        .HasColumnType("uniqueidentifier");
+
                     b.Property<Guid>("ScreeningJobId")
                         .HasColumnType("uniqueidentifier");
 
+                    b.Property<DateTimeOffset>("UpdatedAtUtc")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<Guid?>("UpdatedByUserId")
+                        .HasColumnType("uniqueidentifier");
+
                     b.HasKey("Id");
+
+                    b.HasIndex("CreatedByUserId");
+
+                    b.HasIndex("UpdatedByUserId");
 
                     b.HasIndex("ScreeningJobId", "CompoundId")
                         .IsUnique();
@@ -66,6 +82,12 @@ namespace Algocura.Screening.Api.Data.Migrations
                         .HasMaxLength(4000)
                         .HasColumnType("nvarchar(4000)");
 
+                    b.Property<DateTimeOffset>("CreatedAtUtc")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<Guid?>("CreatedByUserId")
+                        .HasColumnType("uniqueidentifier");
+
                     b.Property<string>("InchiKey")
                         .HasMaxLength(27)
                         .HasColumnType("nvarchar(27)");
@@ -78,12 +100,25 @@ namespace Algocura.Screening.Api.Data.Migrations
                     b.Property<DateTimeOffset>("RegisteredAtUtc")
                         .HasColumnType("datetimeoffset");
 
+                    b.Property<Guid?>("SourceCreatedByUserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid?>("SourceUpdatedByUserId")
+                        .HasColumnType("uniqueidentifier");
+
                     b.Property<DateTimeOffset>("UpdatedAtUtc")
                         .HasColumnType("datetimeoffset");
 
+                    b.Property<Guid?>("UpdatedByUserId")
+                        .HasColumnType("uniqueidentifier");
+
                     b.HasKey("CompoundId");
 
+                    b.HasIndex("CreatedByUserId");
+
                     b.HasIndex("InchiKey");
+
+                    b.HasIndex("UpdatedByUserId");
 
                     b.ToTable("ScreeningCompounds", (string)null);
                 });
@@ -97,8 +132,14 @@ namespace Algocura.Screening.Api.Data.Migrations
                     b.Property<DateTimeOffset?>("CompletedAtUtc")
                         .HasColumnType("datetimeoffset");
 
+                    b.Property<Guid?>("CompletedByUserId")
+                        .HasColumnType("uniqueidentifier");
+
                     b.Property<DateTimeOffset>("CreatedAtUtc")
                         .HasColumnType("datetimeoffset");
+
+                    b.Property<Guid?>("CreatedByUserId")
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("Description")
                         .HasMaxLength(2000)
@@ -112,6 +153,9 @@ namespace Algocura.Screening.Api.Data.Migrations
                         .HasMaxLength(200)
                         .HasColumnType("nvarchar(200)");
 
+                    b.Property<Guid?>("OwnerUserId")
+                        .HasColumnType("uniqueidentifier");
+
                     b.Property<string>("ScreeningMethod")
                         .IsRequired()
                         .HasMaxLength(100)
@@ -120,17 +164,27 @@ namespace Algocura.Screening.Api.Data.Migrations
                     b.Property<DateTimeOffset?>("StartedAtUtc")
                         .HasColumnType("datetimeoffset");
 
+                    b.Property<Guid?>("StartedByUserId")
+                        .HasColumnType("uniqueidentifier");
+
                     b.Property<int>("Status")
                         .HasColumnType("int");
 
                     b.Property<DateTimeOffset>("UpdatedAtUtc")
                         .HasColumnType("datetimeoffset");
 
+                    b.Property<Guid?>("UpdatedByUserId")
+                        .HasColumnType("uniqueidentifier");
+
                     b.HasKey("Id");
 
                     b.HasIndex("CreatedAtUtc");
 
+                    b.HasIndex("CreatedByUserId");
+
                     b.HasIndex("Status");
+
+                    b.HasIndex("UpdatedByUserId");
 
                     b.ToTable("ScreeningJobs", (string)null);
                 });
@@ -146,6 +200,9 @@ namespace Algocura.Screening.Api.Data.Migrations
 
                     b.Property<DateTimeOffset>("CreatedAtUtc")
                         .HasColumnType("datetimeoffset");
+
+                    b.Property<Guid?>("CreatedByUserId")
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("Notes")
                         .HasMaxLength(2000)
@@ -164,7 +221,23 @@ namespace Algocura.Screening.Api.Data.Migrations
                     b.Property<bool>("Selected")
                         .HasColumnType("bit");
 
+                    b.Property<DateTimeOffset?>("SelectedAtUtc")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<Guid?>("SelectedByUserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTimeOffset>("UpdatedAtUtc")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<Guid?>("UpdatedByUserId")
+                        .HasColumnType("uniqueidentifier");
+
                     b.HasKey("Id");
+
+                    b.HasIndex("CreatedByUserId");
+
+                    b.HasIndex("UpdatedByUserId");
 
                     b.HasIndex("ScreeningJobId", "CompoundId")
                         .IsUnique();

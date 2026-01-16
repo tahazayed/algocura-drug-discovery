@@ -1,4 +1,3 @@
-using Algocura.AIDiscovery.Api.Domain;
 using Microsoft.EntityFrameworkCore;
 
 namespace Algocura.AIDiscovery.Api.Data;
@@ -6,7 +5,7 @@ namespace Algocura.AIDiscovery.Api.Data;
 public static class DatabaseInitializer
 {
     public static readonly Guid PrototypeModelId =
-        Guid.Parse("48d78c3a-0f59-4d43-baca-830c976988d6");
+        AIDiscoverySeeder.PrototypeModelId;
 
     public static async Task InitializeAsync(
         IServiceProvider services,
@@ -26,7 +25,8 @@ public static class DatabaseInitializer
 
                 var dbContext =
                     scope.ServiceProvider
-                        .GetRequiredService<AIDiscoveryDbContext>();
+                        .GetRequiredService<
+                            AIDiscoveryDbContext>();
 
                 logger.LogInformation(
                     "Applying AI Discovery database migrations.");
@@ -37,50 +37,9 @@ public static class DatabaseInitializer
                 logger.LogInformation(
                     "Running AI Discovery seed process.");
 
-                if (!await dbContext.ModelDefinitions.AnyAsync(
-                        model =>
-                            model.Id == PrototypeModelId,
-                        cancellationToken))
-                {
-                    var timestamp =
-                        new DateTimeOffset(
-                            2026,
-                            1,
-                            1,
-                            0,
-                            0,
-                            0,
-                            TimeSpan.Zero);
-
-                    dbContext.ModelDefinitions.Add(
-                        new ModelDefinition
-                        {
-                            Id = PrototypeModelId,
-
-                            Name =
-                                "Algocura Deterministic Prioritizer",
-
-                            Version = "1.0",
-
-                            Description =
-                                "Prototype deterministic scoring model.",
-
-                            ScreeningScoreWeight = 0.75m,
-
-                            MolecularWeightWeight = 0.15m,
-
-                            SelectionBonus = 10m,
-
-                            Status = ModelStatus.Active,
-
-                            CreatedAtUtc = timestamp,
-
-                            UpdatedAtUtc = timestamp
-                        });
-
-                    await dbContext.SaveChangesAsync(
-                        cancellationToken);
-                }
+                await AIDiscoverySeeder.SeedAsync(
+                    dbContext,
+                    cancellationToken);
 
                 logger.LogInformation(
                     "AI Discovery database initialization completed.");
@@ -99,7 +58,8 @@ public static class DatabaseInitializer
                 when (attempt < maximumAttempts)
             {
                 var delay =
-                    TimeSpan.FromSeconds(attempt * 2);
+                    TimeSpan.FromSeconds(
+                        attempt * 2);
 
                 logger.LogWarning(
                     exception,

@@ -1,3 +1,4 @@
+using Algocura.Platform.Auditing.Abstractions;
 using Algocura.Workflow.Api.Domain;
 using Microsoft.EntityFrameworkCore;
 
@@ -66,5 +67,57 @@ public sealed class WorkflowDbContext(
                 x.EventType
             });
         });
+
+        ConfigureAuditableEntities(
+            modelBuilder);
+    }
+
+    private static void ConfigureAuditableEntities(
+        ModelBuilder modelBuilder)
+    {
+        var auditableEntityTypes =
+            modelBuilder.Model
+                .GetEntityTypes()
+                .Where(
+                    entityType =>
+                        typeof(IAuditableEntity)
+                            .IsAssignableFrom(
+                                entityType.ClrType))
+                .ToArray();
+
+        foreach (var entityType in auditableEntityTypes)
+        {
+            var entity =
+                modelBuilder.Entity(
+                    entityType.ClrType);
+
+            entity.Property<Guid?>(
+                    nameof(
+                        IAuditableEntity.CreatedByUserId))
+                .IsRequired(false);
+
+            entity.Property<Guid?>(
+                    nameof(
+                        IAuditableEntity.UpdatedByUserId))
+                .IsRequired(false);
+
+            entity.Property<DateTimeOffset>(
+                    nameof(
+                        IAuditableEntity.CreatedAtUtc))
+                .IsRequired();
+
+            entity.Property<DateTimeOffset>(
+                    nameof(
+                        IAuditableEntity.UpdatedAtUtc))
+                .IsRequired();
+
+            entity.HasIndex(
+                nameof(
+                    IAuditableEntity.CreatedByUserId));
+
+            entity.HasIndex(
+                nameof(
+                    IAuditableEntity.UpdatedByUserId));
+        }
     }
 }

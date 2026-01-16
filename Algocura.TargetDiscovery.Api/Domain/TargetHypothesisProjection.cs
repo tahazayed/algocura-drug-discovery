@@ -1,8 +1,10 @@
+using Algocura.Platform.Auditing.Abstractions;
 using System.ComponentModel.DataAnnotations;
 
 namespace Algocura.TargetDiscovery.Api.Domain;
 
 public sealed class TargetHypothesisProjection
+    : IAuditableEntity
 {
     public Guid TargetHypothesisId { get; set; }
 
@@ -32,13 +34,30 @@ public sealed class TargetHypothesisProjection
     public List<TargetHypothesisEvidenceProjection> EvidenceLinks { get; set; } = [];
 
     public List<TargetAssessment> Assessments { get; set; } = [];
+
+    public Guid? CreatedByUserId { get; set; }
+
+    public Guid? UpdatedByUserId { get; set; }
+
+    public DateTimeOffset CreatedAtUtc { get; set; }
+
+    public DateTimeOffset UpdatedAtUtc { get; set; }
 }
 
 public sealed class TargetHypothesisEvidenceProjection
+    : IAuditableEntity
 {
     public Guid TargetHypothesisId { get; set; }
 
     public Guid EvidenceStatementId { get; set; }
 
     public TargetHypothesisProjection? TargetHypothesis { get; set; }
+
+    public Guid? CreatedByUserId { get; set; }
+
+    public Guid? UpdatedByUserId { get; set; }
+
+    public DateTimeOffset CreatedAtUtc { get; set; }
+
+    public DateTimeOffset UpdatedAtUtc { get; set; }
 }

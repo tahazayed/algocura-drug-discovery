@@ -1,3 +1,4 @@
+using Algocura.Platform.Auditing.Abstractions;
 using System.ComponentModel.DataAnnotations;
 
 namespace Algocura.AIDiscovery.Api.Domain;
@@ -20,6 +21,8 @@ public enum ModelStatus
 }
 
 public sealed class CompoundProjection
+    : IAuditableEntity,
+      IProjectionAuditMetadata
 {
     public Guid CompoundId { get; set; }
 
@@ -39,10 +42,22 @@ public sealed class CompoundProjection
 
     public int Status { get; set; }
 
+    public Guid? SourceCreatedByUserId { get; set; }
+
+    public Guid? SourceUpdatedByUserId { get; set; }
+
+    public Guid? CreatedByUserId { get; set; }
+
+    public Guid? UpdatedByUserId { get; set; }
+
+    public DateTimeOffset CreatedAtUtc { get; set; }
+
     public DateTimeOffset UpdatedAtUtc { get; set; }
 }
 
 public sealed class ScreeningProjection
+    : IAuditableEntity,
+      IProjectionAuditMetadata
 {
     public Guid ScreeningId { get; set; }
 
@@ -54,12 +69,24 @@ public sealed class ScreeningProjection
 
     public DateTimeOffset CompletedAtUtc { get; set; }
 
+    public Guid? SourceCreatedByUserId { get; set; }
+
+    public Guid? SourceUpdatedByUserId { get; set; }
+
+    public Guid? CreatedByUserId { get; set; }
+
+    public Guid? UpdatedByUserId { get; set; }
+
+    public DateTimeOffset CreatedAtUtc { get; set; }
+
     public DateTimeOffset UpdatedAtUtc { get; set; }
 
     public List<ScreeningProjectionResult> Results { get; set; } = [];
 }
 
 public sealed class ScreeningProjectionResult
+    : IAuditableEntity,
+      IProjectionAuditMetadata
 {
     public Guid Id { get; set; }
 
@@ -74,9 +101,23 @@ public sealed class ScreeningProjectionResult
     public bool Selected { get; set; }
 
     public ScreeningProjection? Screening { get; set; }
+
+    public Guid? SourceCreatedByUserId { get; set; }
+
+    public Guid? SourceUpdatedByUserId { get; set; }
+
+    public Guid? CreatedByUserId { get; set; }
+
+    public Guid? UpdatedByUserId { get; set; }
+
+    public DateTimeOffset CreatedAtUtc { get; set; }
+
+    public DateTimeOffset UpdatedAtUtc { get; set; }
 }
 
 public sealed class ModelDefinition
+    : IAuditableEntity,
+      IApprovedEntity
 {
     public Guid Id { get; set; }
 
@@ -97,12 +138,23 @@ public sealed class ModelDefinition
 
     public ModelStatus Status { get; set; }
 
+    public Guid? ApprovedByUserId { get; set; }
+
+    public DateTimeOffset? ApprovedAtUtc { get; set; }
+
+    public Guid? CreatedByUserId { get; set; }
+
+    public Guid? UpdatedByUserId { get; set; }
+
     public DateTimeOffset CreatedAtUtc { get; set; }
 
     public DateTimeOffset UpdatedAtUtc { get; set; }
 }
 
 public sealed class PredictionJob
+    : IAuditableEntity,
+      IOwnedEntity,
+      ICompletedEntity
 {
     public Guid Id { get; set; }
 
@@ -121,13 +173,23 @@ public sealed class PredictionJob
     [MaxLength(2000)]
     public string? FailureReason { get; set; }
 
+    public DateTimeOffset? StartedAtUtc { get; set; }
+
+    public Guid? StartedByUserId { get; set; }
+
+    public Guid? CompletedByUserId { get; set; }
+
+    public DateTimeOffset? CompletedAtUtc { get; set; }
+
+    public Guid? OwnerUserId { get; set; }
+
+    public Guid? CreatedByUserId { get; set; }
+
+    public Guid? UpdatedByUserId { get; set; }
+
     public DateTimeOffset CreatedAtUtc { get; set; }
 
     public DateTimeOffset UpdatedAtUtc { get; set; }
-
-    public DateTimeOffset? StartedAtUtc { get; set; }
-
-    public DateTimeOffset? CompletedAtUtc { get; set; }
 
     public ModelDefinition? ModelDefinition { get; set; }
 
@@ -137,6 +199,7 @@ public sealed class PredictionJob
 }
 
 public sealed class PredictionCandidate
+    : IAuditableEntity
 {
     public Guid Id { get; set; }
 
@@ -156,9 +219,19 @@ public sealed class PredictionCandidate
     public decimal MolecularWeight { get; set; }
 
     public PredictionJob? PredictionJob { get; set; }
+
+    public Guid? CreatedByUserId { get; set; }
+
+    public Guid? UpdatedByUserId { get; set; }
+
+    public DateTimeOffset CreatedAtUtc { get; set; }
+
+    public DateTimeOffset UpdatedAtUtc { get; set; }
 }
 
 public sealed class PredictionResult
+    : IAuditableEntity,
+      IApprovedEntity
 {
     public Guid Id { get; set; }
 
@@ -172,8 +245,24 @@ public sealed class PredictionResult
 
     public bool Prioritized { get; set; }
 
+    public Guid? PrioritizedByUserId { get; set; }
+
+    public DateTimeOffset? PrioritizedAtUtc { get; set; }
+
+    public Guid? ApprovedByUserId { get; set; }
+
+    public DateTimeOffset? ApprovedAtUtc { get; set; }
+
     [MaxLength(1000)]
     public string? Explanation { get; set; }
 
     public PredictionJob? PredictionJob { get; set; }
+
+    public Guid? CreatedByUserId { get; set; }
+
+    public Guid? UpdatedByUserId { get; set; }
+
+    public DateTimeOffset CreatedAtUtc { get; set; }
+
+    public DateTimeOffset UpdatedAtUtc { get; set; }
 }

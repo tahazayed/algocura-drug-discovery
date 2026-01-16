@@ -37,6 +37,9 @@ namespace Algocura.CompoundCatalog.Api.Data.Migrations
                         .HasPrecision(0)
                         .HasColumnType("datetimeoffset(0)");
 
+                    b.Property<Guid?>("CreatedByUserId")
+                        .HasColumnType("uniqueidentifier");
+
                     b.Property<string>("Description")
                         .HasMaxLength(2000)
                         .HasColumnType("nvarchar(2000)");
@@ -71,7 +74,12 @@ namespace Algocura.CompoundCatalog.Api.Data.Migrations
                         .HasPrecision(0)
                         .HasColumnType("datetimeoffset(0)");
 
+                    b.Property<Guid?>("UpdatedByUserId")
+                        .HasColumnType("uniqueidentifier");
+
                     b.HasKey("Id");
+
+                    b.HasIndex("CreatedByUserId");
 
                     b.HasIndex("InchiKey")
                         .IsUnique()
@@ -80,6 +88,8 @@ namespace Algocura.CompoundCatalog.Api.Data.Migrations
                     b.HasIndex("Name");
 
                     b.HasIndex("Status");
+
+                    b.HasIndex("UpdatedByUserId");
 
                     b.ToTable("Compounds", (string)null);
                 });

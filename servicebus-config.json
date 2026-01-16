@@ -77,6 +77,14 @@
                   "DeadLetteringOnMessageExpiration": false,
                   "MaxDeliveryCount": 10
                 }
+              },
+              {
+                "Name": "search-api",
+                "Properties": {
+                  "DefaultMessageTimeToLive": "PT1H",
+                  "DeadLetteringOnMessageExpiration": false,
+                  "MaxDeliveryCount": 10
+                }
               }
             ]
           }

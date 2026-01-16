@@ -1,8 +1,9 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using Algocura.Platform.Auditing.Abstractions;
+using System.ComponentModel.DataAnnotations;
 
 namespace Algocura.CompoundCatalog.Api.Domain;
 
-public sealed class Compound
+public sealed class Compound : IAuditableEntity
 {
     public Guid Id { get; set; }
 
@@ -32,4 +33,8 @@ public sealed class Compound
     public DateTimeOffset CreatedAtUtc { get; set; }
 
     public DateTimeOffset UpdatedAtUtc { get; set; }
+
+    public Guid? CreatedByUserId { get; set; }
+
+    public Guid? UpdatedByUserId { get; set; }
 }

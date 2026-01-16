@@ -20,13 +20,20 @@ public static class DatabaseInitializer
 
                 var dbContext =
                     scope.ServiceProvider
-                        .GetRequiredService<AssayManagementDbContext>();
+                        .GetRequiredService<
+                            AssayManagementDbContext>();
 
                 logger.LogInformation(
-                    "Creating or validating the Assay Management database.");
+                    "Applying Assay Management database migrations.");
 
-                // Replace with MigrateAsync after generating the initial migration.
                 await dbContext.Database.MigrateAsync(
+                    cancellationToken);
+
+                logger.LogInformation(
+                    "Running Assay Management seed process.");
+
+                await AssayManagementSeeder.SeedAsync(
+                    dbContext,
                     cancellationToken);
 
                 logger.LogInformation(
@@ -37,17 +44,21 @@ public static class DatabaseInitializer
             catch (OperationCanceledException)
                 when (cancellationToken.IsCancellationRequested)
             {
+                logger.LogWarning(
+                    "Assay Management database initialization was cancelled.");
+
                 throw;
             }
             catch (Exception exception)
                 when (attempt < maximumAttempts)
             {
                 var delay =
-                    TimeSpan.FromSeconds(attempt * 2);
+                    TimeSpan.FromSeconds(
+                        attempt * 2);
 
                 logger.LogWarning(
                     exception,
-                    "Assay Management initialization attempt " +
+                    "Assay Management database initialization attempt " +
                     "{Attempt} of {MaximumAttempts} failed. " +
                     "Retrying in {DelaySeconds} seconds.",
                     attempt,
@@ -57,6 +68,16 @@ public static class DatabaseInitializer
                 await Task.Delay(
                     delay,
                     cancellationToken);
+            }
+            catch (Exception exception)
+            {
+                logger.LogCritical(
+                    exception,
+                    "Assay Management database initialization failed " +
+                    "after {MaximumAttempts} attempts.",
+                    maximumAttempts);
+
+                throw;
             }
         }
     }

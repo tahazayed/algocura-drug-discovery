@@ -1,3 +1,5 @@
+using Microsoft.EntityFrameworkCore;
+
 namespace Algocura.Workflow.Api.Data;
 
 public static class DatabaseInitializer
@@ -13,14 +15,25 @@ public static class DatabaseInitializer
         {
             try
             {
-                await using var scope = services.CreateAsyncScope();
+                await using var scope =
+                    services.CreateAsyncScope();
 
                 var dbContext =
                     scope.ServiceProvider
-                        .GetRequiredService<WorkflowDbContext>();
+                        .GetRequiredService<
+                            WorkflowDbContext>();
 
-                // Replace with MigrateAsync after generating migrations.
-                await dbContext.Database.EnsureCreatedAsync(
+                logger.LogInformation(
+                    "Applying Workflow database migrations.");
+
+                await dbContext.Database.MigrateAsync(
+                    cancellationToken);
+
+                logger.LogInformation(
+                    "Running Workflow seed process.");
+
+                await WorkflowSeeder.SeedAsync(
+                    dbContext,
                     cancellationToken);
 
                 logger.LogInformation(
@@ -31,13 +44,17 @@ public static class DatabaseInitializer
             catch (OperationCanceledException)
                 when (cancellationToken.IsCancellationRequested)
             {
+                logger.LogWarning(
+                    "Workflow database initialization was cancelled.");
+
                 throw;
             }
             catch (Exception exception)
                 when (attempt < maximumAttempts)
             {
                 var delay =
-                    TimeSpan.FromSeconds(attempt * 2);
+                    TimeSpan.FromSeconds(
+                        attempt * 2);
 
                 logger.LogWarning(
                     exception,
@@ -51,6 +68,16 @@ public static class DatabaseInitializer
                 await Task.Delay(
                     delay,
                     cancellationToken);
+            }
+            catch (Exception exception)
+            {
+                logger.LogCritical(
+                    exception,
+                    "Workflow database initialization failed " +
+                    "after {MaximumAttempts} attempts.",
+                    maximumAttempts);
+
+                throw;
             }
         }
     }

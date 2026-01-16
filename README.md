@@ -2,7 +2,7 @@
 
 The **Algocura Drug Discovery Platform** is a cloud-native, event-driven microservices platform designed to support an end-to-end computational drug discovery workflow.
 
-The platform begins with scientific literature analysis and target hypothesis generation, continues through target discovery and chemical design, and then proceeds to compound registration, screening, and AI-assisted candidate prioritization. Literature Intelligence, Target Discovery, Chemical Design, Compound Catalog, Screening, Assay Management, AI Discovery, Workflow, and Notification are currently implemented.
+The platform begins with scientific literature analysis and target hypothesis generation, continues through target discovery and chemical design, and then proceeds to compound registration, screening, and AI-assisted candidate prioritization. Literature Intelligence, Target Discovery, Chemical Design, Compound Catalog, Screening, Assay Management, AI Discovery, Workflow, Notification, and Search are currently implemented.
 
 Each microservice owns its data and communicates asynchronously through Azure Service Bus while exposing REST APIs for synchronous operations.
 
@@ -24,7 +24,7 @@ This repository contains multiple independently deployable microservices. Each s
 | Workflow API | [Algocura.Workflow.Api](./Algocura.Workflow.Api/README.md) |
 | Notification API | [Algocura.Notification.Api](./Algocura.Notification.Api/README.md) |
 | Reporting API | Coming Soon |
-| Search API | Coming Soon |
+| Search API | [Algocura.Search.Api](./Algocura.Search.Api/README.md) |
 | Audit API | Coming Soon |
 | Identity API | Coming Soon |
 
@@ -124,7 +124,7 @@ The workflow is designed to support the following progression:
 | AI Discovery API | AI-assisted compound prioritization, prediction models, screening projection synchronization, and lead ranking | [README](./Algocura.AIDiscovery.Api/README.md) |
 | Assay Management API | Completed-screening synchronization, assay creation, measurements, replicates, quality control, result calculation, publication, and synchronization | [README](./Algocura.AssayManagement.Api/README.md) |
 | Workflow API | End-to-end workflow creation, stage tracking, event correlation, orchestration state, failure handling, cancellation, idempotent event processing, and synchronization | [README](./Algocura.Workflow.Api/README.md) |
-| Search API | Compound and experiment search | Coming Soon |
+| Search API | Event-driven unified search projections, metadata filtering, free-text search, document lifecycle management, and index synchronization | [README](./Algocura.Search.Api/README.md) |
 | Notification API | Event-driven notification rules, manual notifications, delivery attempts, dispatch state, cancellation, and synchronization | [README](./Algocura.Notification.Api/README.md) |
 | Reporting API | Analytics and reporting | Coming Soon |
 | Audit API | Audit trail and compliance | Coming Soon |
@@ -243,19 +243,19 @@ All platform services
         ▼
 Azure Service Bus
         │
-        ├───────────────────────────────────────────────┐
-        ▼                                               ▼
-Workflow API                                  Notification API
-        │                                               │
-        ├── Consumes platform snapshot                 ├── Consumes matching platform events
-        │   and completion events                      ├── Applies enabled notification rules
-        ├── Correlates events to workflows             ├── Creates notification records
-        ├── Tracks seven workflow stages               ├── Creates delivery records
-        ├── Stores processed event receipts            ├── Dispatches through configured channels
-        ├── Prevents duplicate processing              ├── Records delivery attempts
-        ├── Records external entity identifiers        ├── Tracks delivery and failure status
-        ├── Tracks failures and cancellations          ├── Publishes NotificationDelivered
-        ├── Publishes WorkflowCreated                  ├── Publishes NotificationDeliveryFailed
+        ├───────────────────────────────────────────────┬───────────────────────────────────────────────┐
+        ▼                                               ▼                                               ▼
+Workflow API                                  Notification API                                  Search API
+        │                                               │                                               │
+        ├── Consumes platform snapshot                 ├── Consumes matching platform events          ├── Consumes supported platform events
+        │   and completion events                      ├── Applies enabled notification rules         ├── Maps events to search-document types
+        ├── Correlates events to workflows             ├── Creates notification records               ├── Creates or updates local projections
+        ├── Tracks seven workflow stages               ├── Creates delivery records                   ├── Stores searchable metadata and tags
+        ├── Stores processed event receipts            ├── Dispatches through configured channels    ├── Prevents duplicate entity projections
+        ├── Prevents duplicate processing              ├── Records delivery attempts                  ├── Supports free-text and field filtering
+        ├── Records external entity identifiers        ├── Tracks delivery and failure status         ├── Supports archive and restore
+        ├── Tracks failures and cancellations          ├── Publishes NotificationDelivered            ├── Publishes SearchDocumentIndexed
+        ├── Publishes WorkflowCreated                  ├── Publishes NotificationDeliveryFailed       └── Publishes SearchIndexSnapshot
         ├── Publishes WorkflowStageCompleted           └── Publishes NotificationSnapshot
         ├── Publishes WorkflowCompleted
         └── Publishes WorkflowSnapshot
@@ -490,6 +490,50 @@ It does not send real email, Microsoft Teams messages, or webhooks. Production u
 
 ---
 
+# Search Workflow
+
+The Search API currently supports:
+
+```text
+Consume supported platform event
+        ↓
+Determine search-document type
+        ↓
+Extract searchable metadata
+        ↓
+Create or update local search projection
+        ↓
+Store tags and source identifiers
+        ↓
+Expose unified search and filtering
+        ↓
+Archive or restore search documents
+        ↓
+Publish SearchDocumentIndexed or SearchIndexSnapshot
+```
+
+The current implementation indexes the following document types:
+
+```text
+Publication
+Target
+ChemicalDesign
+Compound
+Screening
+Assay
+Prediction
+Workflow
+Notification
+```
+
+The search endpoint supports free-text search together with filters for document type, disease name, gene symbol, compound name, InChIKey, workflow identifier, document status, minimum score, and pagination.
+
+The current implementation uses SQL Server projections and `Contains` filtering. It does not provide stemming, fuzzy matching, linguistic analysis, semantic ranking, vector search, or distributed indexing.
+
+Production-scale search can use Azure AI Search, Elasticsearch, OpenSearch, or another approved search platform while preserving the current event-driven projection model and REST contract.
+
+---
+
 # Data Ownership
 
 Each microservice owns its own database.
@@ -520,6 +564,9 @@ Workflow API
     SQL Server
 
 Notification API
+    SQL Server
+
+Search API
     SQL Server
 
 Reporting API
@@ -554,6 +601,7 @@ Services maintain only the local projections required for their responsibilities
 | Assay Analysis | Deterministic result calculator with future validated dose-response and binding analysis |
 | Workflow Orchestration | Event-correlated state machine with idempotent event receipts |
 | Notification Delivery | Deterministic logging dispatcher with future provider-specific integrations |
+| Search Indexing | SQL Server projections with future Azure AI Search, Elasticsearch, or OpenSearch integration |
 | AI Inference | Deterministic prototype with future trained-model integration |
 
 ---
@@ -595,6 +643,8 @@ Algocura.DrugDiscovery
 │
 ├── Algocura.Reporting.Api
 ├── Algocura.Search.Api
+│   └── README.md
+│
 ├── Algocura.Audit.Api
 ├── Algocura.Identity.Api
 │
@@ -624,6 +674,7 @@ Local development uses Docker Compose to provision the following infrastructure 
 - AI Discovery API
 - Workflow API
 - Notification API
+- Search API
 
 Additional microservices will be added to the Docker Compose environment as they are implemented.
 
@@ -646,11 +697,12 @@ assay-management-api
 ai-discovery-api
 workflow-api
 notification-api
+search-api
 ```
 
 Each consuming service owns a dedicated subscription. This allows services to process events independently while sharing the same integration-event topic.
 
-The `target-discovery-api`, `chemical-design-api`, `compound-catalog-api`, `screening-api`, `assay-management-api`, `ai-discovery-api`, `workflow-api`, and `notification-api` subscriptions are used by their corresponding implemented consumers.
+The `target-discovery-api`, `chemical-design-api`, `compound-catalog-api`, `screening-api`, `assay-management-api`, `ai-discovery-api`, `workflow-api`, `notification-api`, and `search-api` subscriptions are used by their corresponding implemented consumers.
 
 ---
 
@@ -719,6 +771,21 @@ The platform currently supports:
 - Notification cancellation
 - Notification delivery status events
 - Notification synchronization endpoints
+- Event-driven unified search projections
+- Search document creation and update
+- Search document metadata and tag indexing
+- Search projection deduplication
+- Free-text search across indexed fields
+- Search by document type
+- Search by disease name
+- Search by gene symbol
+- Search by compound name
+- Search by InChIKey
+- Search by workflow identifier
+- Search by minimum score
+- Search document archive and restore
+- Search index snapshot publication
+- Search synchronization endpoints
 - AI-assisted prototype prediction workflows
 - Candidate scoring and prioritization
 - OpenAPI documentation
@@ -767,6 +834,6 @@ The platform currently supports:
 | Workflow API | End-to-end workflow orchestration, stage tracking, event correlation, idempotent processing, failure handling, cancellation, and synchronization | ✅ Implemented | [README](./Algocura.Workflow.Api/README.md) | 2026-01-13 |
 | Notification API | Event-driven notification rules, manual notifications, delivery tracking, dispatch state, cancellation, and synchronization | ✅ Implemented | [README](./Algocura.Notification.Api/README.md) | 2026-01-13 |
 | Reporting API | Analytics and reporting | 🚧 Planned | — | — |
-| Search API | Compound and experiment search | 🚧 Planned | — | — |
+| Search API | Event-driven unified search projections, metadata filtering, free-text search, document lifecycle management, and index synchronization | ✅ Implemented | [README](./Algocura.Search.Api/README.md) | 2026-01-13 |
 | Audit API | Audit trail and compliance | 🚧 Planned | — | — |
 | Identity API | Authentication and authorization | 🚧 Planned | — | — |

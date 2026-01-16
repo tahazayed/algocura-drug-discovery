@@ -30,7 +30,9 @@ public static class CompoundCatalogSeeder
                     "Reference compound used to demonstrate catalog operations.",
                 Status = CompoundStatus.Registered,
                 CreatedAtUtc = timestamp,
-                UpdatedAtUtc = timestamp
+                UpdatedAtUtc = timestamp,
+                CreatedByUserId = SystemUsers.SystemUserId,
+                UpdatedByUserId = SystemUsers.SystemUserId
             },
             new Compound
             {
@@ -48,7 +50,9 @@ public static class CompoundCatalogSeeder
                     "Reference compound used to demonstrate search operations.",
                 Status = CompoundStatus.UnderEvaluation,
                 CreatedAtUtc = timestamp,
-                UpdatedAtUtc = timestamp
+                UpdatedAtUtc = timestamp,
+                CreatedByUserId = SystemUsers.SystemUserId,
+            UpdatedByUserId = SystemUsers.SystemUserId
             },
             new Compound
             {
@@ -66,7 +70,9 @@ public static class CompoundCatalogSeeder
                     "Reference analgesic compound.",
                 Status = CompoundStatus.Registered,
                 CreatedAtUtc = timestamp,
-                UpdatedAtUtc = timestamp
+                UpdatedAtUtc = timestamp,
+                CreatedByUserId = SystemUsers.SystemUserId,
+            UpdatedByUserId = SystemUsers.SystemUserId
             },
             new Compound
             {
@@ -84,7 +90,9 @@ public static class CompoundCatalogSeeder
                     "Reference nonsteroidal anti-inflammatory compound.",
                 Status = CompoundStatus.Registered,
                 CreatedAtUtc = timestamp,
-                UpdatedAtUtc = timestamp
+                UpdatedAtUtc = timestamp,
+                CreatedByUserId = SystemUsers.SystemUserId,
+            UpdatedByUserId = SystemUsers.SystemUserId
             },
             new Compound
             {
@@ -102,7 +110,9 @@ public static class CompoundCatalogSeeder
                     "Reference anti-inflammatory compound.",
                 Status = CompoundStatus.UnderEvaluation,
                 CreatedAtUtc = timestamp,
-                UpdatedAtUtc = timestamp
+                UpdatedAtUtc = timestamp,
+                CreatedByUserId = SystemUsers.SystemUserId,
+            UpdatedByUserId = SystemUsers.SystemUserId
             },
             new Compound
             {
@@ -120,7 +130,9 @@ public static class CompoundCatalogSeeder
                     "Reference biguanide compound.",
                 Status = CompoundStatus.Selected,
                 CreatedAtUtc = timestamp,
-                UpdatedAtUtc = timestamp
+                UpdatedAtUtc = timestamp,
+                CreatedByUserId = SystemUsers.SystemUserId,
+            UpdatedByUserId = SystemUsers.SystemUserId
             },
             new Compound
             {
@@ -138,7 +150,9 @@ public static class CompoundCatalogSeeder
                     "Reference catecholamine neurotransmitter.",
                 Status = CompoundStatus.UnderEvaluation,
                 CreatedAtUtc = timestamp,
-                UpdatedAtUtc = timestamp
+                UpdatedAtUtc = timestamp,
+                CreatedByUserId = SystemUsers.SystemUserId,
+            UpdatedByUserId = SystemUsers.SystemUserId
             },
             new Compound
             {
@@ -156,7 +170,9 @@ public static class CompoundCatalogSeeder
                     "Reference local anesthetic compound.",
                 Status = CompoundStatus.Registered,
                 CreatedAtUtc = timestamp,
-                UpdatedAtUtc = timestamp
+                UpdatedAtUtc = timestamp,
+                CreatedByUserId = SystemUsers.SystemUserId,
+            UpdatedByUserId = SystemUsers.SystemUserId
             },
             new Compound
             {
@@ -174,7 +190,9 @@ public static class CompoundCatalogSeeder
                     "Reference anticoagulant compound.",
                 Status = CompoundStatus.Registered,
                 CreatedAtUtc = timestamp,
-                UpdatedAtUtc = timestamp
+                UpdatedAtUtc = timestamp,
+                CreatedByUserId = SystemUsers.SystemUserId,
+            UpdatedByUserId = SystemUsers.SystemUserId
             },
             new Compound
             {
@@ -192,7 +210,9 @@ public static class CompoundCatalogSeeder
                     "Reference aromatic hydroxy acid.",
                 Status = CompoundStatus.Draft,
                 CreatedAtUtc = timestamp,
-                UpdatedAtUtc = timestamp
+                UpdatedAtUtc = timestamp,
+                CreatedByUserId = SystemUsers.SystemUserId,
+            UpdatedByUserId = SystemUsers.SystemUserId
             },
             new Compound
             {
@@ -210,7 +230,9 @@ public static class CompoundCatalogSeeder
                     "Reference aromatic carboxylic acid.",
                 Status = CompoundStatus.Archived,
                 CreatedAtUtc = timestamp,
-                UpdatedAtUtc = timestamp
+                UpdatedAtUtc = timestamp,
+                CreatedByUserId = SystemUsers.SystemUserId,
+            UpdatedByUserId = SystemUsers.SystemUserId
             },
             new Compound
             {
@@ -227,7 +249,9 @@ public static class CompoundCatalogSeeder
                     "Reference small-molecule solvent.",
                 Status = CompoundStatus.Rejected,
                 CreatedAtUtc = timestamp,
-                UpdatedAtUtc = timestamp
+                UpdatedAtUtc = timestamp,
+                CreatedByUserId = SystemUsers.SystemUserId,
+            UpdatedByUserId = SystemUsers.SystemUserId
             }
         };
 

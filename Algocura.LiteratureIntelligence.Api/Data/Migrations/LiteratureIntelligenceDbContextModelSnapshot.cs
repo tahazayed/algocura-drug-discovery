@@ -34,6 +34,9 @@ namespace Algocura.LiteratureIntelligence.Api.Data.Migrations
                     b.Property<DateTimeOffset>("CreatedAtUtc")
                         .HasColumnType("datetimeoffset");
 
+                    b.Property<Guid?>("CreatedByUserId")
+                        .HasColumnType("uniqueidentifier");
+
                     b.Property<string>("DiseaseName")
                         .IsRequired()
                         .HasMaxLength(200)
@@ -67,6 +70,9 @@ namespace Algocura.LiteratureIntelligence.Api.Data.Migrations
                     b.Property<int>("Strength")
                         .HasColumnType("int");
 
+                    b.Property<Guid?>("UpdatedByUserId")
+                        .HasColumnType("uniqueidentifier");
+
                     b.HasKey("Id");
 
                     b.HasIndex("DiseaseName");
@@ -94,6 +100,9 @@ namespace Algocura.LiteratureIntelligence.Api.Data.Migrations
                     b.Property<DateTimeOffset>("CreatedAtUtc")
                         .HasColumnType("datetimeoffset");
 
+                    b.Property<Guid?>("CreatedByUserId")
+                        .HasColumnType("uniqueidentifier");
+
                     b.Property<string>("ExternalId")
                         .HasMaxLength(100)
                         .HasColumnType("nvarchar(100)");
@@ -120,6 +129,9 @@ namespace Algocura.LiteratureIntelligence.Api.Data.Migrations
                     b.Property<DateTimeOffset>("UpdatedAtUtc")
                         .HasColumnType("datetimeoffset");
 
+                    b.Property<Guid?>("UpdatedByUserId")
+                        .HasColumnType("uniqueidentifier");
+
                     b.HasKey("Id");
 
                     b.HasIndex("ExternalId")
@@ -134,6 +146,9 @@ namespace Algocura.LiteratureIntelligence.Api.Data.Migrations
                     b.Property<Guid>("Id")
                         .HasColumnType("uniqueidentifier");
 
+                    b.Property<Guid?>("CreatedByUserId")
+                        .HasColumnType("uniqueidentifier");
+
                     b.Property<int>("DisplayOrder")
                         .HasColumnType("int");
 
@@ -143,6 +158,9 @@ namespace Algocura.LiteratureIntelligence.Api.Data.Migrations
                         .HasColumnType("nvarchar(200)");
 
                     b.Property<Guid>("PublicationId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid?>("UpdatedByUserId")
                         .HasColumnType("uniqueidentifier");
 
                     b.HasKey("Id");
@@ -160,6 +178,9 @@ namespace Algocura.LiteratureIntelligence.Api.Data.Migrations
 
                     b.Property<DateTimeOffset>("CreatedAtUtc")
                         .HasColumnType("datetimeoffset");
+
+                    b.Property<Guid?>("CreatedByUserId")
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("DesiredModulation")
                         .IsRequired()
@@ -195,6 +216,9 @@ namespace Algocura.LiteratureIntelligence.Api.Data.Migrations
                     b.Property<DateTimeOffset>("UpdatedAtUtc")
                         .HasColumnType("datetimeoffset");
 
+                    b.Property<Guid?>("UpdatedByUserId")
+                        .HasColumnType("uniqueidentifier");
+
                     b.HasKey("Id");
 
                     b.ToTable("TargetHypotheses");
@@ -206,6 +230,12 @@ namespace Algocura.LiteratureIntelligence.Api.Data.Migrations
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<Guid>("EvidenceStatementId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid?>("CreatedByUserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid?>("UpdatedByUserId")
                         .HasColumnType("uniqueidentifier");
 
                     b.HasKey("TargetHypothesisId", "EvidenceStatementId");

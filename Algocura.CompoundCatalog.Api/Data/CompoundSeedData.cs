@@ -132,7 +132,9 @@ public static class CompoundSeedData
             InchiKey = inChIKey,
             Status = CompoundStatus.Registered,
             CreatedAtUtc = createdAt,
-            UpdatedAtUtc = createdAt
+            UpdatedAtUtc = createdAt,
+            CreatedByUserId = SystemUsers.SystemUserId,
+            UpdatedByUserId = SystemUsers.SystemUserId
         };
     }
 }

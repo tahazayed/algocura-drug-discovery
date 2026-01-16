@@ -1,3 +1,5 @@
+using Microsoft.EntityFrameworkCore;
+
 namespace Algocura.TargetDiscovery.Api.Data;
 
 public static class DatabaseInitializer
@@ -13,16 +15,26 @@ public static class DatabaseInitializer
         {
             try
             {
-                await using var scope = services.CreateAsyncScope();
+                await using var scope =
+                    services.CreateAsyncScope();
 
-                var dbContext = scope.ServiceProvider
-                    .GetRequiredService<TargetDiscoveryDbContext>();
+                var dbContext =
+                    scope.ServiceProvider
+                        .GetRequiredService<
+                            TargetDiscoveryDbContext>();
 
                 logger.LogInformation(
-                    "Creating or validating the Target Discovery database.");
+                    "Applying Target Discovery database migrations.");
 
-                // Replace with MigrateAsync after generating the initial migration.
-                await dbContext.Database.EnsureCreatedAsync(cancellationToken);
+                await dbContext.Database.MigrateAsync(
+                    cancellationToken);
+
+                logger.LogInformation(
+                    "Running Target Discovery seed process.");
+
+                await TargetDiscoverySeeder.SeedAsync(
+                    dbContext,
+                    cancellationToken);
 
                 logger.LogInformation(
                     "Target Discovery database initialization completed.");
@@ -40,7 +52,9 @@ public static class DatabaseInitializer
             catch (Exception exception)
                 when (attempt < maximumAttempts)
             {
-                var delay = TimeSpan.FromSeconds(attempt * 2);
+                var delay =
+                    TimeSpan.FromSeconds(
+                        attempt * 2);
 
                 logger.LogWarning(
                     exception,
@@ -51,7 +65,9 @@ public static class DatabaseInitializer
                     maximumAttempts,
                     delay.TotalSeconds);
 
-                await Task.Delay(delay, cancellationToken);
+                await Task.Delay(
+                    delay,
+                    cancellationToken);
             }
             catch (Exception exception)
             {

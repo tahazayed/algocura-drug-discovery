@@ -60,6 +60,10 @@ public sealed class Publication
     public List<PublicationAuthor> Authors { get; set; } = [];
 
     public List<EvidenceStatement> EvidenceStatements { get; set; } = [];
+
+    public Guid? CreatedByUserId { get; set; }
+
+    public Guid? UpdatedByUserId { get; set; }
 }
 
 public sealed class PublicationAuthor
@@ -74,6 +78,10 @@ public sealed class PublicationAuthor
     public int DisplayOrder { get; set; }
 
     public Publication? Publication { get; set; }
+
+    public Guid? CreatedByUserId { get; set; }
+
+    public Guid? UpdatedByUserId { get; set; }
 }
 
 public sealed class EvidenceStatement
@@ -106,6 +114,10 @@ public sealed class EvidenceStatement
     public DateTimeOffset CreatedAtUtc { get; set; }
 
     public Publication? Publication { get; set; }
+
+    public Guid? CreatedByUserId { get; set; }
+
+    public Guid? UpdatedByUserId { get; set; }
 }
 
 public sealed class TargetHypothesis
@@ -136,6 +148,10 @@ public sealed class TargetHypothesis
     public DateTimeOffset UpdatedAtUtc { get; set; }
 
     public List<TargetHypothesisEvidence> EvidenceLinks { get; set; } = [];
+
+    public Guid? CreatedByUserId { get; set; }
+
+    public Guid? UpdatedByUserId { get; set; }
 }
 
 public sealed class TargetHypothesisEvidence
@@ -147,4 +163,8 @@ public sealed class TargetHypothesisEvidence
     public TargetHypothesis? TargetHypothesis { get; set; }
 
     public EvidenceStatement? EvidenceStatement { get; set; }
+
+    public Guid? CreatedByUserId { get; set; }
+
+    public Guid? UpdatedByUserId { get; set; }
 }

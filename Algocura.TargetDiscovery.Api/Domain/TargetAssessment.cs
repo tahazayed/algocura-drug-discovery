@@ -44,4 +44,8 @@ public sealed class TargetAssessment
     public DateTimeOffset? SelectedAtUtc { get; set; }
 
     public TargetHypothesisProjection? TargetHypothesis { get; set; }
+
+    public Guid? CreatedByUserId { get; set; }
+
+    public Guid? UpdatedByUserId { get; set; }
 }

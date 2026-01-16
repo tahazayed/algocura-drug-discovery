@@ -59,5 +59,9 @@ public sealed class CompoundCatalogDbContext(
         compound.HasIndex(x => x.Name);
 
         compound.HasIndex(x => x.Status);
+
+        compound.HasIndex(x => x.CreatedByUserId);
+
+        compound.HasIndex(x => x.UpdatedByUserId);
     }
 }

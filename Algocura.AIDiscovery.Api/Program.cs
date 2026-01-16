@@ -3,6 +3,8 @@ using Algocura.AIDiscovery.Api.Messaging;
 using Algocura.AIDiscovery.Api.Messaging.Consumers;
 using Algocura.AIDiscovery.Api.Messaging.Publishers;
 using Algocura.AIDiscovery.Api.Services;
+using Algocura.Platform.Auditing.DependencyInjection;
+using Algocura.Platform.Auditing.Interceptors;
 using Azure.Identity;
 using Azure.Messaging.ServiceBus;
 using Microsoft.EntityFrameworkCore;
@@ -29,18 +31,56 @@ builder.Services.AddOpenApi(options =>
     });
 });
 
+// -----------------------------------------------------------------------------
+// Auditing
+// -----------------------------------------------------------------------------
+
+builder.Services.AddAlgocuraAuditing(options =>
+{
+    options.ServiceName =
+        "Algocura.AIDiscovery.Api";
+
+    options.StampCreatedAndUpdatedFields =
+        true;
+
+    // Enable after registering a Service Bus audit publisher
+    // or implementing a transactional outbox.
+    options.PublishEntityAuditEvents =
+        false;
+});
+
+// -----------------------------------------------------------------------------
+// Database
+// -----------------------------------------------------------------------------
+
 var databaseConnectionString =
     builder.Configuration.GetConnectionString("AIDiscoveryDatabase")
     ?? throw new InvalidOperationException(
         "ConnectionStrings:AIDiscoveryDatabase is required.");
 
-builder.Services.AddDbContext<AIDiscoveryDbContext>(options =>
-    options.UseSqlServer(
-        databaseConnectionString,
-        sql => sql.EnableRetryOnFailure(
-            5,
-            TimeSpan.FromSeconds(10),
-            null)));
+builder.Services.AddDbContext<AIDiscoveryDbContext>(
+    (serviceProvider, options) =>
+    {
+        options.UseSqlServer(
+            databaseConnectionString,
+            sql =>
+                sql.EnableRetryOnFailure(
+                    maxRetryCount: 5,
+                    maxRetryDelay:
+                        TimeSpan.FromSeconds(10),
+                    errorNumbersToAdd: null));
+
+        options.AddInterceptors(
+            serviceProvider.GetRequiredService<
+                AuditableEntityInterceptor>(),
+            serviceProvider.GetRequiredService<
+                EntityAuditEventInterceptor>());
+
+        if (builder.Environment.IsDevelopment())
+        {
+            options.EnableDetailedErrors();
+        }
+    });
 
 builder.Services.AddScoped<
     IPredictionScoringEngine,
@@ -115,31 +155,36 @@ app.MapHealthChecks("/health")
 app.MapGet("/", (
         IHostEnvironment environment,
         IOptions<ServiceBusOptions> serviceBusOptions) =>
-    {
-        var options = serviceBusOptions.Value;
+{
+    var options = serviceBusOptions.Value;
 
-        return Results.Ok(new
+    return Results.Ok(new
+    {
+        service = "Algocura AI Discovery API",
+        version = "v1",
+        status = "Running",
+        environment = environment.EnvironmentName,
+        documentation = new
         {
-            service = "Algocura AI Discovery API",
-            version = "v1",
-            status = "Running",
-            environment = environment.EnvironmentName,
-            documentation = new
-            {
-                swagger = "/swagger",
-                redoc = "/redoc",
-                openApi = "/openapi/v1.json"
-            },
-            health = "/health",
-            messaging = new
-            {
-                provider = "Azure Service Bus",
-                mode = options.UseEmulator ? "Emulator" : "Azure",
-                topic = options.TopicName,
-                subscription = options.SubscriptionName
-            }
-        });
-    })
+            swagger = "/swagger",
+            redoc = "/redoc",
+            openApi = "/openapi/v1.json"
+        },
+        health = "/health",
+        messaging = new
+        {
+            provider = "Azure Service Bus",
+            mode = options.UseEmulator ? "Emulator" : "Azure",
+            topic = options.TopicName,
+            subscription = options.SubscriptionName
+        },
+        auditing = new
+        {
+            entityStamping = true,
+            eventPublishing = false
+        }
+    });
+})
     .WithName("GetServiceInformation")
     .ExcludeFromDescription();
 

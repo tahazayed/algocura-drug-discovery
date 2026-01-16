@@ -1,3 +1,5 @@
+using Algocura.Platform.Auditing.DependencyInjection;
+using Algocura.Platform.Auditing.Interceptors;
 using Algocura.Screening.Api.Data;
 using Algocura.Screening.Api.Messaging;
 using Algocura.Screening.Api.Messaging.Consumers;
@@ -24,6 +26,24 @@ builder.Services.AddOpenApi();
 builder.Services.AddHealthChecks();
 
 // -----------------------------------------------------------------------------
+// Auditing
+// -----------------------------------------------------------------------------
+
+builder.Services.AddAlgocuraAuditing(options =>
+{
+    options.ServiceName =
+        "Algocura.Screening.Api";
+
+    options.StampCreatedAndUpdatedFields =
+        true;
+
+    // Enable after registering a Service Bus audit publisher
+    // or implementing a transactional outbox.
+    options.PublishEntityAuditEvents =
+        false;
+});
+
+// -----------------------------------------------------------------------------
 // Database
 // -----------------------------------------------------------------------------
 
@@ -33,14 +53,28 @@ var databaseConnectionString =
         "ConnectionStrings:ScreeningDatabase is required.");
 
 builder.Services.AddDbContext<ScreeningDbContext>(
-    options =>
+    (serviceProvider, options) =>
+    {
         options.UseSqlServer(
             databaseConnectionString,
             sqlServerOptions =>
                 sqlServerOptions.EnableRetryOnFailure(
                     maxRetryCount: 5,
-                    maxRetryDelay: TimeSpan.FromSeconds(10),
-                    errorNumbersToAdd: null)));
+                    maxRetryDelay:
+                        TimeSpan.FromSeconds(10),
+                    errorNumbersToAdd: null));
+
+        options.AddInterceptors(
+            serviceProvider.GetRequiredService<
+                AuditableEntityInterceptor>(),
+            serviceProvider.GetRequiredService<
+                EntityAuditEventInterceptor>());
+
+        if (builder.Environment.IsDevelopment())
+        {
+            options.EnableDetailedErrors();
+        }
+    });
 
 // -----------------------------------------------------------------------------
 // Azure Service Bus configuration
@@ -178,7 +212,13 @@ app.MapGet(
                     mode = options.UseEmulator
                         ? "Emulator"
                         : "Azure",
-                    topic = options.TopicName
+                    topic = options.TopicName,
+                    subscription = options.SubscriptionName
+                },
+                auditing = new
+                {
+                    entityStamping = true,
+                    eventPublishing = false
                 }
             });
     })

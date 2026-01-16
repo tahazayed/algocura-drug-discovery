@@ -40,6 +40,9 @@ namespace Algocura.TargetDiscovery.Api.Data.Migrations
                     b.Property<DateTimeOffset>("CreatedAtUtc")
                         .HasColumnType("datetimeoffset");
 
+                    b.Property<Guid?>("CreatedByUserId")
+                        .HasColumnType("uniqueidentifier");
+
                     b.Property<decimal>("DruggabilityScore")
                         .HasPrecision(5, 4)
                         .HasColumnType("decimal(5,4)");
@@ -89,6 +92,9 @@ namespace Algocura.TargetDiscovery.Api.Data.Migrations
                     b.Property<DateTimeOffset>("UpdatedAtUtc")
                         .HasColumnType("datetimeoffset");
 
+                    b.Property<Guid?>("UpdatedByUserId")
+                        .HasColumnType("uniqueidentifier");
+
                     b.HasKey("Id");
 
                     b.HasIndex("Status");
@@ -106,7 +112,23 @@ namespace Algocura.TargetDiscovery.Api.Data.Migrations
                     b.Property<Guid>("EvidenceStatementId")
                         .HasColumnType("uniqueidentifier");
 
+                    b.Property<DateTimeOffset>("CreatedAtUtc")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<Guid?>("CreatedByUserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTimeOffset>("UpdatedAtUtc")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<Guid?>("UpdatedByUserId")
+                        .HasColumnType("uniqueidentifier");
+
                     b.HasKey("TargetHypothesisId", "EvidenceStatementId");
+
+                    b.HasIndex("CreatedByUserId");
+
+                    b.HasIndex("UpdatedByUserId");
 
                     b.ToTable("TargetHypothesisEvidence");
                 });
@@ -114,6 +136,12 @@ namespace Algocura.TargetDiscovery.Api.Data.Migrations
             modelBuilder.Entity("Algocura.TargetDiscovery.Api.Domain.TargetHypothesisProjection", b =>
                 {
                     b.Property<Guid>("TargetHypothesisId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTimeOffset>("CreatedAtUtc")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<Guid?>("CreatedByUserId")
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("DesiredModulation")
@@ -153,11 +181,21 @@ namespace Algocura.TargetDiscovery.Api.Data.Migrations
                     b.Property<DateTimeOffset>("SynchronizedAtUtc")
                         .HasColumnType("datetimeoffset");
 
+                    b.Property<DateTimeOffset>("UpdatedAtUtc")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<Guid?>("UpdatedByUserId")
+                        .HasColumnType("uniqueidentifier");
+
                     b.HasKey("TargetHypothesisId");
+
+                    b.HasIndex("CreatedByUserId");
 
                     b.HasIndex("DiseaseName");
 
                     b.HasIndex("GeneSymbol");
+
+                    b.HasIndex("UpdatedByUserId");
 
                     b.ToTable("TargetHypotheses");
                 });
