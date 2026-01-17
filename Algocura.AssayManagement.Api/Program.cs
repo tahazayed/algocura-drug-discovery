@@ -57,7 +57,7 @@ builder.Services.AddAlgocuraAuditing(options =>
     // Enable after registering a Service Bus audit publisher
     // or implementing a transactional outbox.
     options.PublishEntityAuditEvents =
-        false;
+        true;
 });
 
 // -----------------------------------------------------------------------------

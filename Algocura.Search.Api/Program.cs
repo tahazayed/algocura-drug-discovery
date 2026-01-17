@@ -36,7 +36,7 @@ builder.Services.AddAlgocuraAuditing(options =>
 {
     options.ServiceName = "Algocura.Search.Api";
     options.StampCreatedAndUpdatedFields = true;
-    options.PublishEntityAuditEvents = false;
+    options.PublishEntityAuditEvents = true;
 });
 
 var connectionString =

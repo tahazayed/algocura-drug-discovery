@@ -93,6 +93,14 @@
                   "DeadLetteringOnMessageExpiration": false,
                   "MaxDeliveryCount": 10
                 }
+              },
+              {
+                "Name": "audit-api",
+                "Properties": {
+                  "DefaultMessageTimeToLive": "PT1H",
+                  "DeadLetteringOnMessageExpiration": false,
+                  "MaxDeliveryCount": 10
+                }
               }
             ]
           }

@@ -49,7 +49,7 @@ builder.Services.AddAlgocuraAuditing(options =>
     options.StampCreatedAndUpdatedFields =
         true;
     options.PublishEntityAuditEvents =
-        false;
+        true;
 });
 
 // -----------------------------------------------------------------------------

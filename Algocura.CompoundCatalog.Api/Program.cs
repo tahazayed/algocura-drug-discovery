@@ -33,7 +33,7 @@ builder.Services.AddAlgocuraAuditing(
         // Enable this after replacing NullAuditEventPublisher with the
         // Service Bus audit-event publisher or a transactional outbox.
         options.PublishEntityAuditEvents =
-            false;
+            true;
     });
 
 // -----------------------------------------------------------------------------

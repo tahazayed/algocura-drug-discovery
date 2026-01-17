@@ -8,6 +8,8 @@
   <Project Path="Algocura.AIDiscovery.Api/Algocura.AIDiscovery.Api.csproj" />
   <Project Path="Algocura.AssayManagement.Api.Tests/Algocura.AssayManagement.Api.Tests.csproj" />
   <Project Path="Algocura.AssayManagement.Api/Algocura.AssayManagement.Api.csproj" />
+  <Project Path="Algocura.Audit.Api.Tests/Algocura.Audit.Api.Tests.csproj" />
+  <Project Path="Algocura.Audit.Api/Algocura.Audit.Api.csproj" />
   <Project Path="Algocura.ChemicalDesign.Api.Tests/Algocura.ChemicalDesign.Api.Tests.csproj" />
   <Project Path="Algocura.ChemicalDesign.Api/Algocura.ChemicalDesign.Api.csproj" />
   <Project Path="Algocura.CompoundCatalog.Api.Tests/Algocura.CompoundCatalog.Api.Tests.csproj" />
