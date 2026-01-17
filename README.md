@@ -2,7 +2,7 @@
 
 The **Algocura Drug Discovery Platform** is a cloud-native, event-driven microservices platform designed to support an end-to-end computational drug discovery workflow.
 
-The platform begins with scientific literature analysis and target hypothesis generation, continues through target discovery and chemical design, and then proceeds to compound registration, screening, and AI-assisted candidate prioritization. Literature Intelligence, Target Discovery, Chemical Design, Compound Catalog, Screening, Assay Management, AI Discovery, Workflow, Notification, and Search are currently implemented.
+The platform begins with scientific literature analysis and target hypothesis generation, continues through target discovery and chemical design, and then proceeds to compound registration, screening, and AI-assisted candidate prioritization. Literature Intelligence, Target Discovery, Chemical Design, Compound Catalog, Screening, Assay Management, AI Discovery, Workflow, Notification, Search, Reporting, and Audit are currently implemented.
 
 Each microservice owns its data and communicates asynchronously through Azure Service Bus while exposing REST APIs for synchronous operations.
 
@@ -23,9 +23,9 @@ This repository contains multiple independently deployable microservices. Each s
 | Assay Management API | [Algocura.AssayManagement.Api](./Algocura.AssayManagement.Api/README.md) |
 | Workflow API | [Algocura.Workflow.Api](./Algocura.Workflow.Api/README.md) |
 | Notification API | [Algocura.Notification.Api](./Algocura.Notification.Api/README.md) |
-| Reporting API | Coming Soon |
+| Reporting API | [Algocura.Reporting.Api](./Algocura.Reporting.Api/README.md) |
 | Search API | [Algocura.Search.Api](./Algocura.Search.Api/README.md) |
-| Audit API | Coming Soon |
+| Audit API | [Algocura.Audit.Api](./Algocura.Audit.Api/README.md) |
 | Identity API | Coming Soon |
 
 ---
@@ -126,8 +126,8 @@ The workflow is designed to support the following progression:
 | Workflow API | End-to-end workflow creation, stage tracking, event correlation, orchestration state, failure handling, cancellation, idempotent event processing, and synchronization | [README](./Algocura.Workflow.Api/README.md) |
 | Search API | Event-driven unified search projections, metadata filtering, free-text search, document lifecycle management, and index synchronization | [README](./Algocura.Search.Api/README.md) |
 | Notification API | Event-driven notification rules, manual notifications, delivery attempts, dispatch state, cancellation, and synchronization | [README](./Algocura.Notification.Api/README.md) |
-| Reporting API | Analytics and reporting | Coming Soon |
-| Audit API | Audit trail and compliance | Coming Soon |
+| Reporting API | Read-optimized reporting projections, report definitions, report execution, persisted metrics, platform summaries, discovery-funnel analytics, and reporting synchronization | [README](./Algocura.Reporting.Api/README.md) |
+| Audit API | Centralized entity audit-event ingestion, immutable audit history, user/action traceability, correlation and workflow filtering, change-value inspection, summaries, and compliance-oriented querying | [README](./Algocura.Audit.Api/README.md) |
 | Identity API | Authentication and authorization | Coming Soon |
 
 ---
@@ -259,6 +259,24 @@ Workflow API                                  Notification API                  
         ├── Publishes WorkflowStageCompleted           └── Publishes NotificationSnapshot
         ├── Publishes WorkflowCompleted
         └── Publishes WorkflowSnapshot
+
+Entity changes in audited services
+        │
+        │ EntityAuditEvent
+        ▼
+Azure Service Bus
+        │
+        ▼
+Audit API
+        │
+        ├── Consumes EntityAuditEvent
+        ├── Deduplicates by EventId
+        ├── Preserves actor and change metadata
+        ├── Stores previous/current JSON values
+        ├── Supports service/entity/action/user filtering
+        ├── Supports correlation/workflow/trace filtering
+        ├── Exposes audit summaries
+        └── Prevents audit-event feedback loops
 ```
 
 Synchronization endpoints allow downstream services to rebuild local projections after deployment, database recreation, or subscription loss without introducing direct database dependencies.
@@ -534,6 +552,108 @@ Production-scale search can use Azure AI Search, Elasticsearch, OpenSearch, or a
 
 ---
 
+# Reporting Workflow
+
+The Reporting API currently supports:
+
+```text
+Consume or synchronize platform projections
+        ↓
+Maintain read-optimized reporting projections
+        ↓
+Define reusable report definitions
+        ↓
+Execute report runs
+        ↓
+Calculate and persist report metrics
+        ↓
+Expose platform-summary and discovery-funnel analytics
+        ↓
+Publish ReportingSnapshot
+```
+
+The current implementation includes two prototype report types:
+
+```text
+PlatformSummary
+DiscoveryFunnel
+```
+
+`PlatformSummary` reports summarize the reporting projections available across the platform, including completed workflow counts.
+
+`DiscoveryFunnel` reports can filter by disease name and gene symbol and summarize progression through literature, selected targets, and prediction-stage candidates.
+
+Report results are persisted as `ReportRun` and `ReportMetric` records. Reporting data remains read-optimized and isolated from operational service databases; the Reporting API does not query another microservice's database directly.
+
+The current reporting engine is a deterministic prototype intended to validate platform architecture, aggregation, persistence, and API contracts. Production analytics can extend this model with additional KPIs, time-series aggregation, dashboards, export formats, and approved analytics platforms.
+
+
+---
+
+# Audit Workflow
+
+The Audit API currently supports:
+
+```text
+EF Core entity change in a platform service
+        ↓
+Algocura.Platform.Auditing interceptor
+        ↓
+Create EntityAuditEvent
+        ↓
+Publish to Azure Service Bus
+        ↓
+Topic: algocura-events
+        ↓
+Subscription: audit-api
+        ↓
+Consume EntityAuditEvent
+        ↓
+Deduplicate by EventId
+        ↓
+Persist immutable audit record
+        ↓
+Expose audit search, detail, summary, and synchronization endpoints
+```
+
+The centralized audit record preserves:
+
+```text
+Event ID
+Occurred timestamp
+Service name
+Entity type
+Entity ID
+Action
+User ID
+Subject
+User display name
+User email
+Actor type
+Previous values
+Current values
+Changed properties
+Correlation ID
+Workflow ID
+Trace ID
+IP address
+User agent
+Event type
+Event version
+Received timestamp
+```
+
+The Audit API is designed as a read-oriented compliance and traceability service. It does not modify source-domain entities and does not directly query another service's database.
+
+Audit ingestion is idempotent. `EventId` is the primary key, so replaying the same `EntityAuditEvent` does not create duplicate history.
+
+To avoid an audit feedback loop, the Audit API stamps its own persistence metadata but does not publish audit events for `AuditRecord` inserts.
+
+For centralized audit history to receive live events, producing services must enable `PublishEntityAuditEvents` and use the shared Service Bus audit publisher.
+
+
+---
+
 # Data Ownership
 
 Each microservice owns its own database.
@@ -571,6 +691,9 @@ Search API
 
 Reporting API
     SQL Server
+
+Audit API
+    SQL Server
 ```
 
 No databases are shared between services.
@@ -602,6 +725,8 @@ Services maintain only the local projections required for their responsibilities
 | Workflow Orchestration | Event-correlated state machine with idempotent event receipts |
 | Notification Delivery | Deterministic logging dispatcher with future provider-specific integrations |
 | Search Indexing | SQL Server projections with future Azure AI Search, Elasticsearch, or OpenSearch integration |
+| Reporting | SQL Server reporting projections, persisted report runs and metrics, with future dashboard/export integrations |
+| Auditing | Algocura.Platform.Auditing, EF Core interceptors, EntityAuditEvent, Azure Service Bus, centralized SQL Server audit history |
 | AI Inference | Deterministic prototype with future trained-model integration |
 
 ---
@@ -642,10 +767,14 @@ Algocura.DrugDiscovery
 │   └── README.md
 │
 ├── Algocura.Reporting.Api
+│   └── README.md
+│
 ├── Algocura.Search.Api
 │   └── README.md
 │
 ├── Algocura.Audit.Api
+│   └── README.md
+│
 ├── Algocura.Identity.Api
 │
 └── tests
@@ -675,6 +804,8 @@ Local development uses Docker Compose to provision the following infrastructure 
 - Workflow API
 - Notification API
 - Search API
+- Reporting API
+- Audit API
 
 Additional microservices will be added to the Docker Compose environment as they are implemented.
 
@@ -698,11 +829,13 @@ ai-discovery-api
 workflow-api
 notification-api
 search-api
+reporting-api
+audit-api
 ```
 
 Each consuming service owns a dedicated subscription. This allows services to process events independently while sharing the same integration-event topic.
 
-The `target-discovery-api`, `chemical-design-api`, `compound-catalog-api`, `screening-api`, `assay-management-api`, `ai-discovery-api`, `workflow-api`, `notification-api`, and `search-api` subscriptions are used by their corresponding implemented consumers.
+The `target-discovery-api`, `chemical-design-api`, `compound-catalog-api`, `screening-api`, `assay-management-api`, `ai-discovery-api`, `workflow-api`, `notification-api`, `search-api`, `reporting-api`, and `audit-api` subscriptions are used by their corresponding implemented consumers.
 
 ---
 
@@ -788,6 +921,29 @@ The platform currently supports:
 - Search synchronization endpoints
 - AI-assisted prototype prediction workflows
 - Candidate scoring and prioritization
+- Read-optimized reporting projections
+- Report-definition management
+- Platform-summary report execution
+- Discovery-funnel report execution
+- Persisted report-run history
+- Persisted report metrics
+- Reporting summary endpoint
+- Reporting snapshot publication
+- Reporting synchronization endpoint
+- Centralized entity audit-event ingestion
+- Idempotent audit event processing
+- Audit search by service
+- Audit search by entity type and entity ID
+- Audit search by action
+- Audit search by user ID
+- Audit search by workflow and correlation identifiers
+- Audit search by date range
+- Previous-value and current-value inspection
+- Changed-property inspection
+- Actor, trace, IP-address, and user-agent metadata
+- Audit summary aggregation
+- Audit synchronization metadata
+- Audit feedback-loop protection
 - OpenAPI documentation
 - Health endpoints
 - SQL Server persistence
@@ -813,6 +969,9 @@ The platform currently supports:
 - Containerized deployment
 - Cloud-native architecture
 - Observability and structured logging
+- Shared entity auditing and system-user attribution
+- Centralized immutable audit history
+- Audit-event deduplication
 - Health monitoring
 - Automated testing
 - Human validation of scientific evidence
@@ -833,7 +992,7 @@ The platform currently supports:
 | Assay Management API | Completed-screening synchronization, assay measurements, quality control, result calculation, publication, and synchronization | ✅ Implemented | [README](./Algocura.AssayManagement.Api/README.md) | 2026-01-12 |
 | Workflow API | End-to-end workflow orchestration, stage tracking, event correlation, idempotent processing, failure handling, cancellation, and synchronization | ✅ Implemented | [README](./Algocura.Workflow.Api/README.md) | 2026-01-13 |
 | Notification API | Event-driven notification rules, manual notifications, delivery tracking, dispatch state, cancellation, and synchronization | ✅ Implemented | [README](./Algocura.Notification.Api/README.md) | 2026-01-13 |
-| Reporting API | Analytics and reporting | 🚧 Planned | — | — |
+| Reporting API | Reporting projections, report definitions, report execution, persisted metrics, platform summaries, discovery-funnel analytics, and synchronization | ✅ Implemented | [README](./Algocura.Reporting.Api/README.md) | 2026-01-16 |
 | Search API | Event-driven unified search projections, metadata filtering, free-text search, document lifecycle management, and index synchronization | ✅ Implemented | [README](./Algocura.Search.Api/README.md) | 2026-01-13 |
-| Audit API | Audit trail and compliance | 🚧 Planned | — | — |
+| Audit API | Centralized audit-event ingestion, immutable audit history, actor/change traceability, filtering, summaries, and synchronization | ✅ Implemented | [README](./Algocura.Audit.Api/README.md) | 2026-01-16 |
 | Identity API | Authentication and authorization | 🚧 Planned | — | — |

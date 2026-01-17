@@ -85,6 +85,14 @@
                   "DeadLetteringOnMessageExpiration": false,
                   "MaxDeliveryCount": 10
                 }
+              },
+              {
+                "Name": "reporting-api",
+                "Properties": {
+                  "DefaultMessageTimeToLive": "PT1H",
+                  "DeadLetteringOnMessageExpiration": false,
+                  "MaxDeliveryCount": 10
+                }
               }
             ]
           }

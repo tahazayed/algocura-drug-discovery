@@ -18,6 +18,8 @@
   <Project Path="Algocura.Notification.Api/Algocura.Notification.Api.csproj" />
   <Project Path="Algocura.Platform.Auditing.Tests/Algocura.Platform.Auditing.Tests.csproj" />
   <Project Path="Algocura.Platform.Auditing/Algocura.Platform.Auditing.csproj" />
+  <Project Path="Algocura.Reporting.Api.Tests/Algocura.Reporting.Api.Tests.csproj" />
+  <Project Path="Algocura.Reporting.Api/Algocura.Reporting.Api.csproj" />
   <Project Path="Algocura.Screening.Api.Tests/Algocura.Screening.Api.Tests.csproj" />
   <Project Path="Algocura.Screening.Api/Algocura.Screening.Api.csproj" />
   <Project Path="Algocura.Search.Api.Tests/Algocura.Search.Api.Tests.csproj" />

@@ -1,0 +1,47 @@
+# Git and IDE
+.git
+.gitignore
+.vs
+.vscode
+.idea
+
+# .NET build output
+**/bin
+**/bin/**
+**/obj
+**/obj/**
+
+# User-specific files
+**/*.user
+**/*.suo
+**/*.userosscache
+**/*.sln.docstates
+
+# Test and coverage output
+**/TestResults
+**/TestResults/**
+**/coverage
+**/coverage/**
+**/*.coverage
+**/*.coveragexml
+
+# Package output
+**/packages
+**/packages/**
+**/*.nupkg
+**/*.snupkg
+
+# Logs and temporary files
+**/*.log
+**/tmp
+**/temp
+
+# Docker artifacts
+**/Dockerfile*
+**/.dockerignore
+docker-compose*.yml
+docker-compose*.yaml
+
+# Documentation and unrelated repository files
+README*
+LICENSE*
