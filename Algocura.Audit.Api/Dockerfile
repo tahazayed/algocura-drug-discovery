@@ -11,6 +11,8 @@ COPY ["Algocura.Audit.Api/Algocura.Audit.Api.csproj", "Algocura.Audit.Api/"]
 
 COPY ["Algocura.Platform.Auditing/Algocura.Platform.Auditing.csproj", "Algocura.Platform.Auditing/"]
 
+COPY ["Algocura.Platform.Messaging/Algocura.Platform.Messaging.csproj", "Algocura.Platform.Messaging/"]
+
 # Restore inside the Linux container.
 RUN dotnet restore \
     "Algocura.Audit.Api/Algocura.Audit.Api.csproj"

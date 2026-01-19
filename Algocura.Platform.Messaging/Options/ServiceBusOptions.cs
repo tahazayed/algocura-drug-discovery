@@ -1,9 +1,8 @@
-namespace Algocura.Audit.Api.Messaging;
+namespace Algocura.Platform.Messaging.Options;
 
 public sealed class ServiceBusOptions
 {
-    public const string SectionName =
-        "ServiceBus";
+    public const string SectionName = "ServiceBus";
 
     public bool UseEmulator { get; set; }
 
@@ -15,7 +14,4 @@ public sealed class ServiceBusOptions
 
     public string TopicName { get; set; } =
         "algocura-events";
-
-    public string SubscriptionName { get; set; } =
-        "audit-api";
 }

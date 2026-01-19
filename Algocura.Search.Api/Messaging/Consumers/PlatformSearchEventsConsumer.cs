@@ -1,3 +1,4 @@
+using Algocura.Platform.Messaging.Options;
 using Algocura.Search.Api.Data;
 using Algocura.Search.Api.Domain;
 using Algocura.Search.Api.Events;
@@ -20,31 +21,58 @@ public sealed class PlatformSearchEventsConsumer
     public PlatformSearchEventsConsumer(
         IServiceScopeFactory scopeFactory,
         ServiceBusClient client,
-        IOptions<ServiceBusOptions> options,
+        IOptions<ServiceBusOptions> serviceBusOptions,
+        IConfiguration configuration,
         ILogger<PlatformSearchEventsConsumer> logger)
     {
-        _scopeFactory = scopeFactory;
-        _logger = logger;
+        _scopeFactory =
+            scopeFactory;
 
-        _processor = client.CreateProcessor(
-            options.Value.TopicName,
-            options.Value.SubscriptionName,
-            new ServiceBusProcessorOptions
-            {
-                AutoCompleteMessages = false,
-                MaxConcurrentCalls = 4,
-                MaxAutoLockRenewalDuration =
-                    TimeSpan.FromMinutes(5)
-            });
+        _logger =
+            logger;
+
+        var messagingOptions =
+            serviceBusOptions.Value;
+
+        var subscriptionName =
+            configuration[
+                "ServiceBus:SubscriptionName"];
+
+        if (string.IsNullOrWhiteSpace(
+                subscriptionName))
+        {
+            throw new InvalidOperationException(
+                "ServiceBus:SubscriptionName is required.");
+        }
+
+        _processor =
+            client.CreateProcessor(
+                messagingOptions.TopicName,
+                subscriptionName,
+                new ServiceBusProcessorOptions
+                {
+                    AutoCompleteMessages =
+                        false,
+
+                    MaxConcurrentCalls =
+                        4,
+
+                    MaxAutoLockRenewalDuration =
+                        TimeSpan.FromMinutes(5)
+                });
     }
 
     protected override async Task ExecuteAsync(
         CancellationToken stoppingToken)
     {
-        _processor.ProcessMessageAsync += ProcessMessageAsync;
-        _processor.ProcessErrorAsync += ProcessErrorAsync;
+        _processor.ProcessMessageAsync +=
+            ProcessMessageAsync;
 
-        await _processor.StartProcessingAsync(stoppingToken);
+        _processor.ProcessErrorAsync +=
+            ProcessErrorAsync;
+
+        await _processor.StartProcessingAsync(
+            stoppingToken);
 
         try
         {
@@ -65,23 +93,31 @@ public sealed class PlatformSearchEventsConsumer
         {
             var eventType =
                 args.Message.ApplicationProperties
-                    .TryGetValue("eventType", out var eventTypeValue)
+                    .TryGetValue(
+                        "eventType",
+                        out var eventTypeValue)
                     ? eventTypeValue?.ToString()
                     : args.Message.Subject;
 
             var source =
                 args.Message.ApplicationProperties
-                    .TryGetValue("source", out var sourceValue)
+                    .TryGetValue(
+                        "source",
+                        out var sourceValue)
                     ? sourceValue?.ToString()
                     : "Unknown";
 
-            if (string.IsNullOrWhiteSpace(eventType))
+            if (string.IsNullOrWhiteSpace(
+                    eventType))
             {
-                throw new JsonException("The event type is missing.");
+                throw new JsonException(
+                    "The event type is missing.");
             }
 
             var eventId =
-                Guid.TryParse(args.Message.MessageId, out var parsedEventId)
+                Guid.TryParse(
+                    args.Message.MessageId,
+                    out var parsedEventId)
                     ? parsedEventId
                     : Guid.NewGuid();
 
@@ -99,11 +135,13 @@ public sealed class PlatformSearchEventsConsumer
 
             var dbContext =
                 scope.ServiceProvider
-                    .GetRequiredService<SearchDbContext>();
+                    .GetRequiredService<
+                        SearchDbContext>();
 
             var eventPublisher =
                 scope.ServiceProvider
-                    .GetRequiredService<IEventPublisher>();
+                    .GetRequiredService<
+                        IEventPublisher>();
 
             await HandleAsync(
                 dbContext,
@@ -132,7 +170,8 @@ public sealed class PlatformSearchEventsConsumer
 
             await args.AbandonMessageAsync(
                 args.Message,
-                cancellationToken: args.CancellationToken);
+                cancellationToken:
+                    args.CancellationToken);
         }
     }
 
@@ -143,7 +182,8 @@ public sealed class PlatformSearchEventsConsumer
         CancellationToken cancellationToken)
     {
         var candidate =
-            SearchDocumentFactory.Create(platformEvent);
+            SearchDocumentFactory.Create(
+                platformEvent);
 
         if (candidate is null)
         {
@@ -155,15 +195,19 @@ public sealed class PlatformSearchEventsConsumer
                 .Include(x => x.Tags)
                 .SingleOrDefaultAsync(
                     x =>
-                        x.DocumentType == candidate.DocumentType &&
-                        x.SourceEntityId == candidate.SourceEntityId,
+                        x.DocumentType ==
+                            candidate.DocumentType &&
+                        x.SourceEntityId ==
+                            candidate.SourceEntityId,
                     cancellationToken);
 
         if (existing is null)
         {
-            dbContext.SearchDocuments.Add(candidate);
+            dbContext.SearchDocuments.Add(
+                candidate);
 
-            await dbContext.SaveChangesAsync(cancellationToken);
+            await dbContext.SaveChangesAsync(
+                cancellationToken);
 
             await eventPublisher.PublishAsync(
                 new SearchDocumentIndexed(
@@ -179,25 +223,60 @@ public sealed class PlatformSearchEventsConsumer
             return true;
         }
 
-        existing.SourceEventType = candidate.SourceEventType;
-        existing.SourceService = candidate.SourceService;
-        existing.Title = candidate.Title;
-        existing.Summary = candidate.Summary;
-        existing.ExternalReference = candidate.ExternalReference;
-        existing.CorrelationId = candidate.CorrelationId;
-        existing.WorkflowId = candidate.WorkflowId;
-        existing.DiseaseName = candidate.DiseaseName;
-        existing.GeneSymbol = candidate.GeneSymbol;
-        existing.CompoundName = candidate.CompoundName;
-        existing.InchiKey = candidate.InchiKey;
-        existing.CanonicalSmiles = candidate.CanonicalSmiles;
-        existing.Outcome = candidate.Outcome;
-        existing.Score = candidate.Score;
-        existing.Status = candidate.Status;
-        existing.SourceUpdatedAtUtc = candidate.SourceUpdatedAtUtc;
-        existing.UpdatedAtUtc = DateTimeOffset.UtcNow;
+        existing.SourceEventType =
+            candidate.SourceEventType;
 
-        dbContext.SearchDocumentTags.RemoveRange(existing.Tags);
+        existing.SourceService =
+            candidate.SourceService;
+
+        existing.Title =
+            candidate.Title;
+
+        existing.Summary =
+            candidate.Summary;
+
+        existing.ExternalReference =
+            candidate.ExternalReference;
+
+        existing.CorrelationId =
+            candidate.CorrelationId;
+
+        existing.WorkflowId =
+            candidate.WorkflowId;
+
+        existing.DiseaseName =
+            candidate.DiseaseName;
+
+        existing.GeneSymbol =
+            candidate.GeneSymbol;
+
+        existing.CompoundName =
+            candidate.CompoundName;
+
+        existing.InchiKey =
+            candidate.InchiKey;
+
+        existing.CanonicalSmiles =
+            candidate.CanonicalSmiles;
+
+        existing.Outcome =
+            candidate.Outcome;
+
+        existing.Score =
+            candidate.Score;
+
+        existing.Status =
+            candidate.Status;
+
+        existing.SourceUpdatedAtUtc =
+            candidate.SourceUpdatedAtUtc;
+
+        existing.UpdatedAtUtc =
+            DateTimeOffset.UtcNow;
+
+        dbContext.SearchDocumentTags.RemoveRange(
+            existing.Tags);
+
         existing.Tags.Clear();
 
         foreach (var tag in candidate.Tags)
@@ -205,14 +284,22 @@ public sealed class PlatformSearchEventsConsumer
             existing.Tags.Add(
                 new SearchDocumentTag
                 {
-                    Id = Guid.NewGuid(),
-                    SearchDocumentId = existing.Id,
-                    Name = tag.Name,
-                    Value = tag.Value
+                    Id =
+                        Guid.NewGuid(),
+
+                    SearchDocumentId =
+                        existing.Id,
+
+                    Name =
+                        tag.Name,
+
+                    Value =
+                        tag.Value
                 });
         }
 
-        await dbContext.SaveChangesAsync(cancellationToken);
+        await dbContext.SaveChangesAsync(
+            cancellationToken);
 
         return true;
     }
@@ -232,14 +319,20 @@ public sealed class PlatformSearchEventsConsumer
     public override async Task StopAsync(
         CancellationToken cancellationToken)
     {
-        await _processor.StopProcessingAsync(cancellationToken);
-        await base.StopAsync(cancellationToken);
+        await _processor.StopProcessingAsync(
+            cancellationToken);
+
+        await base.StopAsync(
+            cancellationToken);
     }
 
     public override void Dispose()
     {
-        _processor.DisposeAsync().AsTask().GetAwaiter().GetResult();
+        _processor.DisposeAsync()
+            .AsTask()
+            .GetAwaiter()
+            .GetResult();
+
         base.Dispose();
     }
 }
-

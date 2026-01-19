@@ -133,6 +133,9 @@ services:
       Logging__LogLevel__Microsoft__AspNetCore: "Warning"
       Logging__LogLevel__Microsoft__EntityFrameworkCore: "Information"
       Logging__LogLevel__Azure__Messaging__ServiceBus: "Information"
+      Auditing__ServiceName: "Algocura.LiteratureIntelligence.Api"
+      Auditing__PublishEntityAuditEvents: "true"
+      Auditing__StampCreatedAndUpdatedFields: "true"
     depends_on:
       sqlserver:
         condition: service_healthy
@@ -167,6 +170,9 @@ services:
       Logging__LogLevel__Microsoft__AspNetCore: "Warning"
       Logging__LogLevel__Microsoft__EntityFrameworkCore: "Information"
       Logging__LogLevel__Azure__Messaging__ServiceBus: "Information"
+      Auditing__ServiceName: "Algocura.TargetDiscovery.Api"
+      Auditing__PublishEntityAuditEvents: "true"
+      Auditing__StampCreatedAndUpdatedFields: "true"
     depends_on:
       sqlserver:
         condition: service_healthy
@@ -201,6 +207,9 @@ services:
       Logging__LogLevel__Microsoft__AspNetCore: "Warning"
       Logging__LogLevel__Microsoft__EntityFrameworkCore: "Information"
       Logging__LogLevel__Azure__Messaging__ServiceBus: "Information"
+      Auditing__ServiceName: "Algocura.ChemicalDesign.Api"
+      Auditing__PublishEntityAuditEvents: "true"
+      Auditing__StampCreatedAndUpdatedFields: "true"
     depends_on:
       sqlserver:
         condition: service_healthy
@@ -235,6 +244,9 @@ services:
       Logging__LogLevel__Microsoft__AspNetCore: "Warning"
       Logging__LogLevel__Microsoft__EntityFrameworkCore: "Information"
       Logging__LogLevel__Azure__Messaging__ServiceBus: "Information"
+      Auditing__ServiceName: "Algocura.CompoundCatalog.Api"
+      Auditing__PublishEntityAuditEvents: "true"
+      Auditing__StampCreatedAndUpdatedFields: "true"
     depends_on:
       sqlserver:
         condition: service_healthy
@@ -265,7 +277,10 @@ services:
       Logging__LogLevel__Default: "Information"
       Logging__LogLevel__Microsoft__AspNetCore: "Warning"
       Logging__LogLevel__Microsoft__EntityFrameworkCore: "Information"
-      Logging__LogLevel__Azure__Messaging__ServiceBus: "Information"      
+      Logging__LogLevel__Azure__Messaging__ServiceBus: "Information"  
+      Auditing__ServiceName: "Algocura.Screening.Api"
+      Auditing__PublishEntityAuditEvents: "true"
+      Auditing__StampCreatedAndUpdatedFields: "true"
     depends_on:
       sqlserver:
         condition: service_healthy
@@ -296,7 +311,10 @@ services:
       Logging__LogLevel__Default: "Information"
       Logging__LogLevel__Microsoft__AspNetCore: "Warning"
       Logging__LogLevel__Microsoft__EntityFrameworkCore: "Information"
-      Logging__LogLevel__Azure__Messaging__ServiceBus: "Information"      
+      Logging__LogLevel__Azure__Messaging__ServiceBus: "Information"
+      Auditing__ServiceName: "Algocura.AIDiscovery.Api"
+      Auditing__PublishEntityAuditEvents: "true"
+      Auditing__StampCreatedAndUpdatedFields: "true"
     depends_on:
       sqlserver:
         condition: service_healthy
@@ -327,7 +345,10 @@ services:
       Logging__LogLevel__Default: "Information"
       Logging__LogLevel__Microsoft__AspNetCore: "Warning"
       Logging__LogLevel__Microsoft__EntityFrameworkCore: "Information"
-      Logging__LogLevel__Azure__Messaging__ServiceBus: "Information"      
+      Logging__LogLevel__Azure__Messaging__ServiceBus: "Information"
+      Auditing__ServiceName: "Algocura.AssayManagement.Api"
+      Auditing__PublishEntityAuditEvents: "true"
+      Auditing__StampCreatedAndUpdatedFields: "true"
     depends_on:
       sqlserver:
         condition: service_healthy
@@ -358,7 +379,10 @@ services:
       Logging__LogLevel__Default: "Information"
       Logging__LogLevel__Microsoft__AspNetCore: "Warning"
       Logging__LogLevel__Microsoft__EntityFrameworkCore: "Information"
-      Logging__LogLevel__Azure__Messaging__ServiceBus: "Information"      
+      Logging__LogLevel__Azure__Messaging__ServiceBus: "Information"
+      Auditing__ServiceName: "Algocura.Workflow.Api"
+      Auditing__PublishEntityAuditEvents: "true"
+      Auditing__StampCreatedAndUpdatedFields: "true"
     depends_on:
       sqlserver:
         condition: service_healthy
@@ -389,7 +413,10 @@ services:
       Logging__LogLevel__Default: "Information"
       Logging__LogLevel__Microsoft__AspNetCore: "Warning"
       Logging__LogLevel__Microsoft__EntityFrameworkCore: "Information"
-      Logging__LogLevel__Azure__Messaging__ServiceBus: "Information"      
+      Logging__LogLevel__Azure__Messaging__ServiceBus: "Information"
+      Auditing__ServiceName: "Algocura.Notification.Api"
+      Auditing__PublishEntityAuditEvents: "true"
+      Auditing__StampCreatedAndUpdatedFields: "true"
     depends_on:
       sqlserver:
         condition: service_healthy
@@ -420,7 +447,10 @@ services:
       Logging__LogLevel__Default: "Information"
       Logging__LogLevel__Microsoft__AspNetCore: "Warning"
       Logging__LogLevel__Microsoft__EntityFrameworkCore: "Information"
-      Logging__LogLevel__Azure__Messaging__ServiceBus: "Information"      
+      Logging__LogLevel__Azure__Messaging__ServiceBus: "Information"
+      Auditing__ServiceName: "Algocura.Search.Api"
+      Auditing__PublishEntityAuditEvents: "true"
+      Auditing__StampCreatedAndUpdatedFields: "true"
     depends_on:
       sqlserver:
         condition: service_healthy
@@ -451,7 +481,10 @@ services:
       Logging__LogLevel__Default: "Information"
       Logging__LogLevel__Microsoft__AspNetCore: "Warning"
       Logging__LogLevel__Microsoft__EntityFrameworkCore: "Information"
-      Logging__LogLevel__Azure__Messaging__ServiceBus: "Information"      
+      Logging__LogLevel__Azure__Messaging__ServiceBus: "Information"
+      Auditing__ServiceName: "Algocura.Reporting.Api"
+      Auditing__PublishEntityAuditEvents: "true"
+      Auditing__StampCreatedAndUpdatedFields: "true"
     depends_on:
       sqlserver:
         condition: service_healthy
@@ -482,7 +515,10 @@ services:
       Logging__LogLevel__Default: "Information"
       Logging__LogLevel__Microsoft__AspNetCore: "Warning"
       Logging__LogLevel__Microsoft__EntityFrameworkCore: "Information"
-      Logging__LogLevel__Azure__Messaging__ServiceBus: "Information"      
+      Logging__LogLevel__Azure__Messaging__ServiceBus: "Information"
+      Auditing__ServiceName: "Algocura.Audit.Api"
+      Auditing__PublishEntityAuditEvents: "false"
+      Auditing__StampCreatedAndUpdatedFields: "true"
     depends_on:
       sqlserver:
         condition: service_healthy

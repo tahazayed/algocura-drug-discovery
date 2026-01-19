@@ -1,3 +1,4 @@
+using Algocura.Platform.Messaging.Options;
 using Algocura.TargetDiscovery.Api.Data;
 using Algocura.TargetDiscovery.Api.Domain;
 using Algocura.TargetDiscovery.Api.Events;
@@ -21,31 +22,58 @@ public sealed class LiteratureIntelligenceEventsConsumer
     public LiteratureIntelligenceEventsConsumer(
         IServiceScopeFactory scopeFactory,
         ServiceBusClient serviceBusClient,
-        IOptions<ServiceBusOptions> options,
+        IOptions<ServiceBusOptions> serviceBusOptions,
+        IConfiguration configuration,
         ILogger<LiteratureIntelligenceEventsConsumer> logger)
     {
-        _scopeFactory = scopeFactory;
-        _logger = logger;
+        _scopeFactory =
+            scopeFactory;
 
-        _processor = serviceBusClient.CreateProcessor(
-            options.Value.TopicName,
-            options.Value.SubscriptionName,
-            new ServiceBusProcessorOptions
-            {
-                AutoCompleteMessages = false,
-                MaxConcurrentCalls = 4,
-                MaxAutoLockRenewalDuration =
-                    TimeSpan.FromMinutes(5)
-            });
+        _logger =
+            logger;
+
+        var messagingOptions =
+            serviceBusOptions.Value;
+
+        var subscriptionName =
+            configuration[
+                "ServiceBus:SubscriptionName"];
+
+        if (string.IsNullOrWhiteSpace(
+                subscriptionName))
+        {
+            throw new InvalidOperationException(
+                "ServiceBus:SubscriptionName is required.");
+        }
+
+        _processor =
+            serviceBusClient.CreateProcessor(
+                messagingOptions.TopicName,
+                subscriptionName,
+                new ServiceBusProcessorOptions
+                {
+                    AutoCompleteMessages =
+                        false,
+
+                    MaxConcurrentCalls =
+                        4,
+
+                    MaxAutoLockRenewalDuration =
+                        TimeSpan.FromMinutes(5)
+                });
     }
 
     protected override async Task ExecuteAsync(
         CancellationToken stoppingToken)
     {
-        _processor.ProcessMessageAsync += ProcessMessageAsync;
-        _processor.ProcessErrorAsync += ProcessErrorAsync;
+        _processor.ProcessMessageAsync +=
+            ProcessMessageAsync;
 
-        await _processor.StartProcessingAsync(stoppingToken);
+        _processor.ProcessErrorAsync +=
+            ProcessErrorAsync;
+
+        await _processor.StartProcessingAsync(
+            stoppingToken);
 
         try
         {
@@ -66,11 +94,14 @@ public sealed class LiteratureIntelligenceEventsConsumer
         {
             var eventType =
                 args.Message.ApplicationProperties
-                    .TryGetValue("eventType", out var value)
+                    .TryGetValue(
+                        "eventType",
+                        out var value)
                     ? value?.ToString()
                     : args.Message.Subject;
 
-            if (eventType != nameof(LiteratureIntelligenceSnapshot))
+            if (eventType !=
+                nameof(LiteratureIntelligenceSnapshot))
             {
                 _logger.LogDebug(
                     "Ignoring unsupported event type {EventType}.",
@@ -85,7 +116,8 @@ public sealed class LiteratureIntelligenceEventsConsumer
 
             var integrationEvent =
                 args.Message.Body
-                    .ToObjectFromJson<LiteratureIntelligenceSnapshot>(
+                    .ToObjectFromJson<
+                        LiteratureIntelligenceSnapshot>(
                         JsonOptions);
 
             await using var scope =
@@ -93,7 +125,8 @@ public sealed class LiteratureIntelligenceEventsConsumer
 
             var dbContext =
                 scope.ServiceProvider
-                    .GetRequiredService<TargetDiscoveryDbContext>();
+                    .GetRequiredService<
+                        TargetDiscoveryDbContext>();
 
             await HandleAsync(
                 dbContext,
@@ -137,40 +170,57 @@ public sealed class LiteratureIntelligenceEventsConsumer
                 "LiteratureIntelligenceSnapshot payload is empty.");
         }
 
-        var hypothesis = await dbContext.TargetHypotheses
-            .SingleOrDefaultAsync(
-                x =>
-                    x.TargetHypothesisId ==
-                    integrationEvent.TargetHypothesisId,
-                cancellationToken);
+        var hypothesis =
+            await dbContext.TargetHypotheses
+                .SingleOrDefaultAsync(
+                    x =>
+                        x.TargetHypothesisId ==
+                        integrationEvent.TargetHypothesisId,
+                    cancellationToken);
 
         if (hypothesis is null)
         {
-            hypothesis = new TargetHypothesisProjection
-            {
-                TargetHypothesisId =
-                    integrationEvent.TargetHypothesisId,
-                DiseaseName =
-                    integrationEvent.DiseaseName.Trim(),
-                GeneSymbol =
-                    integrationEvent.GeneSymbol.Trim().ToUpperInvariant(),
-                ProteinTarget =
-                    integrationEvent.ProteinTarget?.Trim(),
-                DesiredModulation =
-                    integrationEvent.DesiredModulation.Trim(),
-                Rationale =
-                    integrationEvent.Rationale.Trim(),
-                LiteratureEvidenceScore =
-                    integrationEvent.EvidenceScore,
-                Status =
-                    TargetHypothesisProjectionStatus.Published,
-                SourceUpdatedAtUtc =
-                    integrationEvent.OccurredAtUtc,
-                SynchronizedAtUtc =
-                    DateTimeOffset.UtcNow
-            };
+            hypothesis =
+                new TargetHypothesisProjection
+                {
+                    TargetHypothesisId =
+                        integrationEvent.TargetHypothesisId,
 
-            dbContext.TargetHypotheses.Add(hypothesis);
+                    DiseaseName =
+                        integrationEvent.DiseaseName.Trim(),
+
+                    GeneSymbol =
+                        integrationEvent.GeneSymbol
+                            .Trim()
+                            .ToUpperInvariant(),
+
+                    ProteinTarget =
+                        integrationEvent.ProteinTarget?
+                            .Trim(),
+
+                    DesiredModulation =
+                        integrationEvent.DesiredModulation
+                            .Trim(),
+
+                    Rationale =
+                        integrationEvent.Rationale
+                            .Trim(),
+
+                    LiteratureEvidenceScore =
+                        integrationEvent.EvidenceScore,
+
+                    Status =
+                        TargetHypothesisProjectionStatus.Published,
+
+                    SourceUpdatedAtUtc =
+                        integrationEvent.OccurredAtUtc,
+
+                    SynchronizedAtUtc =
+                        DateTimeOffset.UtcNow
+                };
+
+            dbContext.TargetHypotheses.Add(
+                hypothesis);
         }
         else
         {
@@ -178,13 +228,17 @@ public sealed class LiteratureIntelligenceEventsConsumer
                 integrationEvent.DiseaseName.Trim();
 
             hypothesis.GeneSymbol =
-                integrationEvent.GeneSymbol.Trim().ToUpperInvariant();
+                integrationEvent.GeneSymbol
+                    .Trim()
+                    .ToUpperInvariant();
 
             hypothesis.ProteinTarget =
-                integrationEvent.ProteinTarget?.Trim();
+                integrationEvent.ProteinTarget?
+                    .Trim();
 
             hypothesis.DesiredModulation =
-                integrationEvent.DesiredModulation.Trim();
+                integrationEvent.DesiredModulation
+                    .Trim();
 
             hypothesis.Rationale =
                 integrationEvent.Rationale.Trim();
@@ -208,14 +262,16 @@ public sealed class LiteratureIntelligenceEventsConsumer
                     x =>
                         x.TargetHypothesisId ==
                         integrationEvent.TargetHypothesisId)
-                .ToListAsync(cancellationToken);
+                .ToListAsync(
+                    cancellationToken);
 
         if (existingEvidence.Count > 0)
         {
             dbContext.TargetHypothesisEvidence.RemoveRange(
                 existingEvidence);
 
-            await dbContext.SaveChangesAsync(cancellationToken);
+            await dbContext.SaveChangesAsync(
+                cancellationToken);
         }
 
         var evidenceLinks =
@@ -227,6 +283,7 @@ public sealed class LiteratureIntelligenceEventsConsumer
                         {
                             TargetHypothesisId =
                                 integrationEvent.TargetHypothesisId,
+
                             EvidenceStatementId =
                                 evidenceStatementId
                         })
@@ -238,7 +295,8 @@ public sealed class LiteratureIntelligenceEventsConsumer
                 evidenceLinks);
         }
 
-        await dbContext.SaveChangesAsync(cancellationToken);
+        await dbContext.SaveChangesAsync(
+            cancellationToken);
     }
 
     private Task ProcessErrorAsync(
@@ -246,7 +304,8 @@ public sealed class LiteratureIntelligenceEventsConsumer
     {
         _logger.LogError(
             args.Exception,
-            "Service Bus consumer error. Entity: {Entity}; Source: {Source}.",
+            "Service Bus consumer error. " +
+            "Entity: {Entity}; Source: {Source}.",
             args.EntityPath,
             args.ErrorSource);
 
@@ -256,8 +315,11 @@ public sealed class LiteratureIntelligenceEventsConsumer
     public override async Task StopAsync(
         CancellationToken cancellationToken)
     {
-        await _processor.StopProcessingAsync(cancellationToken);
-        await base.StopAsync(cancellationToken);
+        await _processor.StopProcessingAsync(
+            cancellationToken);
+
+        await base.StopAsync(
+            cancellationToken);
     }
 
     public override void Dispose()

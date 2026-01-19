@@ -1,62 +1,66 @@
 using Algocura.Platform.Auditing.DependencyInjection;
 using Algocura.Platform.Auditing.Interceptors;
+using Algocura.Platform.Auditing.Options;
+using Algocura.Platform.Messaging.DependencyInjection;
+using Algocura.Platform.Messaging.Options;
+using Algocura.Platform.Messaging.Publishing;
 using Algocura.Reporting.Api.Data;
 using Algocura.Reporting.Api.Messaging;
 using Algocura.Reporting.Api.Services;
-using Azure.Identity;
-using Azure.Messaging.ServiceBus;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 
 var builder = WebApplication.CreateBuilder(args);
 
+// -----------------------------------------------------------------------------
+// Controllers and common services
+// -----------------------------------------------------------------------------
+
 builder.Services.AddControllers();
 builder.Services.AddProblemDetails();
 builder.Services.AddHealthChecks();
-
-builder.Services.AddOpenApi(options =>
-{
-    options.AddDocumentTransformer(
-        (document, context, cancellationToken) =>
-        {
-            document.Info.Title =
-                "Algocura Reporting API";
-            document.Info.Version = "v1";
-            document.Info.Description =
-                "Provides reporting definitions, report execution, " +
-                "report metrics, platform summaries, and reporting projections.";
-            document.Info.Contact = new()
-            {
-                Name = "Algocura Platform Engineering"
-            };
-            document.Info.License = new()
-            {
-                Name = "Proprietary"
-            };
-
-            return Task.CompletedTask;
-        });
-});
 
 // -----------------------------------------------------------------------------
 // Auditing
 // -----------------------------------------------------------------------------
 
-builder.Services.AddAlgocuraAuditing(options =>
-{
-    options.ServiceName =
-        "Algocura.Reporting.Api";
-    options.StampCreatedAndUpdatedFields =
-        true;
-    options.PublishEntityAuditEvents =
-        true;
-});
+var auditingSection =
+    builder.Configuration.GetSection(
+        AuditingOptions.SectionName);
+
+builder.Services
+    .AddAlgocuraAuditing<
+        ServiceBusAuditEventPublisher>(
+        options =>
+        {
+            options.ExcludedPropertyNames.UnionWith(
+            [
+                "Password",
+                "PasswordHash",
+                "AccessToken",
+                "RefreshToken",
+                "ClientSecret",
+                "ConnectionString",
+                "SharedAccessKey",
+                "ApiKey"
+            ]);
+
+            options.MaskedPropertyNames.UnionWith(
+            [
+                "Email",
+                "Recipient",
+                "IpAddress",
+                "UserAgent"
+            ]);
+
+            auditingSection.Bind(options);
+        });
 
 // -----------------------------------------------------------------------------
-// Database
+// Entity Framework Core
 // -----------------------------------------------------------------------------
 
-var connectionString =
+var databaseConnectionString =
     builder.Configuration.GetConnectionString(
         "ReportingDatabase")
     ?? throw new InvalidOperationException(
@@ -66,13 +70,22 @@ builder.Services.AddDbContext<ReportingDbContext>(
     (serviceProvider, options) =>
     {
         options.UseSqlServer(
-            connectionString,
-            sql =>
-                sql.EnableRetryOnFailure(
-                    maxRetryCount: 5,
+            databaseConnectionString,
+            sqlServerOptions =>
+            {
+                sqlServerOptions.EnableRetryOnFailure(
+                    maxRetryCount:
+                        5,
+
                     maxRetryDelay:
                         TimeSpan.FromSeconds(10),
-                    errorNumbersToAdd: null));
+
+                    errorNumbersToAdd:
+                        null);
+
+                sqlServerOptions.MigrationsAssembly(
+                    typeof(Program).Assembly.FullName);
+            });
 
         options.AddInterceptors(
             serviceProvider.GetRequiredService<
@@ -86,6 +99,10 @@ builder.Services.AddDbContext<ReportingDbContext>(
         }
     });
 
+// -----------------------------------------------------------------------------
+// Application services
+// -----------------------------------------------------------------------------
+
 builder.Services.AddScoped<
     IReportExecutionService,
     ReportExecutionService>();
@@ -94,142 +111,250 @@ builder.Services.AddScoped<
 // Azure Service Bus
 // -----------------------------------------------------------------------------
 
-builder.Services
-    .AddOptions<ServiceBusOptions>()
-    .Bind(
-        builder.Configuration.GetSection(
-            ServiceBusOptions.SectionName))
-    .Validate(
-        options =>
-            !string.IsNullOrWhiteSpace(
-                options.TopicName),
-        "ServiceBus:TopicName is required.")
-    .Validate(
-        options =>
-            options.UseEmulator
-                ? !string.IsNullOrWhiteSpace(
-                    options.ConnectionString)
-                : !string.IsNullOrWhiteSpace(
-                    options.FullyQualifiedNamespace),
-        "Configure an emulator connection string or Azure namespace.")
-    .ValidateOnStart();
-
-builder.Services.AddSingleton<ServiceBusClient>(
-    serviceProvider =>
-    {
-        var options =
-            serviceProvider
-                .GetRequiredService<
-                    IOptions<ServiceBusOptions>>()
-                .Value;
-
-        return options.UseEmulator
-            ? new ServiceBusClient(
-                options.ConnectionString)
-            : new ServiceBusClient(
-                options.FullyQualifiedNamespace,
-                new DefaultAzureCredential());
-    });
+builder.Services.AddAlgocuraPlatformMessaging(
+    builder.Configuration);
 
 builder.Services.AddSingleton<
     IEventPublisher,
     ServiceBusEventPublisher>();
 
+// -----------------------------------------------------------------------------
+// OpenAPI document generation
+// -----------------------------------------------------------------------------
+
+builder.Services.AddOpenApi(
+    options =>
+    {
+        options.AddDocumentTransformer(
+            (
+                document,
+                context,
+                cancellationToken) =>
+            {
+                document.Info.Title =
+                    "Algocura Reporting API";
+
+                document.Info.Version =
+                    "v1";
+
+                document.Info.Description =
+                    "Provides reporting definitions, report execution, " +
+                    "report metrics, platform summaries, and reporting " +
+                    "projections.";
+
+                document.Info.Contact =
+                    new()
+                    {
+                        Name =
+                            "Algocura Platform Engineering"
+                    };
+
+                document.Info.License =
+                    new()
+                    {
+                        Name =
+                            "Proprietary"
+                    };
+
+                return Task.CompletedTask;
+            });
+    });
+
+// -----------------------------------------------------------------------------
+// Build application
+// -----------------------------------------------------------------------------
+
 var app = builder.Build();
+
+// -----------------------------------------------------------------------------
+// Database initialization
+// -----------------------------------------------------------------------------
+
+await DatabaseInitializer.InitializeAsync(
+    app.Services,
+    app.Logger,
+    app.Lifetime.ApplicationStopping);
+
+// -----------------------------------------------------------------------------
+// Middleware
+// -----------------------------------------------------------------------------
 
 app.UseExceptionHandler();
 
-if (app.Environment.IsDevelopment())
+if (!app.Environment.IsDevelopment())
 {
-    app.MapOpenApi();
+    app.UseHttpsRedirection();
+}
 
-    app.UseSwaggerUI(options =>
+// -----------------------------------------------------------------------------
+// OpenAPI JSON
+//
+// /openapi/v1.json
+// -----------------------------------------------------------------------------
+
+app.MapOpenApi();
+
+// -----------------------------------------------------------------------------
+// Swagger UI
+//
+// /swagger
+// -----------------------------------------------------------------------------
+
+app.UseSwaggerUI(
+    options =>
     {
-        options.RoutePrefix = "swagger";
+        options.RoutePrefix =
+            "swagger";
+
         options.SwaggerEndpoint(
             "/openapi/v1.json",
             "Algocura Reporting API v1");
+
         options.DocumentTitle =
-            "Algocura Reporting API";
+            "Algocura Reporting API - Swagger";
+
         options.DisplayRequestDuration();
         options.EnableDeepLinking();
         options.EnableFilter();
         options.EnableTryItOutByDefault();
+        options.ShowExtensions();
+        options.ShowCommonExtensions();
     });
 
-    app.UseReDoc(options =>
+// -----------------------------------------------------------------------------
+// ReDoc
+//
+// /redoc
+// -----------------------------------------------------------------------------
+
+app.UseReDoc(
+    options =>
     {
-        options.RoutePrefix = "redoc";
-        options.SpecUrl("/openapi/v1.json");
-        options.DocumentTitle =
-            "Algocura Reporting API Documentation";
-    });
-}
+        options.RoutePrefix =
+            "redoc";
 
-app.UseHttpsRedirection();
+        options.SpecUrl(
+            "/openapi/v1.json");
+
+        options.DocumentTitle =
+            "Algocura Reporting API - ReDoc";
+
+        options.ExpandResponses(
+            "200,201");
+
+        options.RequiredPropsFirst();
+    });
+
+// -----------------------------------------------------------------------------
+// Endpoints
+// -----------------------------------------------------------------------------
 
 app.MapControllers();
 
-app.MapHealthChecks("/health")
+app.MapHealthChecks(
+        "/health")
     .ExcludeFromDescription();
 
 app.MapGet(
         "/",
         (
-            IHostEnvironment environment,
-            IOptions<ServiceBusOptions> serviceBusOptions) =>
+            IOptions<ServiceBusOptions> serviceBusOptions,
+            IOptions<AuditingOptions> auditingOptions,
+            IWebHostEnvironment environment) =>
         {
-            var options = serviceBusOptions.Value;
+            var messagingOptions =
+                serviceBusOptions.Value;
+
+            var auditOptions =
+                auditingOptions.Value;
 
             return Results.Ok(
                 new
                 {
                     service =
                         "Algocura Reporting API",
+
                     version =
                         "v1",
+
                     status =
                         "Running",
+
                     environment =
                         environment.EnvironmentName,
+
                     documentation =
                         new
                         {
-                            swagger = "/swagger",
-                            redoc = "/redoc",
-                            openApi = "/openapi/v1.json"
+                            swagger =
+                                "/swagger",
+
+                            redoc =
+                                "/redoc",
+
+                            openApi =
+                                "/openapi/v1.json"
                         },
+
                     health =
                         "/health",
+
                     messaging =
                         new
                         {
                             provider =
                                 "Azure Service Bus",
+
                             mode =
-                                options.UseEmulator
+                                messagingOptions.UseEmulator
                                     ? "Emulator"
                                     : "Azure",
+
                             topic =
-                                options.TopicName,
-                            subscription =
-                                options.SubscriptionName
+                                messagingOptions.TopicName
                         },
+
                     auditing =
                         new
                         {
-                            entityStamping = true,
-                            eventPublishing = false
+                            serviceName =
+                                auditOptions.ServiceName,
+
+                            entityStamping =
+                                auditOptions
+                                    .StampCreatedAndUpdatedFields,
+
+                            eventPublishing =
+                                auditOptions
+                                    .PublishEntityAuditEvents,
+
+                            includeUnchangedPropertiesOnCreate =
+                                auditOptions
+                                    .IncludeUnchangedPropertiesOnCreate,
+
+                            includeUnchangedPropertiesOnDelete =
+                                auditOptions
+                                    .IncludeUnchangedPropertiesOnDelete,
+
+                            ignoreAuditInfrastructureEntities =
+                                auditOptions
+                                    .IgnoreAuditInfrastructureEntities
                         }
                 });
         })
-    .WithName("GetServiceInformation")
-    .ExcludeFromDescription();
+    .WithName(
+        "GetServiceInformation")
+    .WithSummary(
+        "Get service information")
+    .WithDescription(
+        "Returns service status, documentation links, messaging " +
+        "configuration, and auditing configuration.")
+    .Produces(
+        StatusCodes.Status200OK);
 
-await DatabaseInitializer.InitializeAsync(
-    app.Services,
-    app.Logger,
-    app.Lifetime.ApplicationStopping);
+// -----------------------------------------------------------------------------
+// Start application
+// -----------------------------------------------------------------------------
 
 await app.RunAsync();
 

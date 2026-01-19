@@ -1,7 +1,5 @@
 using Algocura.Notification.Api.Events;
-using Azure.Messaging.ServiceBus;
-using Microsoft.Extensions.Options;
-using System.Text.Json;
+using Algocura.Platform.Messaging.Publishing;
 
 namespace Algocura.Notification.Api.Messaging.Publishers;
 
@@ -14,50 +12,44 @@ public interface IEventPublisher
         where TEvent : IntegrationEvent;
 }
 
-public sealed class ServiceBusEventPublisher : IEventPublisher, IAsyncDisposable
+public sealed class ServiceBusEventPublisher(
+    IPlatformMessagePublisher publisher,
+    ILogger<ServiceBusEventPublisher> logger)
+    : IEventPublisher
 {
-    private static readonly JsonSerializerOptions JsonOptions =
-        new(JsonSerializerDefaults.Web);
-
-    private readonly ServiceBusSender _sender;
-    private readonly ILogger<ServiceBusEventPublisher> _logger;
-
-    public ServiceBusEventPublisher(
-        ServiceBusClient client,
-        IOptions<ServiceBusOptions> options,
-        ILogger<ServiceBusEventPublisher> logger)
-    {
-        _logger = logger;
-        _sender = client.CreateSender(options.Value.TopicName);
-    }
-
     public async Task PublishAsync<TEvent>(
         TEvent integrationEvent,
         string? correlationId = null,
         CancellationToken cancellationToken = default)
         where TEvent : IntegrationEvent
     {
-        var message = new ServiceBusMessage(
-            BinaryData.FromObjectAsJson(integrationEvent, JsonOptions))
-        {
-            MessageId = integrationEvent.EventId.ToString(),
-            Subject = integrationEvent.EventType,
-            ContentType = "application/json;charset=utf-8",
-            CorrelationId = correlationId,
-            TimeToLive = TimeSpan.FromDays(7)
-        };
+        ArgumentNullException.ThrowIfNull(
+            integrationEvent);
 
-        message.ApplicationProperties["eventType"] = integrationEvent.EventType;
-        message.ApplicationProperties["eventVersion"] = integrationEvent.EventVersion;
-        message.ApplicationProperties["source"] = integrationEvent.Source;
+        var applicationProperties =
+            new Dictionary<string, object>
+            {
+                ["eventVersion"] =
+                    integrationEvent.EventVersion,
 
-        await _sender.SendMessageAsync(message, cancellationToken);
+                ["source"] =
+                    integrationEvent.Source,
 
-        _logger.LogInformation(
+                ["occurredAtUtc"] =
+                    integrationEvent.OccurredAtUtc.ToString("O")
+            };
+
+        await publisher.PublishAsync(
+            integrationEvent,
+            integrationEvent.EventType,
+            integrationEvent.EventId,
+            correlationId,
+            applicationProperties,
+            cancellationToken);
+
+        logger.LogInformation(
             "Published {EventType} with ID {EventId}.",
             integrationEvent.EventType,
             integrationEvent.EventId);
     }
-
-    public ValueTask DisposeAsync() => _sender.DisposeAsync();
 }

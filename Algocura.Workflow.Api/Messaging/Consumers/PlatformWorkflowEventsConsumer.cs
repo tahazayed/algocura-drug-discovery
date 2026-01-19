@@ -1,3 +1,4 @@
+using Algocura.Platform.Messaging.Options;
 using Algocura.Workflow.Api.Data;
 using Algocura.Workflow.Api.Domain;
 using Algocura.Workflow.Api.Services;
@@ -18,22 +19,45 @@ public sealed class PlatformWorkflowEventsConsumer
     public PlatformWorkflowEventsConsumer(
         IServiceScopeFactory scopeFactory,
         ServiceBusClient client,
-        IOptions<ServiceBusOptions> options,
+        IOptions<ServiceBusOptions> serviceBusOptions,
+        IConfiguration configuration,
         ILogger<PlatformWorkflowEventsConsumer> logger)
     {
-        _scopeFactory = scopeFactory;
-        _logger = logger;
+        _scopeFactory =
+            scopeFactory;
 
-        _processor = client.CreateProcessor(
-            options.Value.TopicName,
-            options.Value.SubscriptionName,
-            new ServiceBusProcessorOptions
-            {
-                AutoCompleteMessages = false,
-                MaxConcurrentCalls = 4,
-                MaxAutoLockRenewalDuration =
-                    TimeSpan.FromMinutes(5)
-            });
+        _logger =
+            logger;
+
+        var messagingOptions =
+            serviceBusOptions.Value;
+
+        var subscriptionName =
+            configuration[
+                "ServiceBus:SubscriptionName"];
+
+        if (string.IsNullOrWhiteSpace(
+                subscriptionName))
+        {
+            throw new InvalidOperationException(
+                "ServiceBus:SubscriptionName is required.");
+        }
+
+        _processor =
+            client.CreateProcessor(
+                messagingOptions.TopicName,
+                subscriptionName,
+                new ServiceBusProcessorOptions
+                {
+                    AutoCompleteMessages =
+                        false,
+
+                    MaxConcurrentCalls =
+                        4,
+
+                    MaxAutoLockRenewalDuration =
+                        TimeSpan.FromMinutes(5)
+                });
     }
 
     protected override async Task ExecuteAsync(
@@ -67,7 +91,9 @@ public sealed class PlatformWorkflowEventsConsumer
         {
             var eventType =
                 args.Message.ApplicationProperties
-                    .TryGetValue("eventType", out var value)
+                    .TryGetValue(
+                        "eventType",
+                        out var value)
                     ? value?.ToString()
                     : args.Message.Subject;
 
@@ -107,11 +133,16 @@ public sealed class PlatformWorkflowEventsConsumer
             }
 
             var eventId =
-                ReadGuid(payload, "eventId")
-                ?? Guid.Parse(args.Message.MessageId);
+                ReadGuid(
+                    payload,
+                    "eventId")
+                ?? Guid.Parse(
+                    args.Message.MessageId);
 
             var occurredAtUtc =
-                ReadDateTimeOffset(payload, "occurredAtUtc")
+                ReadDateTimeOffset(
+                    payload,
+                    "occurredAtUtc")
                 ?? DateTimeOffset.UtcNow;
 
             var externalEntityId =
@@ -121,8 +152,11 @@ public sealed class PlatformWorkflowEventsConsumer
 
             var source =
                 args.Message.ApplicationProperties
-                    .TryGetValue("source", out var sourceValue)
-                    ? sourceValue?.ToString() ?? "Unknown"
+                    .TryGetValue(
+                        "source",
+                        out var sourceValue)
+                    ? sourceValue?.ToString() ??
+                      "Unknown"
                     : "Unknown";
 
             await using var scope =
@@ -130,11 +164,13 @@ public sealed class PlatformWorkflowEventsConsumer
 
             var dbContext =
                 scope.ServiceProvider
-                    .GetRequiredService<WorkflowDbContext>();
+                    .GetRequiredService<
+                        WorkflowDbContext>();
 
             var stateMachine =
                 scope.ServiceProvider
-                    .GetRequiredService<IWorkflowStateMachine>();
+                    .GetRequiredService<
+                        IWorkflowStateMachine>();
 
             await HandleAsync(
                 dbContext,
@@ -193,7 +229,9 @@ public sealed class PlatformWorkflowEventsConsumer
         var alreadyProcessed =
             await dbContext.WorkflowEventReceipts
                 .AnyAsync(
-                    x => x.EventId == eventId,
+                    x =>
+                        x.EventId ==
+                        eventId,
                     cancellationToken);
 
         if (alreadyProcessed)
@@ -203,9 +241,12 @@ public sealed class PlatformWorkflowEventsConsumer
 
         var workflow =
             await dbContext.Workflows
-                .Include(x => x.Stages)
+                .Include(
+                    x => x.Stages)
                 .SingleOrDefaultAsync(
-                    x => x.Id == workflowId,
+                    x =>
+                        x.Id ==
+                        workflowId,
                     cancellationToken)
             ?? throw new InvalidOperationException(
                 $"Workflow {workflowId} was not found.");
@@ -221,12 +262,23 @@ public sealed class PlatformWorkflowEventsConsumer
         dbContext.WorkflowEventReceipts.Add(
             new WorkflowEventReceipt
             {
-                EventId = eventId,
-                WorkflowId = workflow.Id,
-                EventType = eventType,
-                Source = source,
-                OccurredAtUtc = occurredAtUtc,
-                ProcessedAtUtc = DateTimeOffset.UtcNow
+                EventId =
+                    eventId,
+
+                WorkflowId =
+                    workflow.Id,
+
+                EventType =
+                    eventType,
+
+                Source =
+                    source,
+
+                OccurredAtUtc =
+                    occurredAtUtc,
+
+                ProcessedAtUtc =
+                    DateTimeOffset.UtcNow
             });
 
         await dbContext.SaveChangesAsync(
@@ -242,28 +294,53 @@ public sealed class PlatformWorkflowEventsConsumer
             eventType switch
             {
                 "LiteratureIntelligenceSnapshot" =>
-                    (WorkflowStage.LiteratureIntelligence, "TargetHypothesis"),
+                    (
+                        WorkflowStage.LiteratureIntelligence,
+                        "TargetHypothesis"
+                    ),
 
                 "TargetDiscoverySnapshot" =>
-                    (WorkflowStage.TargetDiscovery, "TargetAssessment"),
+                    (
+                        WorkflowStage.TargetDiscovery,
+                        "TargetAssessment"
+                    ),
 
                 "ChemicalDesignSnapshot" =>
-                    (WorkflowStage.ChemicalDesign, "CandidateStructure"),
+                    (
+                        WorkflowStage.ChemicalDesign,
+                        "CandidateStructure"
+                    ),
 
                 "CompoundCatalogSnapshot" =>
-                    (WorkflowStage.CompoundCatalog, "Compound"),
+                    (
+                        WorkflowStage.CompoundCatalog,
+                        "Compound"
+                    ),
 
                 "CompletedScreeningSnapshot" =>
-                    (WorkflowStage.Screening, "Screening"),
+                    (
+                        WorkflowStage.Screening,
+                        "Screening"
+                    ),
 
                 "AssaySnapshot" =>
-                    (WorkflowStage.AssayManagement, "Assay"),
+                    (
+                        WorkflowStage.AssayManagement,
+                        "Assay"
+                    ),
 
-                "PredictionCompleted" or "AiDiscoverySnapshot" =>
-                    (WorkflowStage.AiDiscovery, "Prediction"),
+                "PredictionCompleted" or
+                "AiDiscoverySnapshot" =>
+                    (
+                        WorkflowStage.AiDiscovery,
+                        "Prediction"
+                    ),
 
                 _ =>
-                    (default, string.Empty)
+                    (
+                        default,
+                        string.Empty
+                    )
             };
 
         return !string.IsNullOrWhiteSpace(
@@ -274,12 +351,16 @@ public sealed class PlatformWorkflowEventsConsumer
         JsonElement payload,
         string? correlationId)
     {
-        return ReadGuid(payload, "workflowId")
-            ?? (Guid.TryParse(
+        return ReadGuid(
+                   payload,
+                   "workflowId")
+            ?? (
+                Guid.TryParse(
                     correlationId,
                     out var parsed)
-                ? parsed
-                : null);
+                    ? parsed
+                    : null
+            );
     }
 
     private static Guid? ResolveExternalEntityId(
@@ -310,12 +391,15 @@ public sealed class PlatformWorkflowEventsConsumer
                 WorkflowStage.AiDiscovery =>
                     "predictionId",
 
-                _ => null
+                _ =>
+                    null
             };
 
         return propertyName is null
             ? null
-            : ReadGuid(payload, propertyName);
+            : ReadGuid(
+                payload,
+                propertyName);
     }
 
     private static Guid? ReadGuid(

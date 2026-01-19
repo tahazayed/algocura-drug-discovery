@@ -1,5 +1,6 @@
 using Algocura.Notification.Api.Data;
 using Algocura.Notification.Api.Services;
+using Algocura.Platform.Messaging.Options;
 using Azure.Messaging.ServiceBus;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
@@ -7,7 +8,8 @@ using System.Text.Json;
 
 namespace Algocura.Notification.Api.Messaging.Consumers;
 
-public sealed class PlatformEventsConsumer : BackgroundService
+public sealed class PlatformEventsConsumer
+    : BackgroundService
 {
     private readonly IServiceScopeFactory _scopeFactory;
     private readonly ServiceBusProcessor _processor;
@@ -16,67 +18,138 @@ public sealed class PlatformEventsConsumer : BackgroundService
     public PlatformEventsConsumer(
         IServiceScopeFactory scopeFactory,
         ServiceBusClient client,
-        IOptions<ServiceBusOptions> options,
+        IOptions<ServiceBusOptions> serviceBusOptions,
+        IConfiguration configuration,
         ILogger<PlatformEventsConsumer> logger)
     {
-        _scopeFactory = scopeFactory;
-        _logger = logger;
-        _processor = client.CreateProcessor(
-            options.Value.TopicName,
-            options.Value.SubscriptionName,
-            new ServiceBusProcessorOptions
-            {
-                AutoCompleteMessages = false,
-                MaxConcurrentCalls = 4,
-                MaxAutoLockRenewalDuration = TimeSpan.FromMinutes(5)
-            });
+        _scopeFactory =
+            scopeFactory;
+
+        _logger =
+            logger;
+
+        var messagingOptions =
+            serviceBusOptions.Value;
+
+        var subscriptionName =
+            configuration[
+                "ServiceBus:SubscriptionName"];
+
+        if (string.IsNullOrWhiteSpace(
+                subscriptionName))
+        {
+            throw new InvalidOperationException(
+                "ServiceBus:SubscriptionName is required.");
+        }
+
+        _processor =
+            client.CreateProcessor(
+                messagingOptions.TopicName,
+                subscriptionName,
+                new ServiceBusProcessorOptions
+                {
+                    AutoCompleteMessages =
+                        false,
+
+                    MaxConcurrentCalls =
+                        4,
+
+                    MaxAutoLockRenewalDuration =
+                        TimeSpan.FromMinutes(5)
+                });
     }
 
-    protected override async Task ExecuteAsync(CancellationToken stoppingToken)
+    protected override async Task ExecuteAsync(
+        CancellationToken stoppingToken)
     {
-        _processor.ProcessMessageAsync += ProcessMessageAsync;
-        _processor.ProcessErrorAsync += ProcessErrorAsync;
-        await _processor.StartProcessingAsync(stoppingToken);
+        _processor.ProcessMessageAsync +=
+            ProcessMessageAsync;
 
-        try { await Task.Delay(Timeout.InfiniteTimeSpan, stoppingToken); }
-        catch (OperationCanceledException) when (stoppingToken.IsCancellationRequested) { }
+        _processor.ProcessErrorAsync +=
+            ProcessErrorAsync;
+
+        await _processor.StartProcessingAsync(
+            stoppingToken);
+
+        try
+        {
+            await Task.Delay(
+                Timeout.InfiniteTimeSpan,
+                stoppingToken);
+        }
+        catch (OperationCanceledException)
+            when (stoppingToken.IsCancellationRequested)
+        {
+        }
     }
 
-    private async Task ProcessMessageAsync(ProcessMessageEventArgs args)
+    private async Task ProcessMessageAsync(
+        ProcessMessageEventArgs args)
     {
         try
         {
-            var eventType = args.Message.ApplicationProperties
-                .TryGetValue("eventType", out var eventTypeValue)
-                ? eventTypeValue?.ToString()
-                : args.Message.Subject;
+            var eventType =
+                args.Message.ApplicationProperties
+                    .TryGetValue(
+                        "eventType",
+                        out var eventTypeValue)
+                    ? eventTypeValue?.ToString()
+                    : args.Message.Subject;
 
-            if (string.IsNullOrWhiteSpace(eventType))
-                throw new JsonException("The event type is missing.");
+            if (string.IsNullOrWhiteSpace(
+                    eventType))
+            {
+                throw new JsonException(
+                    "The event type is missing.");
+            }
 
-            var source = args.Message.ApplicationProperties
-                .TryGetValue("source", out var sourceValue)
-                ? sourceValue?.ToString() ?? "Unknown"
-                : "Unknown";
+            var source =
+                args.Message.ApplicationProperties
+                    .TryGetValue(
+                        "source",
+                        out var sourceValue)
+                    ? sourceValue?.ToString() ??
+                      "Unknown"
+                    : "Unknown";
 
-            var eventId = Guid.TryParse(args.Message.MessageId, out var parsed)
-                ? parsed
-                : Guid.NewGuid();
+            var eventId =
+                Guid.TryParse(
+                    args.Message.MessageId,
+                    out var parsed)
+                    ? parsed
+                    : Guid.NewGuid();
 
-            var envelope = new PlatformEventEnvelope(
-                eventId,
-                eventType,
-                source,
-                args.Message.CorrelationId,
-                DateTimeOffset.UtcNow,
-                args.Message.Body.ToString());
+            var envelope =
+                new PlatformEventEnvelope(
+                    eventId,
+                    eventType,
+                    source,
+                    args.Message.CorrelationId,
+                    DateTimeOffset.UtcNow,
+                    args.Message.Body.ToString());
 
-            await using var scope = _scopeFactory.CreateAsyncScope();
-            var db = scope.ServiceProvider.GetRequiredService<NotificationDbContext>();
-            var composer = scope.ServiceProvider.GetRequiredService<INotificationComposer>();
+            await using var scope =
+                _scopeFactory.CreateAsyncScope();
 
-            await HandleAsync(db, composer, envelope, args.CancellationToken);
-            await args.CompleteMessageAsync(args.Message, args.CancellationToken);
+            var dbContext =
+                scope.ServiceProvider
+                    .GetRequiredService<
+                        NotificationDbContext>();
+
+            var composer =
+                scope.ServiceProvider
+                    .GetRequiredService<
+                        INotificationComposer>();
+
+            await HandleAsync(
+                dbContext,
+                composer,
+                envelope,
+                args.CancellationToken);
+
+            await args.CompleteMessageAsync(
+                args.Message,
+                args.CancellationToken);
         }
         catch (JsonException exception)
         {
@@ -95,62 +168,105 @@ public sealed class PlatformEventsConsumer : BackgroundService
 
             await args.AbandonMessageAsync(
                 args.Message,
-                cancellationToken: args.CancellationToken);
+                cancellationToken:
+                    args.CancellationToken);
         }
     }
 
     public static async Task<int> HandleAsync(
-        NotificationDbContext db,
+        NotificationDbContext dbContext,
         INotificationComposer composer,
         PlatformEventEnvelope platformEvent,
         CancellationToken cancellationToken)
     {
-        var rules = await db.NotificationRules
-            .AsNoTracking()
-            .Where(x => x.Enabled && x.EventType == platformEvent.EventType)
-            .ToListAsync(cancellationToken);
+        var rules =
+            await dbContext.NotificationRules
+                .AsNoTracking()
+                .Where(
+                    x =>
+                        x.Enabled &&
+                        x.EventType ==
+                        platformEvent.EventType)
+                .ToListAsync(
+                    cancellationToken);
 
-        if (rules.Count == 0) return 0;
+        if (rules.Count == 0)
+        {
+            return 0;
+        }
 
-        var existingRuleIds = await db.Notifications
-            .Where(x => x.SourceEventId == platformEvent.EventId && x.RuleId != null)
-            .Select(x => x.RuleId!.Value)
-            .ToListAsync(cancellationToken);
+        var existingRuleIds =
+            await dbContext.Notifications
+                .Where(
+                    x =>
+                        x.SourceEventId ==
+                            platformEvent.EventId &&
+                        x.RuleId != null)
+                .Select(
+                    x =>
+                        x.RuleId!.Value)
+                .ToListAsync(
+                    cancellationToken);
 
-        var existing = existingRuleIds.ToHashSet();
+        var existing =
+            existingRuleIds.ToHashSet();
 
-        var notifications = rules
-            .Where(rule => !existing.Contains(rule.Id))
-            .Select(rule => composer.Compose(rule, platformEvent))
-            .ToArray();
+        var notifications =
+            rules
+                .Where(
+                    rule =>
+                        !existing.Contains(
+                            rule.Id))
+                .Select(
+                    rule =>
+                        composer.Compose(
+                            rule,
+                            platformEvent))
+                .ToArray();
 
-        if (notifications.Length == 0) return 0;
+        if (notifications.Length == 0)
+        {
+            return 0;
+        }
 
-        db.Notifications.AddRange(notifications);
-        await db.SaveChangesAsync(cancellationToken);
+        dbContext.Notifications.AddRange(
+            notifications);
+
+        await dbContext.SaveChangesAsync(
+            cancellationToken);
 
         return notifications.Length;
     }
 
-    private Task ProcessErrorAsync(ProcessErrorEventArgs args)
+    private Task ProcessErrorAsync(
+        ProcessErrorEventArgs args)
     {
         _logger.LogError(
             args.Exception,
             "Service Bus error. Entity: {Entity}; Source: {Source}.",
             args.EntityPath,
             args.ErrorSource);
+
         return Task.CompletedTask;
     }
 
-    public override async Task StopAsync(CancellationToken cancellationToken)
+    public override async Task StopAsync(
+        CancellationToken cancellationToken)
     {
-        await _processor.StopProcessingAsync(cancellationToken);
-        await base.StopAsync(cancellationToken);
+        await _processor.StopProcessingAsync(
+            cancellationToken);
+
+        await base.StopAsync(
+            cancellationToken);
     }
 
     public override void Dispose()
     {
-        _processor.DisposeAsync().AsTask().GetAwaiter().GetResult();
+        _processor.DisposeAsync()
+            .AsTask()
+            .GetAwaiter()
+            .GetResult();
+
         base.Dispose();
     }
 }

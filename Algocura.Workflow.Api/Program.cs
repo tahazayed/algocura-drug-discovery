@@ -1,75 +1,69 @@
 using Algocura.Platform.Auditing.DependencyInjection;
 using Algocura.Platform.Auditing.Interceptors;
+using Algocura.Platform.Auditing.Options;
+using Algocura.Platform.Messaging.DependencyInjection;
+using Algocura.Platform.Messaging.Options;
+using Algocura.Platform.Messaging.Publishing;
 using Algocura.Workflow.Api.Data;
-using Algocura.Workflow.Api.Messaging;
 using Algocura.Workflow.Api.Messaging.Consumers;
 using Algocura.Workflow.Api.Messaging.Publishers;
 using Algocura.Workflow.Api.Services;
-using Azure.Identity;
-using Azure.Messaging.ServiceBus;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 
 var builder = WebApplication.CreateBuilder(args);
 
+// -----------------------------------------------------------------------------
+// Controllers and common services
+// -----------------------------------------------------------------------------
+
 builder.Services.AddControllers();
 builder.Services.AddProblemDetails();
 builder.Services.AddHealthChecks();
-
-builder.Services.AddOpenApi(options =>
-{
-    options.AddDocumentTransformer((document, context, cancellationToken) =>
-    {
-        document.Info.Title =
-            "Algocura Workflow API";
-
-        document.Info.Version =
-            "v1";
-
-        document.Info.Description =
-            "Orchestrates and tracks the end-to-end Algocura drug discovery workflow.";
-
-        document.Info.Contact = new()
-        {
-            Name =
-                "Algocura Platform Engineering"
-        };
-
-        document.Info.License = new()
-        {
-            Name =
-                "Proprietary"
-        };
-
-        return Task.CompletedTask;
-    });
-});
 
 // -----------------------------------------------------------------------------
 // Auditing
 // -----------------------------------------------------------------------------
 
-builder.Services.AddAlgocuraAuditing(options =>
-{
-    options.ServiceName =
-        "Algocura.Workflow.Api";
+var auditingSection =
+    builder.Configuration.GetSection(
+        AuditingOptions.SectionName);
 
-    options.StampCreatedAndUpdatedFields =
-        true;
+builder.Services
+    .AddAlgocuraAuditing<
+        ServiceBusAuditEventPublisher>(
+        options =>
+        {
+            options.ExcludedPropertyNames.UnionWith(
+            [
+                "Password",
+                "PasswordHash",
+                "AccessToken",
+                "RefreshToken",
+                "ClientSecret",
+                "ConnectionString",
+                "SharedAccessKey",
+                "ApiKey"
+            ]);
 
-    // Enable after registering a Service Bus audit publisher
-    // or implementing a transactional outbox.
-    options.PublishEntityAuditEvents =
-        true;
-});
+            options.MaskedPropertyNames.UnionWith(
+            [
+                "Email",
+                "Recipient",
+                "IpAddress",
+                "UserAgent"
+            ]);
+
+            auditingSection.Bind(options);
+        });
 
 // -----------------------------------------------------------------------------
-// Database
+// Entity Framework Core
 // -----------------------------------------------------------------------------
 
-var connectionString =
-    builder.Configuration
-        .GetConnectionString("WorkflowDatabase")
+var databaseConnectionString =
+    builder.Configuration.GetConnectionString(
+        "WorkflowDatabase")
     ?? throw new InvalidOperationException(
         "ConnectionStrings:WorkflowDatabase is required.");
 
@@ -77,13 +71,22 @@ builder.Services.AddDbContext<WorkflowDbContext>(
     (serviceProvider, options) =>
     {
         options.UseSqlServer(
-            connectionString,
+            databaseConnectionString,
             sqlServerOptions =>
+            {
                 sqlServerOptions.EnableRetryOnFailure(
-                    maxRetryCount: 5,
+                    maxRetryCount:
+                        5,
+
                     maxRetryDelay:
                         TimeSpan.FromSeconds(10),
-                    errorNumbersToAdd: null));
+
+                    errorNumbersToAdd:
+                        null);
+
+                sqlServerOptions.MigrationsAssembly(
+                    typeof(Program).Assembly.FullName);
+            });
 
         options.AddInterceptors(
             serviceProvider.GetRequiredService<
@@ -97,43 +100,31 @@ builder.Services.AddDbContext<WorkflowDbContext>(
         }
     });
 
+// -----------------------------------------------------------------------------
+// Application services
+// -----------------------------------------------------------------------------
+
 builder.Services.AddScoped<
     IWorkflowStateMachine,
     WorkflowStateMachine>();
 
-builder.Services
-    .AddOptions<ServiceBusOptions>()
-    .Bind(
-        builder.Configuration.GetSection(
-            ServiceBusOptions.SectionName))
-    .Validate(
-        x => !string.IsNullOrWhiteSpace(x.TopicName),
-        "ServiceBus:TopicName is required.")
-    .Validate(
-        x => !string.IsNullOrWhiteSpace(x.SubscriptionName),
-        "ServiceBus:SubscriptionName is required.")
-    .Validate(
-        x => x.UseEmulator
-            ? !string.IsNullOrWhiteSpace(x.ConnectionString)
-            : !string.IsNullOrWhiteSpace(x.FullyQualifiedNamespace),
-        "Configure an emulator connection string or Azure namespace.")
-    .ValidateOnStart();
+// -----------------------------------------------------------------------------
+// Azure Service Bus
+// -----------------------------------------------------------------------------
 
-builder.Services.AddSingleton<ServiceBusClient>(
-    serviceProvider =>
-    {
-        var options =
-            serviceProvider
-                .GetRequiredService<IOptions<ServiceBusOptions>>()
-                .Value;
+builder.Services.AddAlgocuraPlatformMessaging(
+    builder.Configuration);
 
-        return options.UseEmulator
-            ? new ServiceBusClient(
-                options.ConnectionString)
-            : new ServiceBusClient(
-                options.FullyQualifiedNamespace,
-                new DefaultAzureCredential());
-    });
+var subscriptionName =
+    builder.Configuration[
+        "ServiceBus:SubscriptionName"];
+
+if (string.IsNullOrWhiteSpace(
+        subscriptionName))
+{
+    throw new InvalidOperationException(
+        "ServiceBus:SubscriptionName is required.");
+}
 
 builder.Services.AddSingleton<
     IEventPublisher,
@@ -142,96 +133,245 @@ builder.Services.AddSingleton<
 builder.Services.AddHostedService<
     PlatformWorkflowEventsConsumer>();
 
+// -----------------------------------------------------------------------------
+// OpenAPI document generation
+// -----------------------------------------------------------------------------
+
+builder.Services.AddOpenApi(
+    options =>
+    {
+        options.AddDocumentTransformer(
+            (
+                document,
+                context,
+                cancellationToken) =>
+            {
+                document.Info.Title =
+                    "Algocura Workflow API";
+
+                document.Info.Version =
+                    "v1";
+
+                document.Info.Description =
+                    "Orchestrates and tracks the end-to-end Algocura " +
+                    "drug discovery workflow.";
+
+                document.Info.Contact =
+                    new()
+                    {
+                        Name =
+                            "Algocura Platform Engineering"
+                    };
+
+                document.Info.License =
+                    new()
+                    {
+                        Name =
+                            "Proprietary"
+                    };
+
+                return Task.CompletedTask;
+            });
+    });
+
+// -----------------------------------------------------------------------------
+// Build application
+// -----------------------------------------------------------------------------
+
 var app = builder.Build();
+
+// -----------------------------------------------------------------------------
+// Database initialization
+// -----------------------------------------------------------------------------
+
+await DatabaseInitializer.InitializeAsync(
+    app.Services,
+    app.Logger,
+    app.Lifetime.ApplicationStopping);
+
+// -----------------------------------------------------------------------------
+// Middleware
+// -----------------------------------------------------------------------------
 
 app.UseExceptionHandler();
 
-if (app.Environment.IsDevelopment())
+if (!app.Environment.IsDevelopment())
 {
-    app.MapOpenApi();
+    app.UseHttpsRedirection();
+}
 
-    app.UseSwaggerUI(options =>
+// -----------------------------------------------------------------------------
+// OpenAPI JSON
+//
+// /openapi/v1.json
+// -----------------------------------------------------------------------------
+
+app.MapOpenApi();
+
+// -----------------------------------------------------------------------------
+// Swagger UI
+//
+// /swagger
+// -----------------------------------------------------------------------------
+
+app.UseSwaggerUI(
+    options =>
     {
-        options.RoutePrefix = "swagger";
+        options.RoutePrefix =
+            "swagger";
+
         options.SwaggerEndpoint(
             "/openapi/v1.json",
             "Algocura Workflow API v1");
+
         options.DocumentTitle =
-            "Algocura Workflow API";
+            "Algocura Workflow API - Swagger";
+
         options.DisplayRequestDuration();
         options.EnableDeepLinking();
         options.EnableFilter();
         options.EnableTryItOutByDefault();
+        options.ShowExtensions();
+        options.ShowCommonExtensions();
     });
 
-    app.UseReDoc(options =>
+// -----------------------------------------------------------------------------
+// ReDoc
+//
+// /redoc
+// -----------------------------------------------------------------------------
+
+app.UseReDoc(
+    options =>
     {
-        options.RoutePrefix = "redoc";
-        options.SpecUrl("/openapi/v1.json");
-        options.DocumentTitle =
-            "Algocura Workflow API Documentation";
-    });
-}
+        options.RoutePrefix =
+            "redoc";
 
-app.UseHttpsRedirection();
+        options.SpecUrl(
+            "/openapi/v1.json");
+
+        options.DocumentTitle =
+            "Algocura Workflow API - ReDoc";
+
+        options.ExpandResponses(
+            "200,201");
+
+        options.RequiredPropsFirst();
+    });
+
+// -----------------------------------------------------------------------------
+// Endpoints
+// -----------------------------------------------------------------------------
+
 app.MapControllers();
-app.MapHealthChecks("/health")
+
+app.MapHealthChecks(
+        "/health")
     .ExcludeFromDescription();
 
 app.MapGet(
         "/",
         (
-            IHostEnvironment environment,
-            IOptions<ServiceBusOptions> options) =>
+            IOptions<ServiceBusOptions> serviceBusOptions,
+            IOptions<AuditingOptions> auditingOptions,
+            IWebHostEnvironment environment) =>
         {
-            var serviceBus =
-                options.Value;
+            var messagingOptions =
+                serviceBusOptions.Value;
+
+            var auditOptions =
+                auditingOptions.Value;
 
             return Results.Ok(
                 new
                 {
                     service =
                         "Algocura Workflow API",
-                    version = "v1",
-                    status = "Running",
+
+                    version =
+                        "v1",
+
+                    status =
+                        "Running",
+
                     environment =
                         environment.EnvironmentName,
-                    documentation = new
-                    {
-                        swagger = "/swagger",
-                        redoc = "/redoc",
-                        openApi = "/openapi/v1.json"
-                    },
-                    health = "/health",
-                    messaging = new
-                    {
-                        provider =
-                            "Azure Service Bus",
-                        mode =
-                            serviceBus.UseEmulator
-                                ? "Emulator"
-                                : "Azure",
-                        topic =
-                            serviceBus.TopicName,
-                        subscription =
-                            serviceBus.SubscriptionName
-                    },
-                    auditing = new
-                    {
-                        entityStamping =
-                            true,
-                        eventPublishing =
-                            false
-                    }
+
+                    documentation =
+                        new
+                        {
+                            swagger =
+                                "/swagger",
+
+                            redoc =
+                                "/redoc",
+
+                            openApi =
+                                "/openapi/v1.json"
+                        },
+
+                    health =
+                        "/health",
+
+                    messaging =
+                        new
+                        {
+                            provider =
+                                "Azure Service Bus",
+
+                            mode =
+                                messagingOptions.UseEmulator
+                                    ? "Emulator"
+                                    : "Azure",
+
+                            topic =
+                                messagingOptions.TopicName,
+
+                            subscription =
+                                subscriptionName
+                        },
+
+                    auditing =
+                        new
+                        {
+                            serviceName =
+                                auditOptions.ServiceName,
+
+                            entityStamping =
+                                auditOptions
+                                    .StampCreatedAndUpdatedFields,
+
+                            eventPublishing =
+                                auditOptions
+                                    .PublishEntityAuditEvents,
+
+                            includeUnchangedPropertiesOnCreate =
+                                auditOptions
+                                    .IncludeUnchangedPropertiesOnCreate,
+
+                            includeUnchangedPropertiesOnDelete =
+                                auditOptions
+                                    .IncludeUnchangedPropertiesOnDelete,
+
+                            ignoreAuditInfrastructureEntities =
+                                auditOptions
+                                    .IgnoreAuditInfrastructureEntities
+                        }
                 });
         })
-    .WithName("GetServiceInformation")
-    .ExcludeFromDescription();
+    .WithName(
+        "GetServiceInformation")
+    .WithSummary(
+        "Get service information")
+    .WithDescription(
+        "Returns service status, documentation links, messaging " +
+        "configuration, and auditing configuration.")
+    .Produces(
+        StatusCodes.Status200OK);
 
-await DatabaseInitializer.InitializeAsync(
-    app.Services,
-    app.Logger,
-    app.Lifetime.ApplicationStopping);
+// -----------------------------------------------------------------------------
+// Start application
+// -----------------------------------------------------------------------------
 
 await app.RunAsync();
 

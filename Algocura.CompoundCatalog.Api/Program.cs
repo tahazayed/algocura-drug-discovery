@@ -2,8 +2,9 @@ using Algocura.CompoundCatalog.Api.Data;
 using Algocura.CompoundCatalog.Api.Messaging;
 using Algocura.Platform.Auditing.DependencyInjection;
 using Algocura.Platform.Auditing.Interceptors;
-using Azure.Identity;
-using Azure.Messaging.ServiceBus;
+using Algocura.Platform.Auditing.Options;
+using Algocura.Platform.Messaging.DependencyInjection;
+using Algocura.Platform.Messaging.Publishing;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 
@@ -21,20 +22,37 @@ builder.Services.AddHealthChecks();
 // Auditing
 // -----------------------------------------------------------------------------
 
-builder.Services.AddAlgocuraAuditing(
-    options =>
-    {
-        options.ServiceName =
-            "Algocura.CompoundCatalog.Api";
+var auditingSection =
+    builder.Configuration.GetSection(
+        AuditingOptions.SectionName);
 
-        options.StampCreatedAndUpdatedFields =
-            true;
+builder.Services
+    .AddAlgocuraAuditing<
+        ServiceBusAuditEventPublisher>(
+        options =>
+        {
+            options.ExcludedPropertyNames.UnionWith(
+            [
+                "Password",
+                "PasswordHash",
+                "AccessToken",
+                "RefreshToken",
+                "ClientSecret",
+                "ConnectionString",
+                "SharedAccessKey",
+                "ApiKey"
+            ]);
 
-        // Enable this after replacing NullAuditEventPublisher with the
-        // Service Bus audit-event publisher or a transactional outbox.
-        options.PublishEntityAuditEvents =
-            true;
-    });
+            options.MaskedPropertyNames.UnionWith(
+            [
+                "Email",
+                "Recipient",
+                "IpAddress",
+                "UserAgent"
+            ]);
+
+            auditingSection.Bind(options);
+        });
 
 // -----------------------------------------------------------------------------
 // Entity Framework Core
@@ -132,53 +150,11 @@ builder.Services.AddOpenApi(
     });
 
 // -----------------------------------------------------------------------------
-// Azure Service Bus options
-// -----------------------------------------------------------------------------
-
-builder.Services
-    .AddOptions<ServiceBusOptions>()
-    .Bind(
-        builder.Configuration.GetSection(
-            ServiceBusOptions.SectionName))
-    .Validate(
-        options =>
-            !string.IsNullOrWhiteSpace(
-                options.TopicName),
-        "ServiceBus:TopicName is required.")
-    .Validate(
-        options =>
-            options.UseEmulator
-                ? !string.IsNullOrWhiteSpace(
-                    options.ConnectionString)
-                : !string.IsNullOrWhiteSpace(
-                    options.FullyQualifiedNamespace),
-        "ServiceBus:ConnectionString is required for the emulator, or " +
-        "ServiceBus:FullyQualifiedNamespace is required for Azure.")
-    .ValidateOnStart();
-
-// -----------------------------------------------------------------------------
 // Azure Service Bus client
 // -----------------------------------------------------------------------------
 
-builder.Services.AddSingleton<ServiceBusClient>(
-    serviceProvider =>
-    {
-        var options =
-            serviceProvider
-                .GetRequiredService<
-                    IOptions<ServiceBusOptions>>()
-                .Value;
-
-        if (options.UseEmulator)
-        {
-            return new ServiceBusClient(
-                options.ConnectionString);
-        }
-
-        return new ServiceBusClient(
-            options.FullyQualifiedNamespace,
-            new DefaultAzureCredential());
-    });
+builder.Services.AddAlgocuraPlatformMessaging(
+    builder.Configuration);
 
 builder.Services.AddSingleton<
     IEventPublisher,
@@ -282,11 +258,17 @@ app.MapHealthChecks(
 app.MapGet(
         "/",
         (
-            IOptions<ServiceBusOptions> serviceBusOptions,
+            IOptions<
+                Algocura.Platform.Messaging.Options.ServiceBusOptions>
+                serviceBusOptions,
+            IOptions<AuditingOptions> auditingOptions,
             IWebHostEnvironment environment) =>
         {
             var messagingOptions =
                 serviceBusOptions.Value;
+
+            var auditOptions =
+                auditingOptions.Value;
 
             return Results.Ok(
                 new
@@ -337,11 +319,28 @@ app.MapGet(
                     auditing =
                         new
                         {
+                            serviceName =
+                                auditOptions.ServiceName,
+
                             entityStamping =
-                                true,
+                                auditOptions
+                                    .StampCreatedAndUpdatedFields,
 
                             eventPublishing =
-                                false
+                                auditOptions
+                                    .PublishEntityAuditEvents,
+
+                            includeUnchangedPropertiesOnCreate =
+                                auditOptions
+                                    .IncludeUnchangedPropertiesOnCreate,
+
+                            includeUnchangedPropertiesOnDelete =
+                                auditOptions
+                                    .IncludeUnchangedPropertiesOnDelete,
+
+                            ignoreAuditInfrastructureEntities =
+                                auditOptions
+                                    .IgnoreAuditInfrastructureEntities
                         }
                 });
         })
@@ -350,7 +349,8 @@ app.MapGet(
     .WithSummary(
         "Get service information")
     .WithDescription(
-        "Returns service status, documentation links, messaging configuration, and auditing configuration.")
+        "Returns service status, documentation links, " +
+        "messaging configuration, and auditing configuration.")
     .Produces(
         StatusCodes.Status200OK);
 

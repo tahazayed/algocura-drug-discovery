@@ -33,5 +33,6 @@
 
 	<ItemGroup>
 		<ProjectReference Include="..\Algocura.Platform.Auditing\Algocura.Platform.Auditing.csproj" />
+		<ProjectReference Include="..\Algocura.Platform.Messaging\Algocura.Platform.Messaging.csproj" />
 	</ItemGroup>
 </Project>

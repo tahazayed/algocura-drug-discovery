@@ -1,9 +1,11 @@
 namespace Algocura.Audit.Api.Messaging;
 
 /// <summary>
-/// Wire contract matching Algocura.Platform.Auditing.Events.EntityAuditEvent.
-/// A local contract keeps the Audit API decoupled from implementation details
-/// while preserving the shared event schema.
+/// Wire contract matching
+/// Algocura.Platform.Auditing.Events.EntityAuditEvent.
+///
+/// The Audit API keeps a local incoming contract so its ingestion boundary
+/// remains explicit while preserving the shared platform event schema.
 /// </summary>
 public sealed record IncomingEntityAuditEvent
 {

@@ -1,18 +1,6 @@
-using Azure.Messaging.ServiceBus;
-using Microsoft.Extensions.Options;
-using System.Text.Json;
+using Algocura.Platform.Messaging.Publishing;
 
 namespace Algocura.Reporting.Api.Messaging;
-
-public sealed class ServiceBusOptions
-{
-    public const string SectionName = "ServiceBus";
-    public bool UseEmulator { get; set; }
-    public string ConnectionString { get; set; } = string.Empty;
-    public string FullyQualifiedNamespace { get; set; } = string.Empty;
-    public string TopicName { get; set; } = "algocura-events";
-    public string SubscriptionName { get; set; } = "reporting-api";
-}
 
 public abstract record IntegrationEvent(
     Guid EventId,
@@ -27,9 +15,12 @@ public sealed record ReportingSnapshot(
     int ProjectionCount,
     int ActiveReportDefinitions,
     int CompletedReportRuns)
-    : IntegrationEvent(EventId, OccurredAtUtc)
+    : IntegrationEvent(
+        EventId,
+        OccurredAtUtc)
 {
-    public override string EventType => nameof(ReportingSnapshot);
+    public override string EventType =>
+        nameof(ReportingSnapshot);
 }
 
 public interface IEventPublisher
@@ -41,39 +32,36 @@ public interface IEventPublisher
 }
 
 public sealed class ServiceBusEventPublisher(
-    ServiceBusClient client,
-    IOptions<ServiceBusOptions> options)
-    : IEventPublisher,
-      IAsyncDisposable
+    IPlatformMessagePublisher publisher,
+    ILogger<ServiceBusEventPublisher> logger)
+    : IEventPublisher
 {
-    private readonly ServiceBusSender _sender =
-        client.CreateSender(options.Value.TopicName);
-
     public async Task PublishAsync(
         IntegrationEvent integrationEvent,
         string? correlationId = null,
         CancellationToken cancellationToken = default)
     {
-        var message = new ServiceBusMessage(
-            BinaryData.FromString(
-                JsonSerializer.Serialize(
-                    integrationEvent,
-                    integrationEvent.GetType())))
-        {
-            MessageId = integrationEvent.EventId.ToString(),
-            Subject = integrationEvent.EventType,
-            CorrelationId = correlationId,
-            ContentType = "application/json"
-        };
+        ArgumentNullException.ThrowIfNull(
+            integrationEvent);
 
-        message.ApplicationProperties["eventType"] =
-            integrationEvent.EventType;
+        var applicationProperties =
+            new Dictionary<string, object>
+            {
+                ["occurredAtUtc"] =
+                    integrationEvent.OccurredAtUtc.ToString("O")
+            };
 
-        await _sender.SendMessageAsync(
-            message,
+        await publisher.PublishAsync(
+            integrationEvent,
+            integrationEvent.EventType,
+            integrationEvent.EventId,
+            correlationId,
+            applicationProperties,
             cancellationToken);
-    }
 
-    public ValueTask DisposeAsync() =>
-        _sender.DisposeAsync();
+        logger.LogInformation(
+            "Published {EventType} with ID {EventId}.",
+            integrationEvent.EventType,
+            integrationEvent.EventId);
+    }
 }

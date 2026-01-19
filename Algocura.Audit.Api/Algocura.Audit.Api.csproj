@@ -19,9 +19,10 @@
 	<PackageReference Include="Microsoft.OpenApi" Version="2.7.5" />
 	<PackageReference Include="Swashbuckle.AspNetCore.ReDoc" Version="10.2.3" />
 	<PackageReference Include="Swashbuckle.AspNetCore.SwaggerUI" Version="10.2.3" />
-</ItemGroup>
-<ItemGroup>
+  </ItemGroup>
+  <ItemGroup>
 	<ProjectReference Include="..\Algocura.Platform.Auditing\Algocura.Platform.Auditing.csproj" />
-</ItemGroup>
+	<ProjectReference Include="..\Algocura.Platform.Messaging\Algocura.Platform.Messaging.csproj" />
+  </ItemGroup>
 
 </Project>

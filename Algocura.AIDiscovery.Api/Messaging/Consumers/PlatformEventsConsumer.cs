@@ -1,6 +1,7 @@
 using Algocura.AIDiscovery.Api.Data;
 using Algocura.AIDiscovery.Api.Domain;
 using Algocura.AIDiscovery.Api.Events;
+using Algocura.Platform.Messaging.Options;
 using Azure.Messaging.ServiceBus;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
@@ -20,21 +21,44 @@ public sealed class PlatformEventsConsumer : BackgroundService
     public PlatformEventsConsumer(
         IServiceScopeFactory scopeFactory,
         ServiceBusClient client,
-        IOptions<ServiceBusOptions> options,
+        IOptions<ServiceBusOptions> serviceBusOptions,
+        IConfiguration configuration,
         ILogger<PlatformEventsConsumer> logger)
     {
-        _scopeFactory = scopeFactory;
-        _logger = logger;
+        _scopeFactory =
+            scopeFactory;
 
-        _processor = client.CreateProcessor(
-            options.Value.TopicName,
-            options.Value.SubscriptionName,
-            new ServiceBusProcessorOptions
-            {
-                AutoCompleteMessages = false,
-                MaxConcurrentCalls = 4,
-                MaxAutoLockRenewalDuration = TimeSpan.FromMinutes(5)
-            });
+        _logger =
+            logger;
+
+        var messagingOptions =
+            serviceBusOptions.Value;
+
+        var subscriptionName =
+            configuration["ServiceBus:SubscriptionName"];
+
+        if (string.IsNullOrWhiteSpace(
+                subscriptionName))
+        {
+            throw new InvalidOperationException(
+                "ServiceBus:SubscriptionName is required.");
+        }
+
+        _processor =
+            client.CreateProcessor(
+                messagingOptions.TopicName,
+                subscriptionName,
+                new ServiceBusProcessorOptions
+                {
+                    AutoCompleteMessages =
+                        false,
+
+                    MaxConcurrentCalls =
+                        4,
+
+                    MaxAutoLockRenewalDuration =
+                        TimeSpan.FromMinutes(5)
+                });
     }
 
     protected override async Task ExecuteAsync(
