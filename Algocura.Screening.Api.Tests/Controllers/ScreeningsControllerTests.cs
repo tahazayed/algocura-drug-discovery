@@ -1,8 +1,8 @@
+using Algocura.Platform.Messaging.Publishing;
 using Algocura.Screening.Api.Contracts;
 using Algocura.Screening.Api.Controllers;
 using Algocura.Screening.Api.Domain;
 using Algocura.Screening.Api.Events;
-using Algocura.Screening.Api.Messaging.Publishers;
 using Algocura.Screening.Api.Tests.Support;
 using FluentAssertions;
 using Microsoft.AspNetCore.Http;

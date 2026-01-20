@@ -3,8 +3,8 @@ using Algocura.AIDiscovery.Api.Data;
 using Algocura.AIDiscovery.Api.Domain;
 using Algocura.AIDiscovery.Api.Events;
 using Algocura.AIDiscovery.Api.Mapping;
-using Algocura.AIDiscovery.Api.Messaging.Publishers;
 using Algocura.AIDiscovery.Api.Services;
+using Algocura.Platform.Messaging.Publishing;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 

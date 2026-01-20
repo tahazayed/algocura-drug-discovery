@@ -1,5 +1,4 @@
 using Algocura.LiteratureIntelligence.Api.Data;
-using Algocura.LiteratureIntelligence.Api.Messaging.Publishers;
 using Algocura.LiteratureIntelligence.Api.Services;
 using Algocura.Platform.Auditing.DependencyInjection;
 using Algocura.Platform.Auditing.Interceptors;
@@ -113,10 +112,6 @@ builder.Services.AddScoped<
 
 builder.Services.AddAlgocuraPlatformMessaging(
     builder.Configuration);
-
-builder.Services.AddSingleton<
-    IEventPublisher,
-    ServiceBusEventPublisher>();
 
 // -----------------------------------------------------------------------------
 // OpenAPI document generation

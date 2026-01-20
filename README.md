@@ -2,7 +2,7 @@
 
 The **Algocura Drug Discovery Platform** is a cloud-native, event-driven microservices platform designed to support an end-to-end computational drug discovery workflow.
 
-The platform begins with scientific literature analysis and target hypothesis generation, continues through target discovery and chemical design, and then proceeds to compound registration, screening, and AI-assisted candidate prioritization. Literature Intelligence, Target Discovery, Chemical Design, Compound Catalog, Screening, Assay Management, AI Discovery, Workflow, Notification, Search, Reporting, and Audit are currently implemented.
+The platform begins with scientific literature analysis and target hypothesis generation, continues through target discovery and chemical design, and then proceeds to compound registration, screening, and AI-assisted candidate prioritization. Literature Intelligence, Target Discovery, Chemical Design, Compound Catalog, Screening, Assay Management, AI Discovery, Workflow, Notification, Search, Reporting, Audit, and Identity are currently implemented. Shared auditing and messaging infrastructure is provided by Algocura.Platform.Auditing and Algocura.Platform.Messaging.
 
 Each microservice owns its data and communicates asynchronously through Azure Service Bus while exposing REST APIs for synchronous operations.
 
@@ -26,7 +26,10 @@ This repository contains multiple independently deployable microservices. Each s
 | Reporting API | [Algocura.Reporting.Api](./Algocura.Reporting.Api/README.md) |
 | Search API | [Algocura.Search.Api](./Algocura.Search.Api/README.md) |
 | Audit API | [Algocura.Audit.Api](./Algocura.Audit.Api/README.md) |
-| Identity API | Coming Soon |
+| Identity API | [Algocura.Identity.Api](./Algocura.Identity.Api/README.md) |
+| Platform Auditing | [Algocura.Platform.Auditing](./Algocura.Platform.Auditing/README.md) |
+| Platform Messaging | [Algocura.Platform.Messaging](./Algocura.Platform.Messaging/README.md) |
+| Platform Messaging Tests | [Algocura.Platform.Messaging.Tests](./Algocura.Platform.Messaging.Tests/README.md) |
 
 ---
 
@@ -128,7 +131,90 @@ The workflow is designed to support the following progression:
 | Notification API | Event-driven notification rules, manual notifications, delivery attempts, dispatch state, cancellation, and synchronization | [README](./Algocura.Notification.Api/README.md) |
 | Reporting API | Read-optimized reporting projections, report definitions, report execution, persisted metrics, platform summaries, discovery-funnel analytics, and reporting synchronization | [README](./Algocura.Reporting.Api/README.md) |
 | Audit API | Centralized entity audit-event ingestion, immutable audit history, user/action traceability, correlation and workflow filtering, change-value inspection, summaries, and compliance-oriented querying | [README](./Algocura.Audit.Api/README.md) |
-| Identity API | Authentication and authorization | Coming Soon |
+| Identity API | Authentication, authorization, user and role management, and identity lifecycle operations | [README](./Algocura.Identity.Api/README.md) |
+
+---
+
+
+# Shared Platform Infrastructure
+
+Cross-cutting messaging and auditing infrastructure is implemented in shared platform libraries rather than duplicated inside individual APIs.
+
+```text
+Algocura.Platform.Messaging
+        │
+        ├── ServiceBusOptions
+        ├── ServiceBusClient registration
+        ├── IIntegrationEvent
+        ├── IntegrationEvent
+        ├── IEventPublisher
+        ├── ServiceBusEventPublisher
+        ├── IPlatformMessagePublisher
+        ├── ServiceBusMessagePublisher
+        ├── ServiceBusAuditEventPublisher
+        └── ServiceBusConsumerBase
+
+Algocura.Platform.Auditing
+        │
+        ├── Auditable entity support
+        ├── Created/updated field stamping
+        ├── EntityAuditEvent generation
+        ├── EntityAuditEventInterceptor
+        ├── AuditingOptions
+        └── Audit publisher abstraction
+```
+
+Domain services retain ownership of their service-specific integration events and message-processing logic. Common Azure Service Bus transport, publishing, configuration, and consumer lifecycle behavior are provided by `Algocura.Platform.Messaging`.
+
+The standard publishing path is:
+
+```text
+Domain Event
+        ↓
+IEventPublisher
+        ↓
+ServiceBusEventPublisher
+        ↓
+IPlatformMessagePublisher
+        ↓
+ServiceBusMessagePublisher
+        ↓
+Azure Service Bus
+        ↓
+Topic: algocura-events
+```
+
+The standard consumer path is:
+
+```text
+Azure Service Bus
+        ↓
+ServiceBusConsumerBase
+        ↓
+Service-specific Consumer
+        ↓
+Domain / Projection Logic
+```
+
+Audited entity changes use the same shared transport:
+
+```text
+EF Core entity change
+        ↓
+Algocura.Platform.Auditing
+        ↓
+EntityAuditEventInterceptor
+        ↓
+ServiceBusAuditEventPublisher
+        ↓
+IPlatformMessagePublisher
+        ↓
+Azure Service Bus
+        ↓
+Audit API
+```
+
+This design centralizes Service Bus configuration and transport behavior while keeping business-event contracts and processing responsibilities within their owning services.
 
 ---
 
@@ -710,7 +796,7 @@ Services maintain only the local projections required for their responsibilities
 | API Framework | ASP.NET Core |
 | Data Access | Entity Framework Core |
 | Database | SQL Server |
-| Messaging | Azure Service Bus |
+| Messaging | Azure Service Bus via Algocura.Platform.Messaging |
 | Storage | Azure Blob Storage |
 | API Gateway | Azure API Management / YARP |
 | Containers | Docker |
@@ -726,7 +812,7 @@ Services maintain only the local projections required for their responsibilities
 | Notification Delivery | Deterministic logging dispatcher with future provider-specific integrations |
 | Search Indexing | SQL Server projections with future Azure AI Search, Elasticsearch, or OpenSearch integration |
 | Reporting | SQL Server reporting projections, persisted report runs and metrics, with future dashboard/export integrations |
-| Auditing | Algocura.Platform.Auditing, EF Core interceptors, EntityAuditEvent, Azure Service Bus, centralized SQL Server audit history |
+| Auditing | Algocura.Platform.Auditing, EF Core interceptors, EntityAuditEvent, Algocura.Platform.Messaging, Azure Service Bus, centralized SQL Server audit history |
 | AI Inference | Deterministic prototype with future trained-model integration |
 
 ---
@@ -776,6 +862,16 @@ Algocura.DrugDiscovery
 │   └── README.md
 │
 ├── Algocura.Identity.Api
+│   └── README.md
+│
+├── Algocura.Platform.Auditing
+│   └── README.md
+│
+├── Algocura.Platform.Messaging
+│   └── README.md
+│
+├── Algocura.Platform.Messaging.Tests
+│   └── README.md
 │
 └── tests
 ```
@@ -806,6 +902,7 @@ Local development uses Docker Compose to provision the following infrastructure 
 - Search API
 - Reporting API
 - Audit API
+- Identity API
 
 Additional microservices will be added to the Docker Compose environment as they are implemented.
 
@@ -949,6 +1046,12 @@ The platform currently supports:
 - SQL Server persistence
 - Docker-based local development
 - Azure Service Bus Emulator integration
+- Shared Azure Service Bus publishing infrastructure
+- Shared integration-event contracts
+- Shared Service Bus consumer lifecycle management
+- Centralized Service Bus configuration through Algocura.Platform.Messaging
+- Shared audit-event publishing through Algocura.Platform.Messaging
+- Unit tests for shared messaging infrastructure
 - Automated unit testing
 
 ---
@@ -958,6 +1061,7 @@ The platform currently supports:
 - Microservices architecture
 - Domain-Driven Design
 - Event-driven communication
+- Shared messaging infrastructure with service-owned domain contracts
 - Database per service
 - Local projection ownership
 - Idempotent event consumption
@@ -995,4 +1099,7 @@ The platform currently supports:
 | Reporting API | Reporting projections, report definitions, report execution, persisted metrics, platform summaries, discovery-funnel analytics, and synchronization | ✅ Implemented | [README](./Algocura.Reporting.Api/README.md) | 2026-01-16 |
 | Search API | Event-driven unified search projections, metadata filtering, free-text search, document lifecycle management, and index synchronization | ✅ Implemented | [README](./Algocura.Search.Api/README.md) | 2026-01-13 |
 | Audit API | Centralized audit-event ingestion, immutable audit history, actor/change traceability, filtering, summaries, and synchronization | ✅ Implemented | [README](./Algocura.Audit.Api/README.md) | 2026-01-16 |
-| Identity API | Authentication and authorization | 🚧 Planned | — | — |
+| Identity API | Authentication, authorization, user and role management, and identity lifecycle operations | ✅ Implemented | [README](./Algocura.Identity.Api/README.md) | 2026-01-19 |
+| Platform Auditing | Shared EF Core entity auditing, audit metadata, interceptors, and audit-event contracts | ✅ Implemented | [README](./Algocura.Platform.Auditing/README.md) | 2026-01-19 |
+| Platform Messaging | Shared Azure Service Bus configuration, publishing, audit-event transport, integration-event contracts, and consumer infrastructure | ✅ Implemented | [README](./Algocura.Platform.Messaging/README.md) | 2026-01-19 |
+| Platform Messaging Tests | Unit tests for shared messaging contracts, options, publishers, consumer helpers, and dependency injection | ✅ Implemented | [README](./Algocura.Platform.Messaging.Tests/README.md) | 2026-01-19 |

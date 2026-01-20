@@ -6,7 +6,6 @@ using Algocura.Platform.Messaging.Options;
 using Algocura.Platform.Messaging.Publishing;
 using Algocura.Search.Api.Data;
 using Algocura.Search.Api.Messaging.Consumers;
-using Algocura.Search.Api.Messaging.Publishers;
 using Algocura.Search.Api.Services;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
@@ -114,21 +113,6 @@ builder.Services.AddScoped<
 
 builder.Services.AddAlgocuraPlatformMessaging(
     builder.Configuration);
-
-var subscriptionName =
-    builder.Configuration[
-        "ServiceBus:SubscriptionName"];
-
-if (string.IsNullOrWhiteSpace(
-        subscriptionName))
-{
-    throw new InvalidOperationException(
-        "ServiceBus:SubscriptionName is required.");
-}
-
-builder.Services.AddSingleton<
-    IEventPublisher,
-    ServiceBusEventPublisher>();
 
 builder.Services.AddHostedService<
     PlatformSearchEventsConsumer>();
@@ -328,7 +312,7 @@ app.MapGet(
                                 messagingOptions.TopicName,
 
                             subscription =
-                                subscriptionName
+                                messagingOptions.SubscriptionName
                         },
 
                     auditing =

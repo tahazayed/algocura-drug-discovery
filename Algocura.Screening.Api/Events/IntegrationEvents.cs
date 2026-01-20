@@ -1,24 +1,19 @@
 namespace Algocura.Screening.Api.Events;
 
 public abstract record IntegrationEvent
+    : Algocura.Platform.Messaging.Events.IntegrationEvent
 {
     protected IntegrationEvent(
         Guid eventId,
         DateTimeOffset occurredAtUtc)
+        : base(
+            eventId,
+            occurredAtUtc)
     {
-        EventId = eventId;
-        OccurredAtUtc = occurredAtUtc;
     }
 
-    public Guid EventId { get; init; }
-
-    public DateTimeOffset OccurredAtUtc { get; init; }
-
-    public abstract string EventType { get; }
-
-    public virtual string EventVersion => "1.0";
-
-    public virtual string Source => "Algocura.Screening.Api";
+    public override string Source =>
+        "Algocura.Screening.Api";
 }
 
 public sealed record ScreeningCreated : IntegrationEvent

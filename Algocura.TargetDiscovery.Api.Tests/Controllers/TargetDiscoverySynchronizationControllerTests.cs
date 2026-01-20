@@ -1,7 +1,7 @@
+using Algocura.Platform.Messaging.Publishing;
 using Algocura.TargetDiscovery.Api.Controllers;
 using Algocura.TargetDiscovery.Api.Domain;
 using Algocura.TargetDiscovery.Api.Events;
-using Algocura.TargetDiscovery.Api.Messaging.Publishers;
 using Algocura.TargetDiscovery.Api.Tests.Support;
 using FluentAssertions;
 using Microsoft.AspNetCore.Mvc;

@@ -1,12 +1,14 @@
-using Algocura.Platform.Messaging.Publishing;
-
 namespace Algocura.Reporting.Api.Messaging;
 
 public abstract record IntegrationEvent(
     Guid EventId,
     DateTimeOffset OccurredAtUtc)
+    : Algocura.Platform.Messaging.Events.IntegrationEvent(
+        EventId,
+        OccurredAtUtc)
 {
-    public abstract string EventType { get; }
+    public override string Source =>
+        "Algocura.Reporting.Api";
 }
 
 public sealed record ReportingSnapshot(
@@ -21,47 +23,4 @@ public sealed record ReportingSnapshot(
 {
     public override string EventType =>
         nameof(ReportingSnapshot);
-}
-
-public interface IEventPublisher
-{
-    Task PublishAsync(
-        IntegrationEvent integrationEvent,
-        string? correlationId = null,
-        CancellationToken cancellationToken = default);
-}
-
-public sealed class ServiceBusEventPublisher(
-    IPlatformMessagePublisher publisher,
-    ILogger<ServiceBusEventPublisher> logger)
-    : IEventPublisher
-{
-    public async Task PublishAsync(
-        IntegrationEvent integrationEvent,
-        string? correlationId = null,
-        CancellationToken cancellationToken = default)
-    {
-        ArgumentNullException.ThrowIfNull(
-            integrationEvent);
-
-        var applicationProperties =
-            new Dictionary<string, object>
-            {
-                ["occurredAtUtc"] =
-                    integrationEvent.OccurredAtUtc.ToString("O")
-            };
-
-        await publisher.PublishAsync(
-            integrationEvent,
-            integrationEvent.EventType,
-            integrationEvent.EventId,
-            correlationId,
-            applicationProperties,
-            cancellationToken);
-
-        logger.LogInformation(
-            "Published {EventType} with ID {EventId}.",
-            integrationEvent.EventType,
-            integrationEvent.EventId);
-    }
 }

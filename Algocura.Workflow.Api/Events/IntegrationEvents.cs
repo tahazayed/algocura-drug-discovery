@@ -3,12 +3,11 @@ namespace Algocura.Workflow.Api.Events;
 public abstract record IntegrationEvent(
     Guid EventId,
     DateTimeOffset OccurredAtUtc)
+    : Algocura.Platform.Messaging.Events.IntegrationEvent(
+        EventId,
+        OccurredAtUtc)
 {
-    public abstract string EventType { get; }
-
-    public virtual string EventVersion => "1.0";
-
-    public virtual string Source =>
+    public override string Source =>
         "Algocura.Workflow.Api";
 }
 

@@ -3,10 +3,12 @@ namespace Algocura.Search.Api.Events;
 public abstract record IntegrationEvent(
     Guid EventId,
     DateTimeOffset OccurredAtUtc)
+    : Algocura.Platform.Messaging.Events.IntegrationEvent(
+        EventId,
+        OccurredAtUtc)
 {
-    public abstract string EventType { get; }
-    public virtual string EventVersion => "1.0";
-    public virtual string Source => "Algocura.Search.Api";
+    public override string Source =>
+        "Algocura.Search.Api";
 }
 
 public sealed record SearchDocumentIndexed(

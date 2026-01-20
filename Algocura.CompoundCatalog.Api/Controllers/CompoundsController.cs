@@ -1,9 +1,9 @@
-﻿using Algocura.CompoundCatalog.Api.Contracts;
+using Algocura.CompoundCatalog.Api.Contracts;
 using Algocura.CompoundCatalog.Api.Data;
 using Algocura.CompoundCatalog.Api.Domain;
 using Algocura.CompoundCatalog.Api.Events;
 using Algocura.CompoundCatalog.Api.Mapping;
-using Algocura.CompoundCatalog.Api.Messaging;
+using Algocura.Platform.Messaging.Publishing;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 

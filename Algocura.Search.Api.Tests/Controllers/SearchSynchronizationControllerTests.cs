@@ -1,7 +1,7 @@
+using Algocura.Platform.Messaging.Publishing;
 using Algocura.Search.Api.Controllers;
 using Algocura.Search.Api.Domain;
 using Algocura.Search.Api.Events;
-using Algocura.Search.Api.Messaging.Publishers;
 using Algocura.Search.Api.Tests.Support;
 using FluentAssertions;
 using Microsoft.AspNetCore.Mvc;

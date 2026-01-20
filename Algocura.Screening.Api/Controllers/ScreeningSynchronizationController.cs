@@ -1,7 +1,7 @@
-﻿using Algocura.Screening.Api.Data;
+using Algocura.Platform.Messaging.Publishing;
+using Algocura.Screening.Api.Data;
 using Algocura.Screening.Api.Domain;
 using Algocura.Screening.Api.Events;
-using Algocura.Screening.Api.Messaging.Publishers;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 

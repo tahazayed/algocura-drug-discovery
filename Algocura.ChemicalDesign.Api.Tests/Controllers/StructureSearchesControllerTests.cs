@@ -1,9 +1,9 @@
 using Algocura.ChemicalDesign.Api.Controllers;
 using Algocura.ChemicalDesign.Api.Domain;
 using Algocura.ChemicalDesign.Api.Events;
-using Algocura.ChemicalDesign.Api.Messaging.Publishers;
 using Algocura.ChemicalDesign.Api.Services;
 using Algocura.ChemicalDesign.Api.Tests.Support;
+using Algocura.Platform.Messaging.Publishing;
 using FluentAssertions;
 using Microsoft.AspNetCore.Mvc;
 using NSubstitute;

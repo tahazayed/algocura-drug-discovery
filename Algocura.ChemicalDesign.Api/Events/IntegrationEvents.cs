@@ -1,10 +1,14 @@
 namespace Algocura.ChemicalDesign.Api.Events;
 
-public abstract record IntegrationEvent(Guid EventId, DateTimeOffset OccurredAtUtc)
+public abstract record IntegrationEvent(
+    Guid EventId,
+    DateTimeOffset OccurredAtUtc)
+    : Algocura.Platform.Messaging.Events.IntegrationEvent(
+        EventId,
+        OccurredAtUtc)
 {
-    public abstract string EventType { get; }
-    public virtual string EventVersion => "1.0";
-    public virtual string Source => "Algocura.ChemicalDesign.Api";
+    public override string Source =>
+        "Algocura.ChemicalDesign.Api";
 }
 
 public sealed record TargetDiscoverySnapshot

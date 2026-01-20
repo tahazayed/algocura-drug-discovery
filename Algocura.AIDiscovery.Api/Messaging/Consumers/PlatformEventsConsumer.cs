@@ -1,6 +1,7 @@
 using Algocura.AIDiscovery.Api.Data;
 using Algocura.AIDiscovery.Api.Domain;
 using Algocura.AIDiscovery.Api.Events;
+using Algocura.Platform.Messaging.Consumers;
 using Algocura.Platform.Messaging.Options;
 using Azure.Messaging.ServiceBus;
 using Microsoft.EntityFrameworkCore;
@@ -9,79 +10,33 @@ using System.Text.Json;
 
 namespace Algocura.AIDiscovery.Api.Messaging.Consumers;
 
-public sealed class PlatformEventsConsumer : BackgroundService
+public sealed class PlatformEventsConsumer
+    : ServiceBusConsumerBase
 {
     private static readonly JsonSerializerOptions JsonOptions =
         new(JsonSerializerDefaults.Web);
 
     private readonly IServiceScopeFactory _scopeFactory;
-    private readonly ServiceBusProcessor _processor;
     private readonly ILogger<PlatformEventsConsumer> _logger;
 
     public PlatformEventsConsumer(
         IServiceScopeFactory scopeFactory,
         ServiceBusClient client,
         IOptions<ServiceBusOptions> serviceBusOptions,
-        IConfiguration configuration,
         ILogger<PlatformEventsConsumer> logger)
+        : base(
+            client,
+            serviceBusOptions,
+            logger)
     {
         _scopeFactory =
             scopeFactory;
 
         _logger =
             logger;
-
-        var messagingOptions =
-            serviceBusOptions.Value;
-
-        var subscriptionName =
-            configuration["ServiceBus:SubscriptionName"];
-
-        if (string.IsNullOrWhiteSpace(
-                subscriptionName))
-        {
-            throw new InvalidOperationException(
-                "ServiceBus:SubscriptionName is required.");
-        }
-
-        _processor =
-            client.CreateProcessor(
-                messagingOptions.TopicName,
-                subscriptionName,
-                new ServiceBusProcessorOptions
-                {
-                    AutoCompleteMessages =
-                        false,
-
-                    MaxConcurrentCalls =
-                        4,
-
-                    MaxAutoLockRenewalDuration =
-                        TimeSpan.FromMinutes(5)
-                });
     }
 
-    protected override async Task ExecuteAsync(
-        CancellationToken stoppingToken)
-    {
-        _processor.ProcessMessageAsync += ProcessMessageAsync;
-        _processor.ProcessErrorAsync += ProcessErrorAsync;
-
-        await _processor.StartProcessingAsync(stoppingToken);
-
-        try
-        {
-            await Task.Delay(
-                Timeout.InfiniteTimeSpan,
-                stoppingToken);
-        }
-        catch (OperationCanceledException)
-            when (stoppingToken.IsCancellationRequested)
-        {
-        }
-    }
-
-    private async Task ProcessMessageAsync(
+    protected override async Task ProcessMessageAsync(
         ProcessMessageEventArgs args)
     {
         try
@@ -92,10 +47,8 @@ public sealed class PlatformEventsConsumer : BackgroundService
                 .GetRequiredService<AIDiscoveryDbContext>();
 
             var eventType =
-                args.Message.ApplicationProperties
-                    .TryGetValue("eventType", out var value)
-                    ? value?.ToString()
-                    : args.Message.Subject;
+                ResolveEventType(
+                    args.Message);
 
             switch (eventType)
             {
@@ -354,29 +307,6 @@ public sealed class PlatformEventsConsumer : BackgroundService
         await db.SaveChangesAsync(cancellationToken);
     }
 
-    private Task ProcessErrorAsync(ProcessErrorEventArgs args)
-    {
-        _logger.LogError(
-            args.Exception,
-            "Service Bus consumer error. Entity: {Entity}; Source: {Source}.",
-            args.EntityPath,
-            args.ErrorSource);
-
-        return Task.CompletedTask;
-    }
-
-    public override async Task StopAsync(
-        CancellationToken cancellationToken)
-    {
-        await _processor.StopProcessingAsync(cancellationToken);
-        await base.StopAsync(cancellationToken);
-    }
-
-    public override void Dispose()
-    {
-        _processor.DisposeAsync().AsTask().GetAwaiter().GetResult();
-        base.Dispose();
-    }
 
     public static async Task HandleAsync(
         AIDiscoveryDbContext dbContext,

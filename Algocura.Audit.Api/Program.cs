@@ -102,17 +102,6 @@ builder.Services.AddScoped<
 builder.Services.AddAlgocuraPlatformMessaging(
     builder.Configuration);
 
-var subscriptionName =
-    builder.Configuration[
-        "ServiceBus:SubscriptionName"];
-
-if (string.IsNullOrWhiteSpace(
-        subscriptionName))
-{
-    throw new InvalidOperationException(
-        "ServiceBus:SubscriptionName is required.");
-}
-
 builder.Services.AddHostedService<
     EntityAuditEventsConsumer>();
 
@@ -311,7 +300,7 @@ app.MapGet(
                                 messagingOptions.TopicName,
 
                             subscription =
-                                subscriptionName,
+                                messagingOptions.SubscriptionName,
 
                             consumedEvent =
                                 "EntityAuditEvent"

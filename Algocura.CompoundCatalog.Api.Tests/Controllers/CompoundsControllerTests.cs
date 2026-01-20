@@ -1,7 +1,7 @@
 ﻿using Algocura.CompoundCatalog.Api.Controllers;
 using Algocura.CompoundCatalog.Api.Data;
 using Algocura.CompoundCatalog.Api.Domain;
-using Algocura.CompoundCatalog.Api.Messaging;
+using Algocura.Platform.Messaging.Publishing;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Data.Sqlite;

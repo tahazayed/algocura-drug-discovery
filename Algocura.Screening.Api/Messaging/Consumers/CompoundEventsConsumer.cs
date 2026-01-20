@@ -1,3 +1,4 @@
+using Algocura.Platform.Messaging.Consumers;
 using Algocura.Platform.Messaging.Options;
 using Algocura.Screening.Api.Data;
 using Algocura.Screening.Api.Domain;
@@ -10,78 +11,32 @@ using System.Text.Json;
 namespace Algocura.Screening.Api.Messaging.Consumers;
 
 public sealed class CompoundEventsConsumer
-    : BackgroundService
+    : ServiceBusConsumerBase
 {
     private static readonly JsonSerializerOptions JsonOptions =
         new(JsonSerializerDefaults.Web);
 
     private readonly IServiceScopeFactory _scopeFactory;
-    private readonly ServiceBusProcessor _processor;
     private readonly ILogger<CompoundEventsConsumer> _logger;
 
     public CompoundEventsConsumer(
         IServiceScopeFactory scopeFactory,
         ServiceBusClient serviceBusClient,
         IOptions<ServiceBusOptions> serviceBusOptions,
-        IConfiguration configuration,
         ILogger<CompoundEventsConsumer> logger)
+        : base(
+            serviceBusClient,
+            serviceBusOptions,
+            logger)
     {
         _scopeFactory =
             scopeFactory;
 
         _logger =
             logger;
-
-        var messagingOptions =
-            serviceBusOptions.Value;
-
-        var subscriptionName =
-            configuration["ServiceBus:SubscriptionName"];
-
-        if (string.IsNullOrWhiteSpace(subscriptionName))
-        {
-            throw new InvalidOperationException(
-                "ServiceBus:SubscriptionName is required.");
-        }
-
-        _processor =
-            serviceBusClient.CreateProcessor(
-                messagingOptions.TopicName,
-                subscriptionName,
-                new ServiceBusProcessorOptions
-                {
-                    AutoCompleteMessages = false,
-                    MaxConcurrentCalls = 4,
-                    MaxAutoLockRenewalDuration =
-                        TimeSpan.FromMinutes(5)
-                });
     }
 
-    protected override async Task ExecuteAsync(
-        CancellationToken stoppingToken)
-    {
-        _processor.ProcessMessageAsync +=
-            ProcessMessageAsync;
-
-        _processor.ProcessErrorAsync +=
-            ProcessErrorAsync;
-
-        await _processor.StartProcessingAsync(
-            stoppingToken);
-
-        try
-        {
-            await Task.Delay(
-                Timeout.InfiniteTimeSpan,
-                stoppingToken);
-        }
-        catch (OperationCanceledException)
-            when (stoppingToken.IsCancellationRequested)
-        {
-        }
-    }
-
-    private async Task ProcessMessageAsync(
+    protected override async Task ProcessMessageAsync(
         ProcessMessageEventArgs args)
     {
         try
@@ -95,12 +50,8 @@ public sealed class CompoundEventsConsumer
                         ScreeningDbContext>();
 
             var eventType =
-                args.Message.ApplicationProperties
-                    .TryGetValue(
-                        "eventType",
-                        out var value)
-                    ? value?.ToString()
-                    : args.Message.Subject;
+                ResolveEventType(
+                    args.Message);
 
             switch (eventType)
             {
@@ -373,39 +324,5 @@ public sealed class CompoundEventsConsumer
 
         await dbContext.SaveChangesAsync(
             cancellationToken);
-    }
-
-    private Task ProcessErrorAsync(
-        ProcessErrorEventArgs args)
-    {
-        _logger.LogError(
-            args.Exception,
-            "Service Bus consumer error. " +
-            "Entity: {EntityPath}; Source: {ErrorSource}.",
-            args.EntityPath,
-            args.ErrorSource);
-
-        return Task.CompletedTask;
-    }
-
-    public override async Task StopAsync(
-        CancellationToken cancellationToken)
-    {
-        await _processor.StopProcessingAsync(
-            cancellationToken);
-
-        await base.StopAsync(
-            cancellationToken);
-    }
-
-    public override void Dispose()
-    {
-        _processor
-            .DisposeAsync()
-            .AsTask()
-            .GetAwaiter()
-            .GetResult();
-
-        base.Dispose();
     }
 }

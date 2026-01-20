@@ -1,7 +1,7 @@
+using Algocura.Platform.Messaging.Publishing;
 using Algocura.Search.Api.Data;
 using Algocura.Search.Api.Domain;
 using Algocura.Search.Api.Events;
-using Algocura.Search.Api.Messaging.Publishers;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 

@@ -1,3 +1,4 @@
+using Algocura.Platform.Messaging.Publishing;
 using Algocura.Reporting.Api.Data;
 using Algocura.Reporting.Api.Domain;
 using Algocura.Reporting.Api.Messaging;

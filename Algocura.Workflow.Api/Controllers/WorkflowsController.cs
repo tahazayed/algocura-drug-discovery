@@ -1,9 +1,9 @@
+using Algocura.Platform.Messaging.Publishing;
 using Algocura.Workflow.Api.Contracts;
 using Algocura.Workflow.Api.Data;
 using Algocura.Workflow.Api.Domain;
 using Algocura.Workflow.Api.Events;
 using Algocura.Workflow.Api.Mapping;
-using Algocura.Workflow.Api.Messaging.Publishers;
 using Algocura.Workflow.Api.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;

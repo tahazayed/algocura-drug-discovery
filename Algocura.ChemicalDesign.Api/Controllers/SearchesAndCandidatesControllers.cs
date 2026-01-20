@@ -3,8 +3,8 @@ using Algocura.ChemicalDesign.Api.Data;
 using Algocura.ChemicalDesign.Api.Domain;
 using Algocura.ChemicalDesign.Api.Events;
 using Algocura.ChemicalDesign.Api.Mapping;
-using Algocura.ChemicalDesign.Api.Messaging.Publishers;
 using Algocura.ChemicalDesign.Api.Services;
+using Algocura.Platform.Messaging.Publishing;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 

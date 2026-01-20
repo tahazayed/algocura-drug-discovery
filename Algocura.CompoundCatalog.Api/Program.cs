@@ -1,9 +1,9 @@
 using Algocura.CompoundCatalog.Api.Data;
-using Algocura.CompoundCatalog.Api.Messaging;
 using Algocura.Platform.Auditing.DependencyInjection;
 using Algocura.Platform.Auditing.Interceptors;
 using Algocura.Platform.Auditing.Options;
 using Algocura.Platform.Messaging.DependencyInjection;
+using Algocura.Platform.Messaging.Options;
 using Algocura.Platform.Messaging.Publishing;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
@@ -150,15 +150,11 @@ builder.Services.AddOpenApi(
     });
 
 // -----------------------------------------------------------------------------
-// Azure Service Bus client
+// Azure Service Bus
 // -----------------------------------------------------------------------------
 
 builder.Services.AddAlgocuraPlatformMessaging(
     builder.Configuration);
-
-builder.Services.AddSingleton<
-    IEventPublisher,
-    ServiceBusEventPublisher>();
 
 // -----------------------------------------------------------------------------
 // Build application
@@ -258,9 +254,7 @@ app.MapHealthChecks(
 app.MapGet(
         "/",
         (
-            IOptions<
-                Algocura.Platform.Messaging.Options.ServiceBusOptions>
-                serviceBusOptions,
+            IOptions<ServiceBusOptions> serviceBusOptions,
             IOptions<AuditingOptions> auditingOptions,
             IWebHostEnvironment environment) =>
         {

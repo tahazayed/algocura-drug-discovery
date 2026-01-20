@@ -13,14 +13,26 @@ public sealed class ServiceBusAuditEventPublisher(
         EntityAuditEvent auditEvent,
         CancellationToken cancellationToken = default)
     {
-        ArgumentNullException.ThrowIfNull(auditEvent);
+        ArgumentNullException.ThrowIfNull(
+            auditEvent);
 
-        var properties =
+        var applicationProperties =
             new Dictionary<string, object>
             {
-                ["serviceName"] = auditEvent.ServiceName,
-                ["entityType"] = auditEvent.EntityType,
-                ["action"] = auditEvent.Action
+                ["eventVersion"] =
+                    auditEvent.EventVersion,
+
+                ["serviceName"] =
+                    auditEvent.ServiceName,
+
+                ["entityType"] =
+                    auditEvent.EntityType,
+
+                ["action"] =
+                    auditEvent.Action,
+
+                ["occurredAtUtc"] =
+                    auditEvent.OccurredAtUtc.ToString("O")
             };
 
         await publisher.PublishAsync(
@@ -28,7 +40,7 @@ public sealed class ServiceBusAuditEventPublisher(
             auditEvent.EventType,
             auditEvent.EventId,
             auditEvent.CorrelationId,
-            properties,
+            applicationProperties,
             cancellationToken);
 
         logger.LogInformation(

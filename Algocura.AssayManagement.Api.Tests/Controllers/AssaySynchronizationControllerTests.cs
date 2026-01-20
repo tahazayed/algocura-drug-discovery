@@ -1,8 +1,8 @@
 using Algocura.AssayManagement.Api.Controllers;
 using Algocura.AssayManagement.Api.Domain;
 using Algocura.AssayManagement.Api.Events;
-using Algocura.AssayManagement.Api.Messaging.Publishers;
 using Algocura.AssayManagement.Api.Tests.Support;
+using Algocura.Platform.Messaging.Publishing;
 using FluentAssertions;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging.Abstractions;

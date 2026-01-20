@@ -1,6 +1,5 @@
 using Algocura.ChemicalDesign.Api.Data;
 using Algocura.ChemicalDesign.Api.Messaging.Consumers;
-using Algocura.ChemicalDesign.Api.Messaging.Publishers;
 using Algocura.ChemicalDesign.Api.Services;
 using Algocura.Platform.Auditing.DependencyInjection;
 using Algocura.Platform.Auditing.Interceptors;
@@ -114,21 +113,6 @@ builder.Services.AddScoped<
 
 builder.Services.AddAlgocuraPlatformMessaging(
     builder.Configuration);
-
-var subscriptionName =
-    builder.Configuration[
-        "ServiceBus:SubscriptionName"];
-
-if (string.IsNullOrWhiteSpace(
-        subscriptionName))
-{
-    throw new InvalidOperationException(
-        "ServiceBus:SubscriptionName is required.");
-}
-
-builder.Services.AddSingleton<
-    IEventPublisher,
-    ServiceBusEventPublisher>();
 
 builder.Services.AddHostedService<
     TargetDiscoveryEventsConsumer>();
@@ -329,7 +313,7 @@ app.MapGet(
                                 messagingOptions.TopicName,
 
                             subscription =
-                                subscriptionName
+                                messagingOptions.SubscriptionName
                         },
 
                     auditing =

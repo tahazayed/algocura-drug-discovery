@@ -5,7 +5,6 @@ using Algocura.Platform.Messaging.DependencyInjection;
 using Algocura.Platform.Messaging.Options;
 using Algocura.Platform.Messaging.Publishing;
 using Algocura.Reporting.Api.Data;
-using Algocura.Reporting.Api.Messaging;
 using Algocura.Reporting.Api.Services;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
@@ -113,10 +112,6 @@ builder.Services.AddScoped<
 
 builder.Services.AddAlgocuraPlatformMessaging(
     builder.Configuration);
-
-builder.Services.AddSingleton<
-    IEventPublisher,
-    ServiceBusEventPublisher>();
 
 // -----------------------------------------------------------------------------
 // OpenAPI document generation

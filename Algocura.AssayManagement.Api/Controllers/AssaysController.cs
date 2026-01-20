@@ -3,8 +3,8 @@ using Algocura.AssayManagement.Api.Data;
 using Algocura.AssayManagement.Api.Domain;
 using Algocura.AssayManagement.Api.Events;
 using Algocura.AssayManagement.Api.Mapping;
-using Algocura.AssayManagement.Api.Messaging.Publishers;
 using Algocura.AssayManagement.Api.Services;
+using Algocura.Platform.Messaging.Publishing;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 

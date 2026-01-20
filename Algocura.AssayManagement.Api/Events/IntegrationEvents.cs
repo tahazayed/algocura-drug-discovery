@@ -1,14 +1,15 @@
+using Algocura.Platform.Messaging.Events;
+
 namespace Algocura.AssayManagement.Api.Events;
 
-public abstract record IntegrationEvent(
+public abstract record AssayManagementIntegrationEvent(
     Guid EventId,
     DateTimeOffset OccurredAtUtc)
+    : IntegrationEvent(
+        EventId,
+        OccurredAtUtc)
 {
-    public abstract string EventType { get; }
-
-    public virtual string EventVersion => "1.0";
-
-    public virtual string Source =>
+    public override string Source =>
         "Algocura.AssayManagement.Api";
 }
 
@@ -48,7 +49,7 @@ public sealed record AssayCreated(
     Guid ScreeningId,
     string Name,
     string AssayType)
-    : IntegrationEvent(EventId, OccurredAtUtc)
+    : AssayManagementIntegrationEvent(EventId, OccurredAtUtc)
 {
     public override string EventType =>
         nameof(AssayCreated);
@@ -61,7 +62,7 @@ public sealed record AssayCompleted(
     Guid ScreeningId,
     int ResultCount,
     string QualityControlStatus)
-    : IntegrationEvent(EventId, OccurredAtUtc)
+    : AssayManagementIntegrationEvent(EventId, OccurredAtUtc)
 {
     public override string EventType =>
         nameof(AssayCompleted);
@@ -80,7 +81,7 @@ public sealed record AssaySnapshot(
     string QualityControlStatus,
     decimal? ZPrimeFactor,
     IReadOnlyCollection<AssaySnapshotResult> Results)
-    : IntegrationEvent(EventId, OccurredAtUtc)
+    : AssayManagementIntegrationEvent(EventId, OccurredAtUtc)
 {
     public override string EventType =>
         nameof(AssaySnapshot);

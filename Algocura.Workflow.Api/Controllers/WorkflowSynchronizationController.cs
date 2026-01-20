@@ -1,6 +1,6 @@
+using Algocura.Platform.Messaging.Publishing;
 using Algocura.Workflow.Api.Data;
 using Algocura.Workflow.Api.Events;
-using Algocura.Workflow.Api.Messaging.Publishers;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 

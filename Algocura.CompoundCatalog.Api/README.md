@@ -346,6 +346,109 @@ Future enhancements include:
 
 ---
 
+## Shared Platform Messaging
+
+`Algocura.CompoundCatalog.Api` uses `Algocura.Platform.Messaging` for Azure Service Bus transport.
+
+The API no longer owns local implementations of:
+
+```text
+IEventPublisher
+ServiceBusEventPublisher
+ServiceBusOptions
+```
+
+Publishing flows through the shared platform infrastructure:
+
+```text
+Compound Catalog domain event
+        ↓
+Algocura.Platform.Messaging.Publishing.IEventPublisher
+        ↓
+ServiceBusEventPublisher
+        ↓
+IPlatformMessagePublisher
+        ↓
+ServiceBusMessagePublisher
+        ↓
+Azure Service Bus
+        ↓
+algocura-events
+```
+
+Audit events use the same transport:
+
+```text
+EntityAuditEventInterceptor
+        ↓
+ServiceBusAuditEventPublisher
+        ↓
+IPlatformMessagePublisher
+        ↓
+Azure Service Bus
+```
+
+The service keeps its Compound Catalog-specific event types, including:
+
+```text
+CompoundRegistered
+CompoundUpdated
+CompoundDeleted
+CompoundStatusChanged
+```
+
+The local `Events/IntegrationEvent.cs` remains as an object-initializer-friendly base record, but now implements the shared `IIntegrationEvent` contract from `Algocura.Platform.Messaging.Events`.
+
+### Registration
+
+```csharp
+builder.Services.AddAlgocuraPlatformMessaging(
+    builder.Configuration);
+```
+
+This shared registration provides:
+
+```text
+ServiceBusClient
+IPlatformMessagePublisher -> ServiceBusMessagePublisher
+IEventPublisher           -> ServiceBusEventPublisher
+ServiceBusAuditEventPublisher
+```
+
+The API therefore must not register its own `ServiceBusClient`, `IEventPublisher`, or `ServiceBusEventPublisher`.
+
+### Service Bus configuration
+
+```json
+"ServiceBus": {
+  "UseEmulator": true,
+  "ConnectionString": "...",
+  "FullyQualifiedNamespace": "",
+  "TopicName": "algocura-events",
+  "DefaultMessageTimeToLiveDays": 7,
+  "MaxConcurrentCalls": 4,
+  "PrefetchCount": 0,
+  "MaxAutoLockRenewalMinutes": 5
+}
+```
+
+Compound Catalog is currently a publisher, so it does not require a Service Bus subscription.
+
+### Auditing configuration
+
+```json
+"Auditing": {
+  "ServiceName": "Algocura.CompoundCatalog.Api",
+  "PublishEntityAuditEvents": true,
+  "StampCreatedAndUpdatedFields": true,
+  "IncludeUnchangedPropertiesOnCreate": true,
+  "IncludeUnchangedPropertiesOnDelete": true,
+  "IgnoreAuditInfrastructureEntities": true
+}
+```
+
+---
+
 # License
 
 Copyright © Algocura Biotech LLC.

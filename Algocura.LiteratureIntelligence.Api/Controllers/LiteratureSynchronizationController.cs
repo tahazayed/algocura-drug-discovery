@@ -1,7 +1,7 @@
 using Algocura.LiteratureIntelligence.Api.Data;
 using Algocura.LiteratureIntelligence.Api.Domain;
 using Algocura.LiteratureIntelligence.Api.Events;
-using Algocura.LiteratureIntelligence.Api.Messaging.Publishers;
+using Algocura.Platform.Messaging.Publishing;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 

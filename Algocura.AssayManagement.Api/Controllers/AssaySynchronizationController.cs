@@ -1,6 +1,6 @@
 using Algocura.AssayManagement.Api.Data;
 using Algocura.AssayManagement.Api.Domain;
-using Algocura.AssayManagement.Api.Messaging.Publishers;
+using Algocura.Platform.Messaging.Publishing;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 

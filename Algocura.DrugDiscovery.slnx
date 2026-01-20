@@ -14,12 +14,15 @@
   <Project Path="Algocura.ChemicalDesign.Api/Algocura.ChemicalDesign.Api.csproj" />
   <Project Path="Algocura.CompoundCatalog.Api.Tests/Algocura.CompoundCatalog.Api.Tests.csproj" />
   <Project Path="Algocura.CompoundCatalog.Api/Algocura.CompoundCatalog.Api.csproj" />
+  <Project Path="Algocura.Identity.Api.Tests/Algocura.Identity.Api.Tests.csproj" />
+  <Project Path="Algocura.Identity.Api/Algocura.Identity.Api.csproj" />
   <Project Path="Algocura.LiteratureIntelligence.Api.Tests/Algocura.LiteratureIntelligence.Api.Tests.csproj" />
   <Project Path="Algocura.LiteratureIntelligence.Api/Algocura.LiteratureIntelligence.Api.csproj" />
   <Project Path="Algocura.Notification.Api.Tests/Algocura.Notification.Api.Tests.csproj" />
   <Project Path="Algocura.Notification.Api/Algocura.Notification.Api.csproj" />
   <Project Path="Algocura.Platform.Auditing.Tests/Algocura.Platform.Auditing.Tests.csproj" />
   <Project Path="Algocura.Platform.Auditing/Algocura.Platform.Auditing.csproj" />
+  <Project Path="Algocura.Platform.Messaging.Tests/Algocura.Platform.Messaging.Tests.csproj" />
   <Project Path="Algocura.Platform.Messaging/Algocura.Platform.Messaging.csproj" />
   <Project Path="Algocura.Reporting.Api.Tests/Algocura.Reporting.Api.Tests.csproj" />
   <Project Path="Algocura.Reporting.Api/Algocura.Reporting.Api.csproj" />

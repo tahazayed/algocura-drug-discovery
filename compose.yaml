@@ -526,7 +526,43 @@ services:
         condition: service_completed_successfully
     
     restart: unless-stopped
-  
+
+  identity-api:
+    build:
+      context: .
+      dockerfile: Algocura.Identity.Api/Dockerfile
+      target: final
+
+    image: algocura/algocura-identity-api:dev
+    container_name: identity-api
+    ports:
+      - "7013:8080"
+    environment:
+      ASPNETCORE_ENVIRONMENT: "Development"
+      ASPNETCORE_URLS: http://+:8080
+      ConnectionStrings__IdentityDatabase: "Server=sqlserver,1433;Database=AlgocuraIdentity;User Id=sa;Password=DontLogin!Passw0rd;TrustServerCertificate=True;Encrypt=False;ConnectRetryCount=5;ConnectRetryInterval=5"
+      ServiceBus__UseEmulator: "true"
+      ServiceBus__ConnectionString: "Endpoint=sb://servicebus-emulator;SharedAccessKeyName=RootManageSharedAccessKey;SharedAccessKey=SAS_KEY_VALUE;UseDevelopmentEmulator=true;"
+      ServiceBus__FullyQualifiedNamespace: ""
+      ServiceBus__TopicName: "algocura-events"
+      ServiceBus__SubscriptionName: "identity-api"      
+      Logging__LogLevel__Default: "Information"
+      Logging__LogLevel__Microsoft__AspNetCore: "Warning"
+      Logging__LogLevel__Microsoft__EntityFrameworkCore: "Information"
+      Logging__LogLevel__Azure__Messaging__ServiceBus: "Information"
+      Auditing__ServiceName: "Algocura.Identity.Api"
+      Auditing__PublishEntityAuditEvents: "true"
+      Auditing__StampCreatedAndUpdatedFields: "true"
+      Jwt__SigningKey: "2A032D88-B8A2-4862-9373-E41E4D3FEB45"
+      Seed__AdministratorPassword__Enabled: "Don'tLogin@2026"
+    depends_on:
+      sqlserver:
+        condition: service_healthy
+      servicebus-wait:
+        condition: service_completed_successfully
+    
+    restart: unless-stopped
+ 
 volumes:
   sqlserver-data:
   azurite-data:

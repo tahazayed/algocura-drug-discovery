@@ -1,6 +1,7 @@
 using Algocura.ChemicalDesign.Api.Data;
 using Algocura.ChemicalDesign.Api.Domain;
 using Algocura.ChemicalDesign.Api.Events;
+using Algocura.Platform.Messaging.Consumers;
 using Algocura.Platform.Messaging.Options;
 using Azure.Messaging.ServiceBus;
 using Microsoft.EntityFrameworkCore;
@@ -10,95 +11,39 @@ using System.Text.Json;
 namespace Algocura.ChemicalDesign.Api.Messaging.Consumers;
 
 public sealed class TargetDiscoveryEventsConsumer
-    : BackgroundService
+    : ServiceBusConsumerBase
 {
     private static readonly JsonSerializerOptions JsonOptions =
         new(JsonSerializerDefaults.Web);
 
     private readonly IServiceScopeFactory _scopeFactory;
-    private readonly ServiceBusProcessor _processor;
     private readonly ILogger<TargetDiscoveryEventsConsumer> _logger;
 
     public TargetDiscoveryEventsConsumer(
         IServiceScopeFactory scopeFactory,
         ServiceBusClient client,
         IOptions<ServiceBusOptions> serviceBusOptions,
-        IConfiguration configuration,
         ILogger<TargetDiscoveryEventsConsumer> logger)
+        : base(
+            client,
+            serviceBusOptions,
+            logger)
     {
         _scopeFactory =
             scopeFactory;
 
         _logger =
             logger;
-
-        var messagingOptions =
-            serviceBusOptions.Value;
-
-        var subscriptionName =
-            configuration[
-                "ServiceBus:SubscriptionName"];
-
-        if (string.IsNullOrWhiteSpace(
-                subscriptionName))
-        {
-            throw new InvalidOperationException(
-                "ServiceBus:SubscriptionName is required.");
-        }
-
-        _processor =
-            client.CreateProcessor(
-                messagingOptions.TopicName,
-                subscriptionName,
-                new ServiceBusProcessorOptions
-                {
-                    AutoCompleteMessages =
-                        false,
-
-                    MaxConcurrentCalls =
-                        4,
-
-                    MaxAutoLockRenewalDuration =
-                        TimeSpan.FromMinutes(5)
-                });
     }
 
-    protected override async Task ExecuteAsync(
-        CancellationToken stoppingToken)
-    {
-        _processor.ProcessMessageAsync +=
-            ProcessMessageAsync;
-
-        _processor.ProcessErrorAsync +=
-            ProcessErrorAsync;
-
-        await _processor.StartProcessingAsync(
-            stoppingToken);
-
-        try
-        {
-            await Task.Delay(
-                Timeout.InfiniteTimeSpan,
-                stoppingToken);
-        }
-        catch (OperationCanceledException)
-            when (stoppingToken.IsCancellationRequested)
-        {
-        }
-    }
-
-    private async Task ProcessMessageAsync(
+    protected override async Task ProcessMessageAsync(
         ProcessMessageEventArgs args)
     {
         try
         {
             var eventType =
-                args.Message.ApplicationProperties
-                    .TryGetValue(
-                        "eventType",
-                        out var value)
-                    ? value?.ToString()
-                    : args.Message.Subject;
+                ResolveEventType(
+                    args.Message);
 
             if (eventType !=
                 nameof(TargetDiscoverySnapshot))
@@ -271,37 +216,5 @@ public sealed class TargetDiscoveryEventsConsumer
 
         await dbContext.SaveChangesAsync(
             cancellationToken);
-    }
-
-    private Task ProcessErrorAsync(
-        ProcessErrorEventArgs args)
-    {
-        _logger.LogError(
-            args.Exception,
-            "Service Bus error. Entity: {Entity}; Source: {Source}.",
-            args.EntityPath,
-            args.ErrorSource);
-
-        return Task.CompletedTask;
-    }
-
-    public override async Task StopAsync(
-        CancellationToken cancellationToken)
-    {
-        await _processor.StopProcessingAsync(
-            cancellationToken);
-
-        await base.StopAsync(
-            cancellationToken);
-    }
-
-    public override void Dispose()
-    {
-        _processor.DisposeAsync()
-            .AsTask()
-            .GetAwaiter()
-            .GetResult();
-
-        base.Dispose();
     }
 }

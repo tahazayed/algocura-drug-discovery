@@ -1,63 +1,113 @@
 # Algocura AI Discovery API
 
-The **Algocura AI Discovery API** manages prototype prediction workflows,
-candidate scoring, ranking, prioritization, and integration events.
+The AI Discovery API manages compound and screening projections, prediction
+jobs, deterministic prototype scoring, candidate prioritization, and
+downstream integration events.
 
-## Features
+## Shared Platform Messaging
 
-- Compound projection synchronization
-- Completed-screening projection synchronization
-- Prediction jobs
-- Deterministic prototype scoring
-- Candidate prioritization
-- SQL Server with Entity Framework Core
-- Azure Service Bus publishing and consuming
-- Swagger and ReDoc
-- Health checks
-- Docker
-- xUnit, FluentAssertions, NSubstitute, and SQLite tests
+The API uses `Algocura.Platform.Messaging` for common Azure Service Bus
+infrastructure.
 
-## Endpoints
+The API no longer owns local implementations of:
 
-| Resource | URL |
-|---|---|
-| Service information | `http://localhost:7003/` |
-| Swagger | `http://localhost:7003/swagger` |
-| ReDoc | `http://localhost:7003/redoc` |
-| OpenAPI | `http://localhost:7003/openapi/v1.json` |
-| Health | `http://localhost:7003/health` |
-
-## API routes
-
-- `GET /api/v1/models`
-- `GET /api/v1/models/{id}`
-- `GET /api/v1/predictions`
-- `GET /api/v1/predictions/{id}`
-- `POST /api/v1/predictions`
-- `POST /api/v1/predictions/{id}/start`
-- `POST /api/v1/predictions/{id}/run`
-- `POST /api/v1/predictions/{id}/fail`
-- `DELETE /api/v1/predictions/{id}`
-
-## Events consumed
-
-- `CompoundRegistered`
-- `CompoundUpdated`
-- `CompoundDeleted`
-- `ScreeningCompleted`
-
-## Events published
-
-- `PredictionCreated`
-- `PredictionStarted`
-- `PredictionCompleted`
-- `PredictionFailed`
-- `CandidatePrioritized`
-
-## Build and test
-
-```bash
-dotnet restore
-dotnet build
-dotnet test
+```text
+IEventPublisher
+ServiceBusEventPublisher
+ServiceBusClient registration
+ServiceBusOptions
+Service Bus processor lifecycle
 ```
+
+Business events publish through:
+
+```text
+AI Discovery event
+        ↓
+Algocura.Platform.Messaging.Publishing.IEventPublisher
+        ↓
+ServiceBusEventPublisher
+        ↓
+IPlatformMessagePublisher
+        ↓
+ServiceBusMessagePublisher
+        ↓
+Azure Service Bus
+```
+
+Audit events publish through:
+
+```text
+EntityAuditEventInterceptor
+        ↓
+ServiceBusAuditEventPublisher
+        ↓
+IPlatformMessagePublisher
+        ↓
+Azure Service Bus
+```
+
+The AI Discovery domain events inherit from the shared
+`Algocura.Platform.Messaging.Events.IntegrationEvent` through the
+service-specific `AIDiscoveryIntegrationEvent` base record. This keeps the
+service-owned source value:
+
+```text
+Algocura.AIDiscovery.Api
+```
+
+The `PlatformEventsConsumer` now inherits from `ServiceBusConsumerBase`.
+The shared base owns processor creation, startup, shutdown, disposal, common
+Service Bus options, and processor error logging. The AI Discovery consumer
+continues to own its domain-specific event routing and projection updates.
+
+## Registration
+
+```csharp
+builder.Services.AddAlgocuraPlatformMessaging(
+    builder.Configuration);
+```
+
+No API-local registration of `IEventPublisher` or `ServiceBusEventPublisher`
+is required because the shared extension registers them.
+
+Audit events use:
+
+```csharp
+builder.Services
+    .AddAlgocuraAuditing<
+        ServiceBusAuditEventPublisher>(
+        options =>
+        {
+            builder.Configuration
+                .GetSection(
+                    AuditingOptions.SectionName)
+                .Bind(options);
+        });
+```
+
+## Configuration
+
+```json
+"ServiceBus": {
+  "UseEmulator": true,
+  "ConnectionString": "...",
+  "FullyQualifiedNamespace": "",
+  "TopicName": "algocura-events",
+  "SubscriptionName": "ai-discovery-api",
+  "DefaultMessageTimeToLiveDays": 7,
+  "MaxConcurrentCalls": 4,
+  "PrefetchCount": 0,
+  "MaxAutoLockRenewalMinutes": 5
+},
+"Auditing": {
+  "ServiceName": "Algocura.AIDiscovery.Api",
+  "PublishEntityAuditEvents": true,
+  "StampCreatedAndUpdatedFields": true,
+  "IncludeUnchangedPropertiesOnCreate": true,
+  "IncludeUnchangedPropertiesOnDelete": true,
+  "IgnoreAuditInfrastructureEntities": true
+}
+```
+
+`SubscriptionName` is required because AI Discovery consumes platform events.

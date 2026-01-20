@@ -1,8 +1,8 @@
+using Algocura.Platform.Messaging.Publishing;
 using Algocura.Workflow.Api.Contracts;
 using Algocura.Workflow.Api.Controllers;
 using Algocura.Workflow.Api.Domain;
 using Algocura.Workflow.Api.Events;
-using Algocura.Workflow.Api.Messaging.Publishers;
 using Algocura.Workflow.Api.Services;
 using Algocura.Workflow.Api.Tests.Support;
 using FluentAssertions;

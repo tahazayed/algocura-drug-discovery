@@ -14,10 +14,18 @@ public sealed class ServiceBusMessagePublisher(
       IAsyncDisposable
 {
     private static readonly JsonSerializerOptions JsonOptions =
-        new(JsonSerializerDefaults.Web);
+        new(JsonSerializerDefaults.Web)
+        {
+            WriteIndented =
+                false
+        };
+
+    private readonly ServiceBusOptions _options =
+        options.Value;
 
     private readonly ServiceBusSender _sender =
-        client.CreateSender(options.Value.TopicName);
+        client.CreateSender(
+            options.Value.TopicName);
 
     public async Task PublishAsync<TMessage>(
         TMessage message,
@@ -27,9 +35,11 @@ public sealed class ServiceBusMessagePublisher(
         IReadOnlyDictionary<string, object>? applicationProperties = null,
         CancellationToken cancellationToken = default)
     {
-        ArgumentNullException.ThrowIfNull(message);
+        ArgumentNullException.ThrowIfNull(
+            message);
 
-        if (string.IsNullOrWhiteSpace(eventType))
+        if (string.IsNullOrWhiteSpace(
+                eventType))
         {
             throw new ArgumentException(
                 "Event type is required.",
@@ -44,34 +54,46 @@ public sealed class ServiceBusMessagePublisher(
         }
 
         var body =
-            JsonSerializer.Serialize(
+            BinaryData.FromObjectAsJson(
                 message,
-                message.GetType(),
                 JsonOptions);
 
-        var busMessage =
+        var serviceBusMessage =
             new ServiceBusMessage(body)
             {
-                MessageId = messageId.ToString(),
-                Subject = eventType,
-                CorrelationId = correlationId,
-                ContentType = "application/json"
+                MessageId =
+                    messageId.ToString(),
+
+                Subject =
+                    eventType,
+
+                CorrelationId =
+                    correlationId,
+
+                ContentType =
+                    "application/json;charset=utf-8",
+
+                TimeToLive =
+                    TimeSpan.FromDays(
+                        _options.DefaultMessageTimeToLiveDays)
             };
 
-        busMessage.ApplicationProperties["eventType"] =
+        serviceBusMessage.ApplicationProperties[
+            "eventType"] =
             eventType;
 
         if (applicationProperties is not null)
         {
-            foreach (var pair in applicationProperties)
+            foreach (var property in applicationProperties)
             {
-                busMessage.ApplicationProperties[pair.Key] =
-                    pair.Value;
+                serviceBusMessage.ApplicationProperties[
+                    property.Key] =
+                    property.Value;
             }
         }
 
         await _sender.SendMessageAsync(
-            busMessage,
+            serviceBusMessage,
             cancellationToken);
 
         logger.LogInformation(

@@ -1,7 +1,7 @@
+using Algocura.Platform.Messaging.Publishing;
 using Algocura.TargetDiscovery.Api.Data;
 using Algocura.TargetDiscovery.Api.Domain;
 using Algocura.TargetDiscovery.Api.Events;
-using Algocura.TargetDiscovery.Api.Messaging.Publishers;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 

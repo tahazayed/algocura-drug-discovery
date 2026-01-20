@@ -1,8 +1,8 @@
 using Algocura.Notification.Api.Controllers;
 using Algocura.Notification.Api.Domain;
 using Algocura.Notification.Api.Events;
-using Algocura.Notification.Api.Messaging.Publishers;
 using Algocura.Notification.Api.Tests.Support;
+using Algocura.Platform.Messaging.Publishing;
 using FluentAssertions;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging.Abstractions;

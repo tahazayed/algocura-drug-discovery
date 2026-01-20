@@ -168,3 +168,32 @@ ApplicationProperties["eventType"] = EntityAuditEvent
 A shared publisher implementation should preferably live in
 `Algocura.Platform.Auditing` or another shared platform messaging library
 so every microservice uses the same audit-event publishing contract.
+
+---
+
+## Shared Platform Messaging Refactor
+
+This service uses `Algocura.Platform.Messaging` for shared Azure Service Bus
+infrastructure.
+
+The platform library owns:
+
+```text
+ServiceBusOptions
+ServiceBusClient
+IPlatformMessagePublisher
+ServiceBusMessagePublisher
+IEventPublisher
+ServiceBusEventPublisher
+ServiceBusAuditEventPublisher
+ServiceBusConsumerBase
+```
+
+The service keeps its own domain-specific integration-event contracts and
+domain-specific message handling.
+
+This service consumes events and its consumer now derives from `ServiceBusConsumerBase`.
+
+Do not add API-local copies of `IEventPublisher`, `ServiceBusEventPublisher`,
+or `ServiceBusOptions`.
+

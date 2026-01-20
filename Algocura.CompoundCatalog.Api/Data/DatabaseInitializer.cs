@@ -1,5 +1,5 @@
-﻿using Algocura.CompoundCatalog.Api.Events;
-using Algocura.CompoundCatalog.Api.Messaging;
+using Algocura.CompoundCatalog.Api.Events;
+using Algocura.Platform.Messaging.Publishing;
 using Microsoft.EntityFrameworkCore;
 
 namespace Algocura.CompoundCatalog.Api.Data;

@@ -80,3 +80,157 @@ Then replace `EnsureCreatedAsync()` with:
 ```csharp
 await dbContext.Database.MigrateAsync(cancellationToken);
 ```
+
+---
+
+## Shared Platform Messaging
+
+`Algocura.AssayManagement.Api` uses `Algocura.Platform.Messaging` for common
+Azure Service Bus transport and consumer infrastructure.
+
+The API no longer owns local implementations of:
+
+```text
+IEventPublisher
+ServiceBusEventPublisher
+ServiceBusClient registration
+ServiceBusOptions
+Service Bus processor lifecycle
+```
+
+Published Assay Management events flow through:
+
+```text
+AssayCreated / AssayCompleted / AssaySnapshot
+        ↓
+Algocura.Platform.Messaging.Publishing.IEventPublisher
+        ↓
+ServiceBusEventPublisher
+        ↓
+IPlatformMessagePublisher
+        ↓
+ServiceBusMessagePublisher
+        ↓
+Azure Service Bus
+```
+
+Audit events use the same underlying transport:
+
+```text
+EntityAuditEventInterceptor
+        ↓
+ServiceBusAuditEventPublisher
+        ↓
+IPlatformMessagePublisher
+        ↓
+Azure Service Bus
+```
+
+### Shared event contract
+
+Assay Management events now inherit from the platform
+`IntegrationEvent` contract through:
+
+```text
+AssayManagementIntegrationEvent
+        ↓
+Algocura.Platform.Messaging.Events.IntegrationEvent
+```
+
+`AssayManagementIntegrationEvent` preserves the service source:
+
+```text
+Algocura.AssayManagement.Api
+```
+
+Domain-specific events remain owned by this API:
+
+```text
+AssayCreated
+AssayCompleted
+AssaySnapshot
+```
+
+The consumed `CompletedScreeningSnapshot` remains a local incoming contract
+owned by the Assay Management integration boundary.
+
+### Shared consumer base
+
+`ScreeningEventsConsumer` now inherits from:
+
+```text
+ServiceBusConsumerBase
+```
+
+The shared base owns:
+
+```text
+ServiceBusProcessor creation
+Topic/subscription configuration
+Processor startup
+Processor shutdown
+Processor disposal
+Cancellation handling
+Common processor error logging
+Event-type resolution
+Source resolution
+Event-ID resolution
+```
+
+`ScreeningEventsConsumer` continues to own the Assay Management-specific
+processing of `CompletedScreeningSnapshot`.
+
+### Registration
+
+```csharp
+builder.Services.AddAlgocuraPlatformMessaging(
+    builder.Configuration);
+
+builder.Services.AddHostedService<
+    ScreeningEventsConsumer>();
+```
+
+`AddAlgocuraPlatformMessaging(...)` already registers:
+
+```text
+ServiceBusClient
+IPlatformMessagePublisher -> ServiceBusMessagePublisher
+IEventPublisher           -> ServiceBusEventPublisher
+ServiceBusAuditEventPublisher
+```
+
+Do not register another API-local `IEventPublisher`,
+`ServiceBusEventPublisher`, or `ServiceBusClient`.
+
+### Service Bus configuration
+
+```json
+"ServiceBus": {
+  "UseEmulator": true,
+  "ConnectionString": "...",
+  "FullyQualifiedNamespace": "",
+  "TopicName": "algocura-events",
+  "SubscriptionName": "assay-management-api",
+  "DefaultMessageTimeToLiveDays": 7,
+  "MaxConcurrentCalls": 4,
+  "PrefetchCount": 0,
+  "MaxAutoLockRenewalMinutes": 5
+}
+```
+
+`SubscriptionName` is required because Assay Management consumes completed
+screening events.
+
+### Auditing configuration
+
+```json
+"Auditing": {
+  "ServiceName": "Algocura.AssayManagement.Api",
+  "PublishEntityAuditEvents": true,
+  "StampCreatedAndUpdatedFields": true,
+  "IncludeUnchangedPropertiesOnCreate": true,
+  "IncludeUnchangedPropertiesOnDelete": true,
+  "IgnoreAuditInfrastructureEntities": true
+}
+```
+

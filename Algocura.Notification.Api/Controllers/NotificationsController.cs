@@ -3,8 +3,8 @@ using Algocura.Notification.Api.Data;
 using Algocura.Notification.Api.Domain;
 using Algocura.Notification.Api.Events;
 using Algocura.Notification.Api.Mapping;
-using Algocura.Notification.Api.Messaging.Publishers;
 using Algocura.Notification.Api.Services;
+using Algocura.Platform.Messaging.Publishing;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 

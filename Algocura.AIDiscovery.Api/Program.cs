@@ -1,6 +1,5 @@
 using Algocura.AIDiscovery.Api.Data;
 using Algocura.AIDiscovery.Api.Messaging.Consumers;
-using Algocura.AIDiscovery.Api.Messaging.Publishers;
 using Algocura.AIDiscovery.Api.Services;
 using Algocura.Platform.Auditing.DependencyInjection;
 using Algocura.Platform.Auditing.Interceptors;
@@ -114,21 +113,6 @@ builder.Services.AddScoped<
 
 builder.Services.AddAlgocuraPlatformMessaging(
     builder.Configuration);
-
-var subscriptionName =
-    builder.Configuration[
-        "ServiceBus:SubscriptionName"];
-
-if (string.IsNullOrWhiteSpace(
-        subscriptionName))
-{
-    throw new InvalidOperationException(
-        "ServiceBus:SubscriptionName is required.");
-}
-
-builder.Services.AddSingleton<
-    IEventPublisher,
-    ServiceBusEventPublisher>();
 
 builder.Services.AddHostedService<
     PlatformEventsConsumer>();
@@ -329,7 +313,7 @@ app.MapGet(
                                 messagingOptions.TopicName,
 
                             subscription =
-                                subscriptionName
+                                messagingOptions.SubscriptionName
                         },
 
                     auditing =

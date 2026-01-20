@@ -1,14 +1,16 @@
+using Algocura.Platform.Messaging.Events;
+
 namespace Algocura.AIDiscovery.Api.Events;
 
-public abstract record IntegrationEvent(
+public abstract record AIDiscoveryIntegrationEvent(
     Guid EventId,
     DateTimeOffset OccurredAtUtc)
+    : IntegrationEvent(
+        EventId,
+        OccurredAtUtc)
 {
-    public abstract string EventType { get; }
-
-    public virtual string EventVersion => "1.0";
-
-    public virtual string Source => "Algocura.AIDiscovery.Api";
+    public override string Source =>
+        "Algocura.AIDiscovery.Api";
 }
 
 public sealed record PredictionCreated(
@@ -18,7 +20,7 @@ public sealed record PredictionCreated(
     string Name,
     Guid ModelDefinitionId,
     int CandidateCount)
-    : IntegrationEvent(EventId, OccurredAtUtc)
+    : AIDiscoveryIntegrationEvent(EventId, OccurredAtUtc)
 {
     public override string EventType => nameof(PredictionCreated);
 }
@@ -27,7 +29,7 @@ public sealed record PredictionStarted(
     Guid EventId,
     DateTimeOffset OccurredAtUtc,
     Guid PredictionId)
-    : IntegrationEvent(EventId, OccurredAtUtc)
+    : AIDiscoveryIntegrationEvent(EventId, OccurredAtUtc)
 {
     public override string EventType => nameof(PredictionStarted);
 }
@@ -38,7 +40,7 @@ public sealed record PredictionCompleted(
     Guid PredictionId,
     int ResultCount,
     int PrioritizedCount)
-    : IntegrationEvent(EventId, OccurredAtUtc)
+    : AIDiscoveryIntegrationEvent(EventId, OccurredAtUtc)
 {
     public override string EventType => nameof(PredictionCompleted);
 }
@@ -48,7 +50,7 @@ public sealed record PredictionFailed(
     DateTimeOffset OccurredAtUtc,
     Guid PredictionId,
     string Reason)
-    : IntegrationEvent(EventId, OccurredAtUtc)
+    : AIDiscoveryIntegrationEvent(EventId, OccurredAtUtc)
 {
     public override string EventType => nameof(PredictionFailed);
 }
@@ -60,7 +62,7 @@ public sealed record CandidatePrioritized(
     Guid CompoundId,
     decimal PredictionScore,
     int Rank)
-    : IntegrationEvent(EventId, OccurredAtUtc)
+    : AIDiscoveryIntegrationEvent(EventId, OccurredAtUtc)
 {
     public override string EventType => nameof(CandidatePrioritized);
 }

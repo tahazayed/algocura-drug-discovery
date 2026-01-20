@@ -6,7 +6,6 @@ using Algocura.Platform.Messaging.Options;
 using Algocura.Platform.Messaging.Publishing;
 using Algocura.Screening.Api.Data;
 using Algocura.Screening.Api.Messaging.Consumers;
-using Algocura.Screening.Api.Messaging.Publishers;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 
@@ -105,21 +104,6 @@ builder.Services.AddDbContext<ScreeningDbContext>(
 
 builder.Services.AddAlgocuraPlatformMessaging(
     builder.Configuration);
-
-var subscriptionName =
-    builder.Configuration[
-        "ServiceBus:SubscriptionName"];
-
-if (string.IsNullOrWhiteSpace(
-        subscriptionName))
-{
-    throw new InvalidOperationException(
-        "ServiceBus:SubscriptionName is required.");
-}
-
-builder.Services.AddSingleton<
-    IEventPublisher,
-    ServiceBusEventPublisher>();
 
 builder.Services.AddHostedService<
     CompoundEventsConsumer>();
@@ -320,7 +304,7 @@ app.MapGet(
                                 messagingOptions.TopicName,
 
                             subscription =
-                                subscriptionName
+                                messagingOptions.SubscriptionName
                         },
 
                     auditing =

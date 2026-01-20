@@ -14,8 +14,11 @@ public static class MessagingServiceCollectionExtensions
         this IServiceCollection services,
         IConfiguration configuration)
     {
-        ArgumentNullException.ThrowIfNull(services);
-        ArgumentNullException.ThrowIfNull(configuration);
+        ArgumentNullException.ThrowIfNull(
+            services);
+
+        ArgumentNullException.ThrowIfNull(
+            configuration);
 
         services
             .AddOptions<ServiceBusOptions>()
@@ -36,6 +39,22 @@ public static class MessagingServiceCollectionExtensions
                             options.FullyQualifiedNamespace),
                 "ServiceBus:ConnectionString is required for the emulator, " +
                 "or ServiceBus:FullyQualifiedNamespace is required for Azure.")
+            .Validate(
+                options =>
+                    options.DefaultMessageTimeToLiveDays > 0,
+                "ServiceBus:DefaultMessageTimeToLiveDays must be greater than zero.")
+            .Validate(
+                options =>
+                    options.MaxConcurrentCalls > 0,
+                "ServiceBus:MaxConcurrentCalls must be greater than zero.")
+            .Validate(
+                options =>
+                    options.PrefetchCount >= 0,
+                "ServiceBus:PrefetchCount cannot be negative.")
+            .Validate(
+                options =>
+                    options.MaxAutoLockRenewalMinutes >= 0,
+                "ServiceBus:MaxAutoLockRenewalMinutes cannot be negative.")
             .ValidateOnStart();
 
         services.AddSingleton<ServiceBusClient>(
@@ -58,6 +77,10 @@ public static class MessagingServiceCollectionExtensions
         services.AddSingleton<
             IPlatformMessagePublisher,
             ServiceBusMessagePublisher>();
+
+        services.AddSingleton<
+            IEventPublisher,
+            ServiceBusEventPublisher>();
 
         services.AddScoped<
             ServiceBusAuditEventPublisher>();
