@@ -6,7 +6,7 @@ services:
 
     environment:
       ACCEPT_EULA: "Y"
-      MSSQL_SA_PASSWORD: "DontLogin!Passw0rd"
+      MSSQL_SA_PASSWORD: "${SQL_SA_PASSWORD}"
       MSSQL_PID: "Developer"
 
     ports:
@@ -19,7 +19,7 @@ services:
       test:
         [
           "CMD-SHELL",
-          "/opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P 'DontLogin!Passw0rd' -C -Q 'SELECT 1' || exit 1"
+          "/opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P '${SQL_SA_PASSWORD}' -C -Q 'SELECT 1' || exit 1"
         ]
       interval: 10s
       timeout: 5s
@@ -60,7 +60,7 @@ services:
     environment:
       ACCEPT_EULA: "Y"
       SQL_SERVER: "sqlserver"
-      MSSQL_SA_PASSWORD: "DontLogin!Passw0rd"
+      MSSQL_SA_PASSWORD: "${SQL_SA_PASSWORD}"
       EMULATOR_HTTP_PORT: "5300"
 
     ports:
@@ -122,7 +122,7 @@ services:
     environment:
       ASPNETCORE_ENVIRONMENT: "Development"
       ASPNETCORE_URLS: http://+:8080
-      ConnectionStrings__LiteratureIntelligenceDatabase: "Server=sqlserver,1433;Database=AlgocuraLiteratureIntelligence;User Id=sa;Password=DontLogin!Passw0rd;TrustServerCertificate=True;Encrypt=False;ConnectRetryCount=5;ConnectRetryInterval=5"
+      ConnectionStrings__LiteratureIntelligenceDatabase: "Server=sqlserver,1433;Database=AlgocuraLiteratureIntelligence;User Id=sa;Password=${SQL_SA_PASSWORD};TrustServerCertificate=True;Encrypt=True;ConnectRetryCount=5;ConnectRetryInterval=5;"
 
       ServiceBus__UseEmulator: "true"
       ServiceBus__ConnectionString: "Endpoint=sb://servicebus-emulator;SharedAccessKeyName=RootManageSharedAccessKey;SharedAccessKey=SAS_KEY_VALUE;UseDevelopmentEmulator=true;"
@@ -136,6 +136,8 @@ services:
       Auditing__ServiceName: "Algocura.LiteratureIntelligence.Api"
       Auditing__PublishEntityAuditEvents: "true"
       Auditing__StampCreatedAndUpdatedFields: "true"
+      Jwt__SigningKey: "${JWT_SIGNING_KEY}"
+      Jwt__ClockSkewMinutes: "5"
     depends_on:
       sqlserver:
         condition: service_healthy
@@ -159,7 +161,7 @@ services:
     environment:
       ASPNETCORE_ENVIRONMENT: "Development"
       ASPNETCORE_URLS: http://+:8080
-      ConnectionStrings__TargetDiscoveryDatabase: "Server=sqlserver,1433;Database=AlgocuraTargetDiscovery;User Id=sa;Password=DontLogin!Passw0rd;TrustServerCertificate=True;Encrypt=False;ConnectRetryCount=5;ConnectRetryInterval=5"
+      ConnectionStrings__TargetDiscoveryDatabase: "Server=sqlserver,1433;Database=AlgocuraTargetDiscovery;User Id=sa;Password=${SQL_SA_PASSWORD};TrustServerCertificate=True;Encrypt=True;ConnectRetryCount=5;ConnectRetryInterval=5;"
 
       ServiceBus__UseEmulator: "true"
       ServiceBus__ConnectionString: "Endpoint=sb://servicebus-emulator;SharedAccessKeyName=RootManageSharedAccessKey;SharedAccessKey=SAS_KEY_VALUE;UseDevelopmentEmulator=true;"
@@ -173,6 +175,8 @@ services:
       Auditing__ServiceName: "Algocura.TargetDiscovery.Api"
       Auditing__PublishEntityAuditEvents: "true"
       Auditing__StampCreatedAndUpdatedFields: "true"
+      Jwt__SigningKey: "${JWT_SIGNING_KEY}"
+      Jwt__ClockSkewMinutes: "5"
     depends_on:
       sqlserver:
         condition: service_healthy
@@ -196,7 +200,7 @@ services:
     environment:
       ASPNETCORE_ENVIRONMENT: "Development"
       ASPNETCORE_URLS: http://+:8080
-      ConnectionStrings__ChemicalDesignDatabase: "Server=sqlserver,1433;Database=AlgocuraChemicalDesign;User Id=sa;Password=DontLogin!Passw0rd;TrustServerCertificate=True;Encrypt=False;ConnectRetryCount=5;ConnectRetryInterval=5"
+      ConnectionStrings__ChemicalDesignDatabase: "Server=sqlserver,1433;Database=AlgocuraChemicalDesign;User Id=sa;Password=${SQL_SA_PASSWORD};TrustServerCertificate=True;Encrypt=True;ConnectRetryCount=5;ConnectRetryInterval=5;"
 
       ServiceBus__UseEmulator: "true"
       ServiceBus__ConnectionString: "Endpoint=sb://servicebus-emulator;SharedAccessKeyName=RootManageSharedAccessKey;SharedAccessKey=SAS_KEY_VALUE;UseDevelopmentEmulator=true;"
@@ -210,6 +214,8 @@ services:
       Auditing__ServiceName: "Algocura.ChemicalDesign.Api"
       Auditing__PublishEntityAuditEvents: "true"
       Auditing__StampCreatedAndUpdatedFields: "true"
+      Jwt__SigningKey: "${JWT_SIGNING_KEY}"
+      Jwt__ClockSkewMinutes: "5"
     depends_on:
       sqlserver:
         condition: service_healthy
@@ -233,7 +239,7 @@ services:
     environment:
       ASPNETCORE_ENVIRONMENT: "Development"
       ASPNETCORE_URLS: http://+:8080
-      ConnectionStrings__CompoundCatalogDatabase: "Server=sqlserver,1433;Database=AlgocuraCompoundCatalog;User Id=sa;Password=DontLogin!Passw0rd;TrustServerCertificate=True;Encrypt=False;ConnectRetryCount=5;ConnectRetryInterval=5"
+      ConnectionStrings__CompoundCatalogDatabase: "Server=sqlserver,1433;Database=AlgocuraCompoundCatalog;User Id=sa;Password=${SQL_SA_PASSWORD};TrustServerCertificate=True;Encrypt=True;ConnectRetryCount=5;ConnectRetryInterval=5;"
 
       ServiceBus__UseEmulator: "true"
       ServiceBus__ConnectionString: "Endpoint=sb://servicebus-emulator;SharedAccessKeyName=RootManageSharedAccessKey;SharedAccessKey=SAS_KEY_VALUE;UseDevelopmentEmulator=true;"
@@ -247,6 +253,8 @@ services:
       Auditing__ServiceName: "Algocura.CompoundCatalog.Api"
       Auditing__PublishEntityAuditEvents: "true"
       Auditing__StampCreatedAndUpdatedFields: "true"
+      Jwt__SigningKey: "${JWT_SIGNING_KEY}"
+      Jwt__ClockSkewMinutes: "5"
     depends_on:
       sqlserver:
         condition: service_healthy
@@ -268,7 +276,7 @@ services:
     environment:
       ASPNETCORE_ENVIRONMENT: "Development"
       ASPNETCORE_URLS: http://+:8080
-      ConnectionStrings__ScreeningDatabase: "Server=sqlserver,1433;Database=AlgocuraScreening;User Id=sa;Password=DontLogin!Passw0rd;TrustServerCertificate=True;Encrypt=False;ConnectRetryCount=5;ConnectRetryInterval=5"
+      ConnectionStrings__ScreeningDatabase: "Server=sqlserver,1433;Database=AlgocuraScreening;User Id=sa;Password=${SQL_SA_PASSWORD};TrustServerCertificate=True;Encrypt=True;ConnectRetryCount=5;ConnectRetryInterval=5;"
       ServiceBus__UseEmulator: "true"
       ServiceBus__ConnectionString: "Endpoint=sb://servicebus-emulator;SharedAccessKeyName=RootManageSharedAccessKey;SharedAccessKey=SAS_KEY_VALUE;UseDevelopmentEmulator=true;"
       ServiceBus__FullyQualifiedNamespace: ""
@@ -281,6 +289,8 @@ services:
       Auditing__ServiceName: "Algocura.Screening.Api"
       Auditing__PublishEntityAuditEvents: "true"
       Auditing__StampCreatedAndUpdatedFields: "true"
+      Jwt__SigningKey: "${JWT_SIGNING_KEY}"
+      Jwt__ClockSkewMinutes: "5"
     depends_on:
       sqlserver:
         condition: service_healthy
@@ -302,7 +312,7 @@ services:
     environment:
       ASPNETCORE_ENVIRONMENT: "Development"
       ASPNETCORE_URLS: http://+:8080
-      ConnectionStrings__AIDiscoveryDatabase: "Server=sqlserver,1433;Database=AlgocuraAIDiscovery;User Id=sa;Password=DontLogin!Passw0rd;TrustServerCertificate=True;Encrypt=False;ConnectRetryCount=5;ConnectRetryInterval=5"
+      ConnectionStrings__AIDiscoveryDatabase: "Server=sqlserver,1433;Database=AlgocuraAIDiscovery;User Id=sa;Password=${SQL_SA_PASSWORD};TrustServerCertificate=True;Encrypt=True;ConnectRetryCount=5;ConnectRetryInterval=5;"
       ServiceBus__UseEmulator: "true"
       ServiceBus__ConnectionString: "Endpoint=sb://servicebus-emulator;SharedAccessKeyName=RootManageSharedAccessKey;SharedAccessKey=SAS_KEY_VALUE;UseDevelopmentEmulator=true;"
       ServiceBus__FullyQualifiedNamespace: ""
@@ -315,6 +325,8 @@ services:
       Auditing__ServiceName: "Algocura.AIDiscovery.Api"
       Auditing__PublishEntityAuditEvents: "true"
       Auditing__StampCreatedAndUpdatedFields: "true"
+      Jwt__SigningKey: "${JWT_SIGNING_KEY}"
+      Jwt__ClockSkewMinutes: "5"
     depends_on:
       sqlserver:
         condition: service_healthy
@@ -336,7 +348,7 @@ services:
     environment:
       ASPNETCORE_ENVIRONMENT: "Development"
       ASPNETCORE_URLS: http://+:8080
-      ConnectionStrings__AssayManagementDatabase: "Server=sqlserver,1433;Database=AlgocuraAssayManagement;User Id=sa;Password=DontLogin!Passw0rd;TrustServerCertificate=True;Encrypt=False;ConnectRetryCount=5;ConnectRetryInterval=5"
+      ConnectionStrings__AssayManagementDatabase: "Server=sqlserver,1433;Database=AlgocuraAssayManagement;User Id=sa;Password=${SQL_SA_PASSWORD};TrustServerCertificate=True;Encrypt=True;ConnectRetryCount=5;ConnectRetryInterval=5;"
       ServiceBus__UseEmulator: "true"
       ServiceBus__ConnectionString: "Endpoint=sb://servicebus-emulator;SharedAccessKeyName=RootManageSharedAccessKey;SharedAccessKey=SAS_KEY_VALUE;UseDevelopmentEmulator=true;"
       ServiceBus__FullyQualifiedNamespace: ""
@@ -349,6 +361,8 @@ services:
       Auditing__ServiceName: "Algocura.AssayManagement.Api"
       Auditing__PublishEntityAuditEvents: "true"
       Auditing__StampCreatedAndUpdatedFields: "true"
+      Jwt__SigningKey: "${JWT_SIGNING_KEY}"
+      Jwt__ClockSkewMinutes: "5"
     depends_on:
       sqlserver:
         condition: service_healthy
@@ -370,7 +384,7 @@ services:
     environment:
       ASPNETCORE_ENVIRONMENT: "Development"
       ASPNETCORE_URLS: http://+:8080
-      ConnectionStrings__WorkflowDatabase: "Server=sqlserver,1433;Database=AlgocuraWorkflow;User Id=sa;Password=DontLogin!Passw0rd;TrustServerCertificate=True;Encrypt=False;ConnectRetryCount=5;ConnectRetryInterval=5"
+      ConnectionStrings__WorkflowDatabase: "Server=sqlserver,1433;Database=AlgocuraWorkflow;User Id=sa;Password=${SQL_SA_PASSWORD};TrustServerCertificate=True;Encrypt=True;ConnectRetryCount=5;ConnectRetryInterval=5;"
       ServiceBus__UseEmulator: "true"
       ServiceBus__ConnectionString: "Endpoint=sb://servicebus-emulator;SharedAccessKeyName=RootManageSharedAccessKey;SharedAccessKey=SAS_KEY_VALUE;UseDevelopmentEmulator=true;"
       ServiceBus__FullyQualifiedNamespace: ""
@@ -383,6 +397,8 @@ services:
       Auditing__ServiceName: "Algocura.Workflow.Api"
       Auditing__PublishEntityAuditEvents: "true"
       Auditing__StampCreatedAndUpdatedFields: "true"
+      Jwt__SigningKey: "${JWT_SIGNING_KEY}"
+      Jwt__ClockSkewMinutes: "5"
     depends_on:
       sqlserver:
         condition: service_healthy
@@ -404,7 +420,7 @@ services:
     environment:
       ASPNETCORE_ENVIRONMENT: "Development"
       ASPNETCORE_URLS: http://+:8080
-      ConnectionStrings__NotificationDatabase: "Server=sqlserver,1433;Database=AlgocuraNotification;User Id=sa;Password=DontLogin!Passw0rd;TrustServerCertificate=True;Encrypt=False;ConnectRetryCount=5;ConnectRetryInterval=5"
+      ConnectionStrings__NotificationDatabase: "Server=sqlserver,1433;Database=AlgocuraNotification;User Id=sa;Password=${SQL_SA_PASSWORD};TrustServerCertificate=True;Encrypt=True;ConnectRetryCount=5;ConnectRetryInterval=5;"
       ServiceBus__UseEmulator: "true"
       ServiceBus__ConnectionString: "Endpoint=sb://servicebus-emulator;SharedAccessKeyName=RootManageSharedAccessKey;SharedAccessKey=SAS_KEY_VALUE;UseDevelopmentEmulator=true;"
       ServiceBus__FullyQualifiedNamespace: ""
@@ -417,6 +433,8 @@ services:
       Auditing__ServiceName: "Algocura.Notification.Api"
       Auditing__PublishEntityAuditEvents: "true"
       Auditing__StampCreatedAndUpdatedFields: "true"
+      Jwt__SigningKey: "${JWT_SIGNING_KEY}"
+      Jwt__ClockSkewMinutes: "5"
     depends_on:
       sqlserver:
         condition: service_healthy
@@ -438,7 +456,7 @@ services:
     environment:
       ASPNETCORE_ENVIRONMENT: "Development"
       ASPNETCORE_URLS: http://+:8080
-      ConnectionStrings__SearchDatabase: "Server=sqlserver,1433;Database=AlgocuraSearch;User Id=sa;Password=DontLogin!Passw0rd;TrustServerCertificate=True;Encrypt=False;ConnectRetryCount=5;ConnectRetryInterval=5"
+      ConnectionStrings__SearchDatabase: "Server=sqlserver,1433;Database=AlgocuraSearch;User Id=sa;Password=${SQL_SA_PASSWORD};TrustServerCertificate=True;Encrypt=True;ConnectRetryCount=5;ConnectRetryInterval=5;"
       ServiceBus__UseEmulator: "true"
       ServiceBus__ConnectionString: "Endpoint=sb://servicebus-emulator;SharedAccessKeyName=RootManageSharedAccessKey;SharedAccessKey=SAS_KEY_VALUE;UseDevelopmentEmulator=true;"
       ServiceBus__FullyQualifiedNamespace: ""
@@ -451,6 +469,8 @@ services:
       Auditing__ServiceName: "Algocura.Search.Api"
       Auditing__PublishEntityAuditEvents: "true"
       Auditing__StampCreatedAndUpdatedFields: "true"
+      Jwt__SigningKey: "${JWT_SIGNING_KEY}"
+      Jwt__ClockSkewMinutes: "5"
     depends_on:
       sqlserver:
         condition: service_healthy
@@ -472,7 +492,7 @@ services:
     environment:
       ASPNETCORE_ENVIRONMENT: "Development"
       ASPNETCORE_URLS: http://+:8080
-      ConnectionStrings__ReportingDatabase: "Server=sqlserver,1433;Database=AlgocuraReporting;User Id=sa;Password=DontLogin!Passw0rd;TrustServerCertificate=True;Encrypt=False;ConnectRetryCount=5;ConnectRetryInterval=5"
+      ConnectionStrings__ReportingDatabase: "Server=sqlserver,1433;Database=AlgocuraReporting;User Id=sa;Password=${SQL_SA_PASSWORD};TrustServerCertificate=True;Encrypt=True;ConnectRetryCount=5;ConnectRetryInterval=5;"
       ServiceBus__UseEmulator: "true"
       ServiceBus__ConnectionString: "Endpoint=sb://servicebus-emulator;SharedAccessKeyName=RootManageSharedAccessKey;SharedAccessKey=SAS_KEY_VALUE;UseDevelopmentEmulator=true;"
       ServiceBus__FullyQualifiedNamespace: ""
@@ -485,6 +505,8 @@ services:
       Auditing__ServiceName: "Algocura.Reporting.Api"
       Auditing__PublishEntityAuditEvents: "true"
       Auditing__StampCreatedAndUpdatedFields: "true"
+      Jwt__SigningKey: "${JWT_SIGNING_KEY}"
+      Jwt__ClockSkewMinutes: "5"
     depends_on:
       sqlserver:
         condition: service_healthy
@@ -506,7 +528,7 @@ services:
     environment:
       ASPNETCORE_ENVIRONMENT: "Development"
       ASPNETCORE_URLS: http://+:8080
-      ConnectionStrings__AuditDatabase: "Server=sqlserver,1433;Database=AlgocuraAudit;User Id=sa;Password=DontLogin!Passw0rd;TrustServerCertificate=True;Encrypt=False;ConnectRetryCount=5;ConnectRetryInterval=5"
+      ConnectionStrings__AuditDatabase: "Server=sqlserver,1433;Database=AlgocuraAudit;User Id=sa;Password=${SQL_SA_PASSWORD};TrustServerCertificate=True;Encrypt=True;ConnectRetryCount=5;ConnectRetryInterval=5;"
       ServiceBus__UseEmulator: "true"
       ServiceBus__ConnectionString: "Endpoint=sb://servicebus-emulator;SharedAccessKeyName=RootManageSharedAccessKey;SharedAccessKey=SAS_KEY_VALUE;UseDevelopmentEmulator=true;"
       ServiceBus__FullyQualifiedNamespace: ""
@@ -519,6 +541,8 @@ services:
       Auditing__ServiceName: "Algocura.Audit.Api"
       Auditing__PublishEntityAuditEvents: "false"
       Auditing__StampCreatedAndUpdatedFields: "true"
+      Jwt__SigningKey: "${JWT_SIGNING_KEY}"
+      Jwt__ClockSkewMinutes: "5"
     depends_on:
       sqlserver:
         condition: service_healthy
@@ -540,12 +564,11 @@ services:
     environment:
       ASPNETCORE_ENVIRONMENT: "Development"
       ASPNETCORE_URLS: http://+:8080
-      ConnectionStrings__IdentityDatabase: "Server=sqlserver,1433;Database=AlgocuraIdentity;User Id=sa;Password=DontLogin!Passw0rd;TrustServerCertificate=True;Encrypt=False;ConnectRetryCount=5;ConnectRetryInterval=5"
+      ConnectionStrings__IdentityDatabase: "Server=sqlserver,1433;Database=AlgocuraIdentity;User Id=sa;Password=${SQL_SA_PASSWORD};TrustServerCertificate=True;Encrypt=True;ConnectRetryCount=5;ConnectRetryInterval=5;"
       ServiceBus__UseEmulator: "true"
       ServiceBus__ConnectionString: "Endpoint=sb://servicebus-emulator;SharedAccessKeyName=RootManageSharedAccessKey;SharedAccessKey=SAS_KEY_VALUE;UseDevelopmentEmulator=true;"
       ServiceBus__FullyQualifiedNamespace: ""
       ServiceBus__TopicName: "algocura-events"
-      ServiceBus__SubscriptionName: "identity-api"      
       Logging__LogLevel__Default: "Information"
       Logging__LogLevel__Microsoft__AspNetCore: "Warning"
       Logging__LogLevel__Microsoft__EntityFrameworkCore: "Information"
@@ -553,8 +576,12 @@ services:
       Auditing__ServiceName: "Algocura.Identity.Api"
       Auditing__PublishEntityAuditEvents: "true"
       Auditing__StampCreatedAndUpdatedFields: "true"
-      Jwt__SigningKey: "2A032D88-B8A2-4862-9373-E41E4D3FEB45"
-      Seed__AdministratorPassword__Enabled: "Don'tLogin@2026"
+      Jwt__SigningKey: "${JWT_SIGNING_KEY}"
+      Jwt__ClockSkewMinutes: "5"
+      Seed__AdministratorPassword: "${SEED_USER_PASSWORD}"
+      Seed__ScientistPassword: "${SEED_USER_PASSWORD}"
+      Seed__ReviewerPassword: "${SEED_USER_PASSWORD}"
+      Seed__ServicePassword: "${SEED_USER_PASSWORD}"
     depends_on:
       sqlserver:
         condition: service_healthy

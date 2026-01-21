@@ -7,12 +7,10 @@ using Algocura.Platform.Auditing.Options;
 using Algocura.Platform.Messaging.DependencyInjection;
 using Algocura.Platform.Messaging.Options;
 using Algocura.Platform.Messaging.Publishing;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Algocura.Platform.Security.DependencyInjection;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
-using Microsoft.IdentityModel.Tokens;
-using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -23,6 +21,13 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddControllers();
 builder.Services.AddProblemDetails();
 builder.Services.AddHealthChecks();
+
+// -----------------------------------------------------------------------------
+// Security
+// -----------------------------------------------------------------------------
+
+builder.Services.AddAlgocuraPlatformSecurity(
+    builder.Configuration);
 
 // -----------------------------------------------------------------------------
 // Auditing
@@ -142,78 +147,11 @@ builder.Services
     .AddDefaultTokenProviders();
 
 // -----------------------------------------------------------------------------
-// JWT authentication
+// Token issuance
+//
+// JWT validation and authorization are registered by
+// AddAlgocuraPlatformSecurity(...).
 // -----------------------------------------------------------------------------
-
-builder.Services
-    .AddOptions<JwtOptions>()
-    .Bind(
-        builder.Configuration.GetSection(
-            JwtOptions.SectionName))
-    .Validate(
-        options =>
-            !string.IsNullOrWhiteSpace(
-                options.Issuer),
-        "Jwt:Issuer is required.")
-    .Validate(
-        options =>
-            !string.IsNullOrWhiteSpace(
-                options.Audience),
-        "Jwt:Audience is required.")
-    .Validate(
-        options =>
-            !string.IsNullOrWhiteSpace(
-                options.SigningKey) &&
-            options.SigningKey.Length >= 32,
-        "Jwt:SigningKey must contain at least 32 characters.")
-    .ValidateOnStart();
-
-var jwtOptions =
-    builder.Configuration
-        .GetSection(
-            JwtOptions.SectionName)
-        .Get<JwtOptions>()
-    ?? throw new InvalidOperationException(
-        "Jwt configuration is required.");
-
-builder.Services
-    .AddAuthentication(
-        JwtBearerDefaults.AuthenticationScheme)
-    .AddJwtBearer(
-        options =>
-        {
-            options.TokenValidationParameters =
-                new TokenValidationParameters
-                {
-                    ValidateIssuer =
-                        true,
-
-                    ValidIssuer =
-                        jwtOptions.Issuer,
-
-                    ValidateAudience =
-                        true,
-
-                    ValidAudience =
-                        jwtOptions.Audience,
-
-                    ValidateIssuerSigningKey =
-                        true,
-
-                    IssuerSigningKey =
-                        new SymmetricSecurityKey(
-                            Encoding.UTF8.GetBytes(
-                                jwtOptions.SigningKey)),
-
-                    ValidateLifetime =
-                        true,
-
-                    ClockSkew =
-                        TimeSpan.FromMinutes(1)
-                };
-        });
-
-builder.Services.AddAuthorization();
 
 builder.Services.AddScoped<
     IJwtTokenService,

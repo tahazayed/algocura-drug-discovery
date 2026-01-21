@@ -1,4 +1,4 @@
-namespace Algocura.Identity.Api.Security;
+namespace Algocura.Platform.Security.Options;
 
 public sealed class JwtOptions
 {
@@ -16,4 +16,7 @@ public sealed class JwtOptions
 
     public int AccessTokenMinutes { get; set; } =
         60;
+
+    public int ClockSkewMinutes { get; set; } =
+        5;
 }

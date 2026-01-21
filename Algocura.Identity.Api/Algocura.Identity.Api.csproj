@@ -8,19 +8,32 @@
   <ItemGroup>
     <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="10.0.10" />
     <PackageReference Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" Version="10.0.10" />
-    <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="10.0.10" />
-    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="10.0.10">
-      <PrivateAssets>all</PrivateAssets>
-      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-    </PackageReference>
-    <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="10.0.10" />
-    <PackageReference Include="Swashbuckle.AspNetCore" Version="9.0.6" />
-    <PackageReference Include="Swashbuckle.AspNetCore.ReDoc" Version="9.0.6" />
-	<PackageReference Include="Microsoft.OpenApi" Version="2.7.5" />
+	  <PackageReference Include="Azure.Messaging.ServiceBus" Version="7.*" />
+
+	  <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="10.0.10" />
+	  <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="10.0.10" />
+
+	  <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="10.0.10">
+		  <PrivateAssets>all</PrivateAssets>
+		  <IncludeAssets>
+			  runtime;
+			  build;
+			  native;
+			  contentfiles;
+			  analyzers;
+			  buildtransitive
+		  </IncludeAssets>
+	  </PackageReference>
+
+	  <PackageReference Include="Microsoft.OpenApi" Version="2.7.5" />
+
+	  <PackageReference Include="Swashbuckle.AspNetCore.ReDoc" Version="10.2.3" />
+	  <PackageReference Include="Swashbuckle.AspNetCore.SwaggerUI" Version="10.2.3" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\Algocura.Platform.Auditing\Algocura.Platform.Auditing.csproj" />
     <ProjectReference Include="..\Algocura.Platform.Messaging\Algocura.Platform.Messaging.csproj" />
+	<ProjectReference Include="..\Algocura.Platform.Security\Algocura.Platform.Security.csproj" />
   </ItemGroup>
 </Project>

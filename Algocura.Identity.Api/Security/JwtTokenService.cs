@@ -1,4 +1,5 @@
 using Algocura.Identity.Api.Domain;
+using Algocura.Platform.Security.Options;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
@@ -18,22 +19,38 @@ public sealed class JwtTokenService(
             ApplicationUser user,
             CancellationToken cancellationToken = default)
     {
+        ArgumentNullException.ThrowIfNull(
+            user);
+
+        cancellationToken.ThrowIfCancellationRequested();
+
         var jwtOptions =
             options.Value;
 
+        var now =
+            DateTimeOffset.UtcNow;
+
         var roles =
-            await userManager.GetRolesAsync(user);
+            await userManager.GetRolesAsync(
+                user);
+
+        cancellationToken.ThrowIfCancellationRequested();
 
         var claims =
             new List<Claim>
             {
+                new(
+                    JwtRegisteredClaimNames.Jti,
+                    Guid.NewGuid().ToString()),
+
                 new(
                     JwtRegisteredClaimNames.Sub,
                     user.Id.ToString()),
 
                 new(
                     JwtRegisteredClaimNames.Email,
-                    user.Email ?? string.Empty),
+                    user.Email ??
+                    string.Empty),
 
                 new(
                     ClaimTypes.NameIdentifier,
@@ -47,13 +64,14 @@ public sealed class JwtTokenService(
             };
 
         claims.AddRange(
-            roles.Select(role =>
-                new Claim(
-                    ClaimTypes.Role,
-                    role)));
+            roles.Select(
+                role =>
+                    new Claim(
+                        ClaimTypes.Role,
+                        role)));
 
         var expiresAtUtc =
-            DateTimeOffset.UtcNow.AddMinutes(
+            now.AddMinutes(
                 jwtOptions.AccessTokenMinutes);
 
         var key =
@@ -70,20 +88,29 @@ public sealed class JwtTokenService(
             new JwtSecurityToken(
                 issuer:
                     jwtOptions.Issuer,
+
                 audience:
                     jwtOptions.Audience,
+
                 claims:
                     claims,
+
                 notBefore:
-                    DateTime.UtcNow,
+                    now.UtcDateTime,
+
                 expires:
                     expiresAtUtc.UtcDateTime,
+
                 signingCredentials:
                     credentials);
 
-        return (
+        var tokenValue =
             new JwtSecurityTokenHandler()
-                .WriteToken(token),
+                .WriteToken(
+                    token);
+
+        return (
+            tokenValue,
             expiresAtUtc);
     }
 }

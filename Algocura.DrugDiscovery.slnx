@@ -24,6 +24,8 @@
   <Project Path="Algocura.Platform.Auditing/Algocura.Platform.Auditing.csproj" />
   <Project Path="Algocura.Platform.Messaging.Tests/Algocura.Platform.Messaging.Tests.csproj" />
   <Project Path="Algocura.Platform.Messaging/Algocura.Platform.Messaging.csproj" />
+  <Project Path="Algocura.Platform.Security.Tests/Algocura.Platform.Security.Tests.csproj" />
+  <Project Path="Algocura.Platform.Security/Algocura.Platform.Security.csproj" />
   <Project Path="Algocura.Reporting.Api.Tests/Algocura.Reporting.Api.Tests.csproj" />
   <Project Path="Algocura.Reporting.Api/Algocura.Reporting.Api.csproj" />
   <Project Path="Algocura.Screening.Api.Tests/Algocura.Screening.Api.Tests.csproj" />

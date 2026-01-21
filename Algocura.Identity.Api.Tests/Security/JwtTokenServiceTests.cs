@@ -1,6 +1,7 @@
 using Algocura.Identity.Api.Domain;
 using Algocura.Identity.Api.Security;
 using Algocura.Identity.Api.Tests.Support;
+using Algocura.Platform.Security.Options;
 using FluentAssertions;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.DependencyInjection;

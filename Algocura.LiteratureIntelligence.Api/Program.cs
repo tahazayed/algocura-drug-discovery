@@ -6,6 +6,7 @@ using Algocura.Platform.Auditing.Options;
 using Algocura.Platform.Messaging.DependencyInjection;
 using Algocura.Platform.Messaging.Options;
 using Algocura.Platform.Messaging.Publishing;
+using Algocura.Platform.Security.DependencyInjection;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 
@@ -18,6 +19,13 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddControllers();
 builder.Services.AddProblemDetails();
 builder.Services.AddHealthChecks();
+
+// -----------------------------------------------------------------------------
+// Security
+// -----------------------------------------------------------------------------
+
+builder.Services.AddAlgocuraPlatformSecurity(
+    builder.Configuration);
 
 // -----------------------------------------------------------------------------
 // Auditing
@@ -179,6 +187,9 @@ if (!app.Environment.IsDevelopment())
 {
     app.UseHttpsRedirection();
 }
+
+app.UseAuthentication();
+app.UseAuthorization();
 
 // -----------------------------------------------------------------------------
 // OpenAPI JSON
