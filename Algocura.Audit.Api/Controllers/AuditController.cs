@@ -1,10 +1,12 @@
 using Algocura.Audit.Api.Contracts;
 using Algocura.Audit.Api.Data;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
 namespace Algocura.Audit.Api.Controllers;
 
+[Authorize(Roles = "Reviewer,Administrator")]
 [ApiController]
 [Route("api/v1/audit")]
 public sealed class AuditController(

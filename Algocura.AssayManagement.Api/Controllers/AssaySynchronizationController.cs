@@ -1,11 +1,13 @@
 using Algocura.AssayManagement.Api.Data;
 using Algocura.AssayManagement.Api.Domain;
 using Algocura.Platform.Messaging.Publishing;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
 namespace Algocura.AssayManagement.Api.Controllers;
 
+[Authorize(Roles = "Service,Administrator")]
 [ApiController]
 [Route("api/v1/assay-management/synchronization")]
 public sealed class AssaySynchronizationController(

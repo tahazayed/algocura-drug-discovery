@@ -2,11 +2,13 @@ using Algocura.ChemicalDesign.Api.Data;
 using Algocura.ChemicalDesign.Api.Domain;
 using Algocura.ChemicalDesign.Api.Events;
 using Algocura.Platform.Messaging.Publishing;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
 namespace Algocura.ChemicalDesign.Api.Controllers;
 
+[Authorize(Roles = "Service,Administrator")]
 [ApiController]
 [Route("api/v1/chemical-design/synchronization")]
 public sealed class ChemicalDesignSynchronizationController(

@@ -5,11 +5,13 @@ using Algocura.Workflow.Api.Domain;
 using Algocura.Workflow.Api.Events;
 using Algocura.Workflow.Api.Mapping;
 using Algocura.Workflow.Api.Services;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
 namespace Algocura.Workflow.Api.Controllers;
 
+[Authorize(Roles = "Scientist,Reviewer,Administrator")]
 [ApiController]
 [Route("api/v1/workflows")]
 public sealed class WorkflowsController(

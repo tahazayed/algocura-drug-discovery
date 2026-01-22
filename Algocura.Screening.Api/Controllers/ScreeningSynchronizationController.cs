@@ -2,11 +2,13 @@ using Algocura.Platform.Messaging.Publishing;
 using Algocura.Screening.Api.Data;
 using Algocura.Screening.Api.Domain;
 using Algocura.Screening.Api.Events;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
 namespace Algocura.Screening.Api.Controllers;
 
+[Authorize(Roles = "Service,Administrator")]
 [ApiController]
 [Route("api/v1/screenings/synchronization")]
 public sealed class ScreeningSynchronizationController(

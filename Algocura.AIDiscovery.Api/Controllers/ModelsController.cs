@@ -1,11 +1,13 @@
 using Algocura.AIDiscovery.Api.Contracts;
 using Algocura.AIDiscovery.Api.Data;
 using Algocura.AIDiscovery.Api.Mapping;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
 namespace Algocura.AIDiscovery.Api.Controllers;
 
+[Authorize(Roles = "Scientist,Reviewer,Administrator")]
 [ApiController]
 [Route("api/v1/models")]
 public sealed class ModelsController(AIDiscoveryDbContext db)

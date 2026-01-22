@@ -1,11 +1,13 @@
 using Algocura.TargetDiscovery.Api.Contracts;
 using Algocura.TargetDiscovery.Api.Data;
 using Algocura.TargetDiscovery.Api.Mapping;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
 namespace Algocura.TargetDiscovery.Api.Controllers;
 
+[Authorize(Roles = "Scientist,Reviewer,Administrator")]
 [ApiController]
 [Route("api/v1/target-hypotheses")]
 public sealed class TargetHypothesesController(

@@ -1,11 +1,13 @@
 using Algocura.AssayManagement.Api.Contracts;
 using Algocura.AssayManagement.Api.Data;
 using Algocura.AssayManagement.Api.Mapping;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
 namespace Algocura.AssayManagement.Api.Controllers;
 
+[Authorize(Roles = "Scientist,Reviewer,Administrator")]
 [ApiController]
 [Route("api/v1/completed-screenings")]
 public sealed class CompletedScreeningsController(

@@ -2,11 +2,13 @@ using Algocura.Reporting.Api.Contracts;
 using Algocura.Reporting.Api.Data;
 using Algocura.Reporting.Api.Domain;
 using Algocura.Reporting.Api.Services;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
 namespace Algocura.Reporting.Api.Controllers;
 
+[Authorize(Roles = "Scientist,Reviewer,Administrator")]
 [ApiController]
 [Route("api/v1/report-definitions")]
 public sealed class ReportDefinitionsController(
@@ -144,6 +146,7 @@ public sealed class ReportDefinitionsController(
                 x.Unit)).ToArray());
 }
 
+[Authorize(Roles = "Scientist,Reviewer,Administrator")]
 [ApiController]
 [Route("api/v1/report-runs")]
 public sealed class ReportRunsController(
@@ -195,6 +198,7 @@ public sealed class ReportRunsController(
                 x.Unit)).ToArray());
 }
 
+[Authorize(Roles = "Scientist,Reviewer,Administrator")]
 [ApiController]
 [Route("api/v1/reporting/summary")]
 public sealed class ReportingSummaryController(

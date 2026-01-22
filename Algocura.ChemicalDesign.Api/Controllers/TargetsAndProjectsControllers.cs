@@ -4,11 +4,13 @@ using Algocura.ChemicalDesign.Api.Domain;
 using Algocura.ChemicalDesign.Api.Events;
 using Algocura.ChemicalDesign.Api.Mapping;
 using Algocura.Platform.Messaging.Publishing;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
 namespace Algocura.ChemicalDesign.Api.Controllers;
 
+[Authorize(Roles = "Scientist,Reviewer,Administrator")]
 [ApiController]
 [Route("api/v1/selected-targets")]
 public sealed class SelectedTargetsController(ChemicalDesignDbContext db) : ControllerBase
@@ -49,6 +51,7 @@ public sealed class SelectedTargetsController(ChemicalDesignDbContext db) : Cont
     }
 }
 
+[Authorize(Roles = "Scientist,Reviewer,Administrator")]
 [ApiController]
 [Route("api/v1/design-projects")]
 public sealed class DesignProjectsController(

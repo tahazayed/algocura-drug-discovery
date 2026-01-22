@@ -3,18 +3,22 @@ using Algocura.AIDiscovery.Api.Data;
 using Algocura.AIDiscovery.Api.Domain;
 using Algocura.AIDiscovery.Api.Events;
 using Algocura.AIDiscovery.Api.Mapping;
+using Algocura.AIDiscovery.Api.Routing;
 using Algocura.AIDiscovery.Api.Services;
 using Algocura.Platform.Messaging.Publishing;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
 namespace Algocura.AIDiscovery.Api.Controllers;
 
+[Authorize(Roles = "Scientist,Reviewer,Administrator")]
 [ApiController]
 [Route("api/v1/predictions")]
 public sealed class PredictionsController(
     AIDiscoveryDbContext db,
     IPredictionScoringEngine scoringEngine,
+    IAdaptivePredictionOrchestrator adaptiveOrchestrator,
     IEventPublisher publisher,
     ILogger<PredictionsController> logger)
     : ControllerBase
@@ -348,6 +352,103 @@ public sealed class PredictionsController(
         }
 
         return Ok(job.ToResponse());
+    }
+
+
+    [HttpPost("{id:guid}/adaptive-run")]
+    public async Task<ActionResult<AdaptiveRunPredictionResponse>> AdaptiveRun(
+        Guid id,
+        AdaptiveRunPredictionRequest request,
+        CancellationToken cancellationToken)
+    {
+        var job = await db.PredictionJobs
+            .Include(x => x.Candidates)
+            .Include(x => x.Results)
+            .SingleOrDefaultAsync(x => x.Id == id, cancellationToken);
+
+        if (job is null) return NotFound();
+
+        if (job.Status is not PredictionStatus.Queued and not PredictionStatus.Running)
+            return Conflict(new ProblemDetails
+            {
+                Title = "Invalid prediction status",
+                Detail = "Only queued or running predictions can be executed adaptively.",
+                Status = StatusCodes.Status409Conflict
+            });
+
+        var models = await db.ModelDefinitions
+            .AsNoTracking()
+            .Where(x => x.Status == ModelStatus.Active)
+            .ToListAsync(cancellationToken);
+
+        AdaptivePredictionExecution execution;
+        try
+        {
+            execution = adaptiveOrchestrator.Execute(job, models, request.ResourceBudget);
+        }
+        catch (InvalidOperationException exception)
+        {
+            return Conflict(new ProblemDetails
+            {
+                Title = "Adaptive routing failed",
+                Detail = exception.Message,
+                Status = StatusCodes.Status409Conflict
+            });
+        }
+
+        var now = DateTimeOffset.UtcNow;
+
+        if (job.Status == PredictionStatus.Queued)
+        {
+            job.Status = PredictionStatus.Running;
+            job.StartedAtUtc = now;
+
+            await publisher.PublishAsync(
+                new PredictionStarted(Guid.NewGuid(), now, job.Id),
+                correlationId: job.Id.ToString(),
+                cancellationToken: cancellationToken);
+        }
+
+        if (job.Results.Count > 0)
+            db.PredictionResults.RemoveRange(job.Results);
+
+        foreach (var result in execution.Results)
+            result.Explanation =
+                $"{result.Explanation} Adaptive model={execution.FinalModel.Name}; confidence={execution.FinalConfidence:0.0000}.";
+
+        db.PredictionResults.AddRange(execution.Results);
+        job.ModelDefinitionId = execution.FinalModel.Id;
+        job.Status = PredictionStatus.Completed;
+        job.CompletedAtUtc = now;
+        job.UpdatedAtUtc = now;
+
+        await db.SaveChangesAsync(cancellationToken);
+
+        job.Results.Clear();
+        job.Results.AddRange(execution.Results);
+
+        await publisher.PublishAsync(
+            new PredictionCompleted(
+                Guid.NewGuid(), now, job.Id, execution.Results.Count,
+                execution.Results.Count(x => x.Prioritized)),
+            correlationId: job.Id.ToString(),
+            cancellationToken: cancellationToken);
+
+        await publisher.PublishAsync(
+            new AdaptivePredictionCompleted(
+                Guid.NewGuid(), now, job.Id, execution.FinalModel.Id,
+                execution.FinalConfidence, execution.ResourceConsumed,
+                execution.Executions.Count),
+            correlationId: job.Id.ToString(),
+            cancellationToken: cancellationToken);
+
+        return Ok(new AdaptiveRunPredictionResponse(
+            job.ToResponse(),
+            execution.FinalConfidence,
+            execution.ResourceConsumed,
+            execution.Executions.Select(x => new AdaptiveModelExecutionResponse(
+                x.ModelDefinitionId, x.ModelName, x.Confidence,
+                x.ResourceCost, x.RoutingScore, x.RoutingReason)).ToArray()));
     }
 
     [HttpPost("{id:guid}/fail")]

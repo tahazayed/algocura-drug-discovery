@@ -1,5 +1,6 @@
 using Algocura.AIDiscovery.Api.Data;
 using Algocura.AIDiscovery.Api.Messaging.Consumers;
+using Algocura.AIDiscovery.Api.Routing;
 using Algocura.AIDiscovery.Api.Services;
 using Algocura.Platform.Auditing.DependencyInjection;
 using Algocura.Platform.Auditing.Interceptors;
@@ -115,6 +116,16 @@ builder.Services.AddScoped<
     IPredictionScoringEngine,
     DeterministicPredictionScoringEngine>();
 
+builder.Services
+    .AddOptions<ModelRoutingOptions>()
+    .Bind(builder.Configuration.GetSection(ModelRoutingOptions.SectionName))
+    .Validate(options => options.Models.Count > 0,
+        "AdaptiveRouting:Models must contain at least one model profile.")
+    .ValidateOnStart();
+
+builder.Services.AddScoped<IAdaptiveModelRouter, AdaptiveModelRouter>();
+builder.Services.AddScoped<IAdaptivePredictionOrchestrator, AdaptivePredictionOrchestrator>();
+
 // -----------------------------------------------------------------------------
 // Azure Service Bus
 // -----------------------------------------------------------------------------
@@ -145,7 +156,8 @@ builder.Services.AddOpenApi(
                     "v1";
 
                 document.Info.Description =
-                    "Manages prediction jobs, deterministic prototype scoring, " +
+                    "Manages prediction jobs, adaptive molecular-model routing, " +
+                    "confidence-driven model escalation, resource-aware " +
                     "candidate prioritization, screening projections, and " +
                     "integration events.";
 

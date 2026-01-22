@@ -2,11 +2,13 @@ using Algocura.Notification.Api.Data;
 using Algocura.Notification.Api.Domain;
 using Algocura.Notification.Api.Events;
 using Algocura.Platform.Messaging.Publishing;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
 namespace Algocura.Notification.Api.Controllers;
 
+[Authorize(Roles = "Service,Administrator")]
 [ApiController]
 [Route("api/v1/notification/synchronization")]
 public sealed class NotificationSynchronizationController(

@@ -1,9 +1,11 @@
 using Algocura.Audit.Api.Data;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
 namespace Algocura.Audit.Api.Controllers;
 
+[Authorize(Roles = "Service,Administrator")]
 [ApiController]
 [Route("api/v1/audit/synchronization")]
 public sealed class AuditSynchronizationController(

@@ -5,11 +5,13 @@ using Algocura.TargetDiscovery.Api.Domain;
 using Algocura.TargetDiscovery.Api.Events;
 using Algocura.TargetDiscovery.Api.Mapping;
 using Algocura.TargetDiscovery.Api.Services;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
 namespace Algocura.TargetDiscovery.Api.Controllers;
 
+[Authorize(Roles = "Scientist,Reviewer,Administrator")]
 [ApiController]
 [Route("api/v1/target-assessments")]
 public sealed class TargetAssessmentsController(

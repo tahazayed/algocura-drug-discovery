@@ -2,11 +2,13 @@ using Algocura.LiteratureIntelligence.Api.Data;
 using Algocura.LiteratureIntelligence.Api.Domain;
 using Algocura.LiteratureIntelligence.Api.Events;
 using Algocura.Platform.Messaging.Publishing;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
 namespace Algocura.LiteratureIntelligence.Api.Controllers;
 
+[Authorize(Roles = "Service,Administrator")]
 [ApiController]
 [Route("api/v1/literature-intelligence/synchronization")]
 public sealed class LiteratureSynchronizationController(

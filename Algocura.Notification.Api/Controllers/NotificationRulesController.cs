@@ -2,11 +2,13 @@ using Algocura.Notification.Api.Contracts;
 using Algocura.Notification.Api.Data;
 using Algocura.Notification.Api.Domain;
 using Algocura.Notification.Api.Mapping;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
 namespace Algocura.Notification.Api.Controllers;
 
+[Authorize(Roles = "Administrator")]
 [ApiController]
 [Route("api/v1/notification-rules")]
 public sealed class NotificationRulesController(

@@ -2,6 +2,7 @@ using Algocura.AIDiscovery.Api.Contracts;
 using Algocura.AIDiscovery.Api.Controllers;
 using Algocura.AIDiscovery.Api.Domain;
 using Algocura.AIDiscovery.Api.Events;
+using Algocura.AIDiscovery.Api.Routing;
 using Algocura.AIDiscovery.Api.Services;
 using Algocura.AIDiscovery.Api.Tests.Support;
 using Algocura.Platform.Messaging.Publishing;
@@ -42,6 +43,7 @@ public sealed class PredictionsControllerTests
         var sut = new PredictionsController(
             database.Context,
             new DeterministicPredictionScoringEngine(),
+            Substitute.For<IAdaptivePredictionOrchestrator>(),
             publisher,
             NullLogger<PredictionsController>.Instance);
 
@@ -119,6 +121,7 @@ public sealed class PredictionsControllerTests
         var sut = new PredictionsController(
             database.Context,
             new DeterministicPredictionScoringEngine(),
+            Substitute.For<IAdaptivePredictionOrchestrator>(),
             publisher,
             NullLogger<PredictionsController>.Instance);
 

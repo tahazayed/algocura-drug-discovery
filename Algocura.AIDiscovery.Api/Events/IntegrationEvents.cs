@@ -45,6 +45,20 @@ public sealed record PredictionCompleted(
     public override string EventType => nameof(PredictionCompleted);
 }
 
+
+public sealed record AdaptivePredictionCompleted(
+    Guid EventId,
+    DateTimeOffset OccurredAtUtc,
+    Guid PredictionId,
+    Guid FinalModelDefinitionId,
+    decimal FinalConfidence,
+    decimal ResourceConsumed,
+    int ModelsExecuted)
+    : AIDiscoveryIntegrationEvent(EventId, OccurredAtUtc)
+{
+    public override string EventType => nameof(AdaptivePredictionCompleted);
+}
+
 public sealed record PredictionFailed(
     Guid EventId,
     DateTimeOffset OccurredAtUtc,

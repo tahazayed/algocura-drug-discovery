@@ -2,11 +2,13 @@ using Algocura.Platform.Messaging.Publishing;
 using Algocura.TargetDiscovery.Api.Data;
 using Algocura.TargetDiscovery.Api.Domain;
 using Algocura.TargetDiscovery.Api.Events;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
 namespace Algocura.TargetDiscovery.Api.Controllers;
 
+[Authorize(Roles = "Service,Administrator")]
 [ApiController]
 [Route("api/v1/target-discovery/synchronization")]
 public sealed class TargetDiscoverySynchronizationController(

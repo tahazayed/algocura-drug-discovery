@@ -1,11 +1,13 @@
 using Algocura.LiteratureIntelligence.Api.Contracts;
 using Algocura.LiteratureIntelligence.Api.Data;
 using Algocura.LiteratureIntelligence.Api.Mapping;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
 namespace Algocura.LiteratureIntelligence.Api.Controllers;
 
+[Authorize(Roles = "Scientist,Reviewer,Administrator")]
 [ApiController]
 [Route("api/v1/evidence")]
 public sealed class EvidenceController(

@@ -4,11 +4,13 @@ using Algocura.Screening.Api.Data;
 using Algocura.Screening.Api.Domain;
 using Algocura.Screening.Api.Events;
 using Algocura.Screening.Api.Mapping;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
 namespace Algocura.Screening.Api.Controllers;
 
+[Authorize(Roles = "Scientist,Reviewer,Administrator")]
 [ApiController]
 [Route("api/v1/screenings")]
 public sealed class ScreeningsController(ScreeningDbContext db, IEventPublisher publisher, ILogger<ScreeningsController> logger) : ControllerBase

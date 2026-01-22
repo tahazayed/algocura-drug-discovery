@@ -2,11 +2,13 @@ using Algocura.Platform.Messaging.Publishing;
 using Algocura.Reporting.Api.Data;
 using Algocura.Reporting.Api.Domain;
 using Algocura.Reporting.Api.Messaging;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
 namespace Algocura.Reporting.Api.Controllers;
 
+[Authorize(Roles = "Service,Administrator")]
 [ApiController]
 [Route("api/v1/reporting/synchronization")]
 public sealed class ReportingSynchronizationController(

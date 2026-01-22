@@ -1,11 +1,13 @@
 using Algocura.Platform.Messaging.Publishing;
 using Algocura.Workflow.Api.Data;
 using Algocura.Workflow.Api.Events;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
 namespace Algocura.Workflow.Api.Controllers;
 
+[Authorize(Roles = "Service,Administrator")]
 [ApiController]
 [Route("api/v1/workflow/synchronization")]
 public sealed class WorkflowSynchronizationController(

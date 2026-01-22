@@ -2,11 +2,13 @@ using Algocura.Search.Api.Contracts;
 using Algocura.Search.Api.Data;
 using Algocura.Search.Api.Domain;
 using Algocura.Search.Api.Mapping;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
 namespace Algocura.Search.Api.Controllers;
 
+[Authorize(Roles = "Scientist,Reviewer,Administrator")]
 [ApiController]
 [Route("api/v1/search-documents")]
 public sealed class SearchDocumentsController(

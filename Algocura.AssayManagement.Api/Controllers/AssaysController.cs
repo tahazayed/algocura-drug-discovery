@@ -5,11 +5,13 @@ using Algocura.AssayManagement.Api.Events;
 using Algocura.AssayManagement.Api.Mapping;
 using Algocura.AssayManagement.Api.Services;
 using Algocura.Platform.Messaging.Publishing;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
 namespace Algocura.AssayManagement.Api.Controllers;
 
+[Authorize(Roles = "Scientist,Reviewer,Administrator")]
 [ApiController]
 [Route("api/v1/assays")]
 public sealed class AssaysController(

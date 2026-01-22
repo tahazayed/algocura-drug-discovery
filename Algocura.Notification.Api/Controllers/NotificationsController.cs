@@ -5,11 +5,13 @@ using Algocura.Notification.Api.Events;
 using Algocura.Notification.Api.Mapping;
 using Algocura.Notification.Api.Services;
 using Algocura.Platform.Messaging.Publishing;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
 namespace Algocura.Notification.Api.Controllers;
 
+[Authorize(Roles = "Scientist,Reviewer,Administrator")]
 [ApiController]
 [Route("api/v1/notifications")]
 public sealed class NotificationsController(

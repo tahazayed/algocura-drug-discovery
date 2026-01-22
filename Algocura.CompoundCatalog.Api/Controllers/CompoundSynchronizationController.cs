@@ -1,11 +1,13 @@
 using Algocura.CompoundCatalog.Api.Data;
 using Algocura.CompoundCatalog.Api.Events;
 using Algocura.Platform.Messaging.Publishing;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
 namespace Algocura.CompoundCatalog.Api.Controllers;
 
+[Authorize(Roles = "Service,Administrator")]
 [ApiController]
 [Route("api/v1/compounds/synchronization")]
 public sealed class CompoundSynchronizationController(

@@ -1,4 +1,5 @@
 using Algocura.Identity.Api.Domain;
+using Algocura.Platform.Security.Authorization;
 using Microsoft.AspNetCore.Identity;
 
 namespace Algocura.Identity.Api.Data;
@@ -6,97 +7,62 @@ namespace Algocura.Identity.Api.Data;
 public static class IdentitySeeder
 {
     private static readonly DateTimeOffset SeedTimestamp =
-        new(
-            2026,
-            1,
-            1,
-            0,
-            0,
-            0,
-            TimeSpan.Zero);
-
-    // -------------------------------------------------------------------------
-    // Seed user IDs
-    //
-    // These IDs are deterministic so repeated seeding remains idempotent.
-    // -------------------------------------------------------------------------
+        new(2026, 1, 1, 0, 0, 0, TimeSpan.Zero);
 
     private static readonly Guid ScientistUserId =
-        Guid.Parse(
-            "00000000-0000-0000-0001-000000000001");
+        Guid.Parse("00000000-0000-0000-0001-000000000001");
 
     private static readonly Guid ReviewerUserId =
-        Guid.Parse(
-            "00000000-0000-0000-0002-000000000001");
+        Guid.Parse("00000000-0000-0000-0002-000000000001");
 
     private static readonly Guid ServiceUserId =
-        Guid.Parse(
-            "00000000-0000-0000-0000-000000000001");
+        Guid.Parse("00000000-0000-0000-0003-000000000001");
 
     public static async Task SeedAsync(
         IServiceProvider services,
         IConfiguration configuration,
         CancellationToken cancellationToken = default)
     {
+        cancellationToken.ThrowIfCancellationRequested();
+
         var userManager =
-            services.GetRequiredService<
-                UserManager<ApplicationUser>>();
+            services.GetRequiredService<UserManager<ApplicationUser>>();
 
         var roleManager =
-            services.GetRequiredService<
-                RoleManager<ApplicationRole>>();
-
-        // ---------------------------------------------------------------------
-        // Roles
-        // ---------------------------------------------------------------------
+            services.GetRequiredService<RoleManager<ApplicationRole>>();
 
         await EnsureRoleAsync(
             roleManager,
-            "Administrator",
+            PlatformRoles.Administrator,
             "Platform administrator.",
             cancellationToken);
 
         await EnsureRoleAsync(
             roleManager,
-            "Scientist",
+            PlatformRoles.Scientist,
             "Scientific platform user.",
             cancellationToken);
 
         await EnsureRoleAsync(
             roleManager,
-            "Reviewer",
+            PlatformRoles.Reviewer,
             "Scientific reviewer and approver.",
             cancellationToken);
 
         await EnsureRoleAsync(
             roleManager,
-            "Service",
+            PlatformRoles.Service,
             "Machine or service identity.",
             cancellationToken);
-
-        // ---------------------------------------------------------------------
-        // System user
-        //
-        // The system user is assigned to the Service role. Because the Service
-        // role has the fixed ID above, the AspNetUserRoles record will contain:
-        //
-        // RoleId = 00000000-0000-0000-0000-000000000001
-        // ---------------------------------------------------------------------
 
         await EnsureSystemUserAsync(
             userManager,
             cancellationToken);
 
-        // ---------------------------------------------------------------------
-        // Administrator
-        // ---------------------------------------------------------------------
-
         var administratorPassword =
-            configuration[
-                "Seed:AdministratorPassword"];
+            configuration["Seed:AdministratorPassword"];
 
-        if (!string.IsNullOrWhiteSpace(
-                administratorPassword))
+        if (!string.IsNullOrWhiteSpace(administratorPassword))
         {
             await EnsureAdministratorAsync(
                 userManager,
@@ -104,16 +70,10 @@ public static class IdentitySeeder
                 cancellationToken);
         }
 
-        // ---------------------------------------------------------------------
-        // Scientist
-        // ---------------------------------------------------------------------
-
         var scientistPassword =
-            configuration[
-                "Seed:ScientistPassword"];
+            configuration["Seed:ScientistPassword"];
 
-        if (!string.IsNullOrWhiteSpace(
-                scientistPassword))
+        if (!string.IsNullOrWhiteSpace(scientistPassword))
         {
             await EnsureSeedUserAsync(
                 userManager,
@@ -121,20 +81,14 @@ public static class IdentitySeeder
                 "scientist@algocura.local",
                 "Algocura Scientist",
                 scientistPassword,
-                "Scientist",
+                PlatformRoles.Scientist,
                 cancellationToken);
         }
 
-        // ---------------------------------------------------------------------
-        // Reviewer
-        // ---------------------------------------------------------------------
-
         var reviewerPassword =
-            configuration[
-                "Seed:ReviewerPassword"];
+            configuration["Seed:ReviewerPassword"];
 
-        if (!string.IsNullOrWhiteSpace(
-                reviewerPassword))
+        if (!string.IsNullOrWhiteSpace(reviewerPassword))
         {
             await EnsureSeedUserAsync(
                 userManager,
@@ -142,23 +96,14 @@ public static class IdentitySeeder
                 "reviewer@algocura.local",
                 "Algocura Reviewer",
                 reviewerPassword,
-                "Reviewer",
+                PlatformRoles.Reviewer,
                 cancellationToken);
         }
 
-        // ---------------------------------------------------------------------
-        // Service test user
-        //
-        // This is a normal credential-based Service-role user for testing.
-        // The special system user above remains passwordless.
-        // ---------------------------------------------------------------------
-
         var servicePassword =
-            configuration[
-                "Seed:ServicePassword"];
+            configuration["Seed:ServicePassword"];
 
-        if (!string.IsNullOrWhiteSpace(
-                servicePassword))
+        if (!string.IsNullOrWhiteSpace(servicePassword))
         {
             await EnsureSeedUserAsync(
                 userManager,
@@ -166,7 +111,7 @@ public static class IdentitySeeder
                 "service@algocura.local",
                 "Algocura Service",
                 servicePassword,
-                "Service",
+                PlatformRoles.Service,
                 cancellationToken);
         }
     }
@@ -175,62 +120,33 @@ public static class IdentitySeeder
         RoleManager<ApplicationRole> roleManager,
         string name,
         string description,
-        CancellationToken cancellationToken,
-        Guid? roleId = null)
+        CancellationToken cancellationToken)
     {
         cancellationToken.ThrowIfCancellationRequested();
 
         var existing =
-            await roleManager.FindByNameAsync(
-                name);
+            await roleManager.FindByNameAsync(name);
 
         if (existing is not null)
         {
-            // The Service role must always use the required deterministic ID.
-            if (roleId.HasValue &&
-                existing.Id != roleId.Value)
-            {
-                throw new InvalidOperationException(
-                    $"Role '{name}' already exists with ID " +
-                    $"'{existing.Id}', but the required ID is " +
-                    $"'{roleId.Value}'.");
-            }
-
             return;
         }
 
         var role =
             new ApplicationRole
             {
-                Id =
-                    roleId ??
-                    Guid.NewGuid(),
-
-                Name =
-                    name,
-
-                NormalizedName =
-                    name.ToUpperInvariant(),
-
-                Description =
-                    description,
-
-                CreatedByUserId =
-                    SystemUsers.SystemUserId,
-
-                UpdatedByUserId =
-                    SystemUsers.SystemUserId,
-
-                CreatedAtUtc =
-                    SeedTimestamp,
-
-                UpdatedAtUtc =
-                    SeedTimestamp
+                Id = Guid.NewGuid(),
+                Name = name,
+                NormalizedName = name.ToUpperInvariant(),
+                Description = description,
+                CreatedByUserId = SystemUsers.SystemUserId,
+                UpdatedByUserId = SystemUsers.SystemUserId,
+                CreatedAtUtc = SeedTimestamp,
+                UpdatedAtUtc = SeedTimestamp
             };
 
         var result =
-            await roleManager.CreateAsync(
-                role);
+            await roleManager.CreateAsync(role);
 
         EnsureSucceeded(
             result,
@@ -250,42 +166,29 @@ public static class IdentitySeeder
         if (user is null)
         {
             user =
+                await userManager.FindByEmailAsync(
+                    "system@algocura.local");
+        }
+
+        if (user is null)
+        {
+            user =
                 new ApplicationUser
                 {
-                    Id =
-                        SystemUsers.SystemUserId,
-
-                    UserName =
-                        "system@algocura.local",
-
-                    Email =
-                        "system@algocura.local",
-
-                    EmailConfirmed =
-                        true,
-
-                    DisplayName =
-                        "Algocura System",
-
-                    IsActive =
-                        true,
-
-                    CreatedByUserId =
-                        SystemUsers.SystemUserId,
-
-                    UpdatedByUserId =
-                        SystemUsers.SystemUserId,
-
-                    CreatedAtUtc =
-                        SeedTimestamp,
-
-                    UpdatedAtUtc =
-                        SeedTimestamp
+                    Id = SystemUsers.SystemUserId,
+                    UserName = "system@algocura.local",
+                    Email = "system@algocura.local",
+                    EmailConfirmed = true,
+                    DisplayName = "Algocura System",
+                    IsActive = true,
+                    CreatedByUserId = SystemUsers.SystemUserId,
+                    UpdatedByUserId = SystemUsers.SystemUserId,
+                    CreatedAtUtc = SeedTimestamp,
+                    UpdatedAtUtc = SeedTimestamp
                 };
 
             var createResult =
-                await userManager.CreateAsync(
-                    user);
+                await userManager.CreateAsync(user);
 
             EnsureSucceeded(
                 createResult,
@@ -295,7 +198,7 @@ public static class IdentitySeeder
         await EnsureUserRoleAsync(
             userManager,
             user,
-            "Service");
+            PlatformRoles.Service);
     }
 
     private static async Task EnsureAdministratorAsync(
@@ -307,43 +210,30 @@ public static class IdentitySeeder
 
         var user =
             await userManager.FindByIdAsync(
-                SystemUsers.AdministratorUserId
-                    .ToString());
+                SystemUsers.AdministratorUserId.ToString());
+
+        if (user is null)
+        {
+            user =
+                await userManager.FindByEmailAsync(
+                    "admin@algocura.local");
+        }
 
         if (user is null)
         {
             user =
                 new ApplicationUser
                 {
-                    Id =
-                        SystemUsers.AdministratorUserId,
-
-                    UserName =
-                        "admin@algocura.local",
-
-                    Email =
-                        "admin@algocura.local",
-
-                    EmailConfirmed =
-                        true,
-
-                    DisplayName =
-                        "Algocura Administrator",
-
-                    IsActive =
-                        true,
-
-                    CreatedByUserId =
-                        SystemUsers.SystemUserId,
-
-                    UpdatedByUserId =
-                        SystemUsers.SystemUserId,
-
-                    CreatedAtUtc =
-                        SeedTimestamp,
-
-                    UpdatedAtUtc =
-                        SeedTimestamp
+                    Id = SystemUsers.AdministratorUserId,
+                    UserName = "admin@algocura.local",
+                    Email = "admin@algocura.local",
+                    EmailConfirmed = true,
+                    DisplayName = "Algocura Administrator",
+                    IsActive = true,
+                    CreatedByUserId = SystemUsers.SystemUserId,
+                    UpdatedByUserId = SystemUsers.SystemUserId,
+                    CreatedAtUtc = SeedTimestamp,
+                    UpdatedAtUtc = SeedTimestamp
                 };
 
             var createResult =
@@ -359,7 +249,7 @@ public static class IdentitySeeder
         await EnsureUserRoleAsync(
             userManager,
             user,
-            "Administrator");
+            PlatformRoles.Administrator);
     }
 
     private static async Task EnsureSeedUserAsync(
@@ -380,8 +270,7 @@ public static class IdentitySeeder
         if (user is null)
         {
             user =
-                await userManager.FindByEmailAsync(
-                    email);
+                await userManager.FindByEmailAsync(email);
         }
 
         if (user is null)
@@ -389,35 +278,16 @@ public static class IdentitySeeder
             user =
                 new ApplicationUser
                 {
-                    Id =
-                        userId,
-
-                    UserName =
-                        email,
-
-                    Email =
-                        email,
-
-                    EmailConfirmed =
-                        true,
-
-                    DisplayName =
-                        displayName,
-
-                    IsActive =
-                        true,
-
-                    CreatedByUserId =
-                        SystemUsers.SystemUserId,
-
-                    UpdatedByUserId =
-                        SystemUsers.SystemUserId,
-
-                    CreatedAtUtc =
-                        SeedTimestamp,
-
-                    UpdatedAtUtc =
-                        SeedTimestamp
+                    Id = userId,
+                    UserName = email,
+                    Email = email,
+                    EmailConfirmed = true,
+                    DisplayName = displayName,
+                    IsActive = true,
+                    CreatedByUserId = SystemUsers.SystemUserId,
+                    UpdatedByUserId = SystemUsers.SystemUserId,
+                    CreatedAtUtc = SeedTimestamp,
+                    UpdatedAtUtc = SeedTimestamp
                 };
 
             var createResult =
@@ -441,9 +311,7 @@ public static class IdentitySeeder
         ApplicationUser user,
         string roleName)
     {
-        if (await userManager.IsInRoleAsync(
-                user,
-                roleName))
+        if (await userManager.IsInRoleAsync(user, roleName))
         {
             return;
         }

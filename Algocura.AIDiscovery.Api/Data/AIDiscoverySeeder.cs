@@ -1,4 +1,4 @@
-﻿using Algocura.AIDiscovery.Api.Domain;
+using Algocura.AIDiscovery.Api.Domain;
 using Microsoft.EntityFrameworkCore;
 
 namespace Algocura.AIDiscovery.Api.Data;
@@ -17,6 +17,18 @@ public static class AIDiscoverySeeder
 
     public static readonly Guid PrototypeModelId =
         Guid.Parse("48d78c3a-0f59-4d43-baca-830c976988d6");
+
+    public static readonly Guid QsarFastModelId =
+        Guid.Parse("55000000-0000-0000-0000-000000000001");
+
+    public static readonly Guid GnnMolecularModelId =
+        Guid.Parse("55000000-0000-0000-0000-000000000002");
+
+    public static readonly Guid SmilesTransformerModelId =
+        Guid.Parse("55000000-0000-0000-0000-000000000003");
+
+    public static readonly Guid EnsembleConsensusModelId =
+        Guid.Parse("55000000-0000-0000-0000-000000000004");
 
     // Matches the completed Screening API seed.
     private static readonly Guid ScreeningId =
@@ -104,7 +116,7 @@ public static class AIDiscoverySeeder
             dbContext,
             cancellationToken);
 
-        await SeedModelDefinitionAsync(
+        await SeedModelDefinitionsAsync(
             dbContext,
             cancellationToken);
 
@@ -347,73 +359,117 @@ public static class AIDiscoverySeeder
             cancellationToken);
     }
 
-    private static async Task SeedModelDefinitionAsync(
+    private static async Task SeedModelDefinitionsAsync(
         AIDiscoveryDbContext dbContext,
         CancellationToken cancellationToken)
     {
-        var exists =
+        var models =
+            new[]
+            {
+                CreateModelDefinition(
+                    PrototypeModelId,
+                    "Algocura Deterministic Prioritizer",
+                    "1.0",
+                    "Prototype deterministic scoring model used to rank " +
+                    "screened compounds for downstream discovery review.",
+                    screeningScoreWeight:
+                        0.75m,
+                    molecularWeightWeight:
+                        0.15m,
+                    selectionBonus:
+                        10m),
+
+                CreateModelDefinition(
+                    QsarFastModelId,
+                    "QSAR Fast",
+                    "1.0",
+                    "Low-cost initial routing model optimized for rapid " +
+                    "molecular-property prioritization.",
+                    screeningScoreWeight:
+                        0.82m,
+                    molecularWeightWeight:
+                        0.08m,
+                    selectionBonus:
+                        6m),
+
+                CreateModelDefinition(
+                    GnnMolecularModelId,
+                    "GNN Molecular",
+                    "1.0",
+                    "Graph-oriented molecular model profile used when " +
+                    "structural specialization is preferred.",
+                    screeningScoreWeight:
+                        0.68m,
+                    molecularWeightWeight:
+                        0.22m,
+                    selectionBonus:
+                        12m),
+
+                CreateModelDefinition(
+                    SmilesTransformerModelId,
+                    "SMILES Transformer",
+                    "1.0",
+                    "Sequence-oriented molecular model profile used for " +
+                    "higher-confidence escalation from earlier models.",
+                    screeningScoreWeight:
+                        0.62m,
+                    molecularWeightWeight:
+                        0.28m,
+                    selectionBonus:
+                        15m),
+
+                CreateModelDefinition(
+                    EnsembleConsensusModelId,
+                    "Ensemble Consensus",
+                    "1.0",
+                    "Higher-cost consensus model profile used as the final " +
+                    "adaptive-routing escalation stage.",
+                    screeningScoreWeight:
+                        0.70m,
+                    molecularWeightWeight:
+                        0.20m,
+                    selectionBonus:
+                        18m)
+            };
+
+        var seedIds =
+            models
+                .Select(
+                    model =>
+                        model.Id)
+                .ToArray();
+
+        var existingIds =
             await dbContext.ModelDefinitions
                 .AsNoTracking()
-                .AnyAsync(
+                .Where(
                     model =>
-                        model.Id ==
-                        PrototypeModelId,
+                        seedIds.Contains(
+                            model.Id))
+                .Select(
+                    model =>
+                        model.Id)
+                .ToListAsync(
                     cancellationToken);
 
-        if (exists)
+        var existingIdSet =
+            existingIds.ToHashSet();
+
+        var missingModels =
+            models
+                .Where(
+                    model =>
+                        !existingIdSet.Contains(
+                            model.Id))
+                .ToArray();
+
+        if (missingModels.Length == 0)
         {
             return;
         }
 
-        var model =
-            new ModelDefinition
-            {
-                Id =
-                    PrototypeModelId,
-
-                Name =
-                    "Algocura Deterministic Prioritizer",
-
-                Version =
-                    "1.0",
-
-                Description =
-                    "Prototype deterministic scoring model used to rank " +
-                    "screened compounds for downstream discovery review.",
-
-                ScreeningScoreWeight =
-                    0.75m,
-
-                MolecularWeightWeight =
-                    0.15m,
-
-                SelectionBonus =
-                    10m,
-
-                Status =
-                    ModelStatus.Active,
-
-                ApprovedByUserId =
-                    SystemUsers.SystemUserId,
-
-                ApprovedAtUtc =
-                    SeedTimestamp,
-
-                CreatedByUserId =
-                    SystemUsers.SystemUserId,
-
-                UpdatedByUserId =
-                    SystemUsers.SystemUserId,
-
-                CreatedAtUtc =
-                    SeedTimestamp,
-
-                UpdatedAtUtc =
-                    SeedTimestamp
-            };
-
-        await dbContext.ModelDefinitions.AddAsync(
-            model,
+        await dbContext.ModelDefinitions.AddRangeAsync(
+            missingModels,
             cancellationToken);
 
         await dbContext.SaveChangesAsync(
@@ -806,6 +862,61 @@ public static class AIDiscoverySeeder
 
             MolecularWeight =
                 molecularWeight,
+
+            CreatedByUserId =
+                SystemUsers.SystemUserId,
+
+            UpdatedByUserId =
+                SystemUsers.SystemUserId,
+
+            CreatedAtUtc =
+                SeedTimestamp,
+
+            UpdatedAtUtc =
+                SeedTimestamp
+        };
+    }
+
+    private static ModelDefinition CreateModelDefinition(
+        Guid id,
+        string name,
+        string version,
+        string description,
+        decimal screeningScoreWeight,
+        decimal molecularWeightWeight,
+        decimal selectionBonus)
+    {
+        return new ModelDefinition
+        {
+            Id =
+                id,
+
+            Name =
+                name,
+
+            Version =
+                version,
+
+            Description =
+                description,
+
+            ScreeningScoreWeight =
+                screeningScoreWeight,
+
+            MolecularWeightWeight =
+                molecularWeightWeight,
+
+            SelectionBonus =
+                selectionBonus,
+
+            Status =
+                ModelStatus.Active,
+
+            ApprovedByUserId =
+                SystemUsers.SystemUserId,
+
+            ApprovedAtUtc =
+                SeedTimestamp,
 
             CreatedByUserId =
                 SystemUsers.SystemUserId,

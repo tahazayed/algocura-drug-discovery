@@ -2,11 +2,13 @@ using Algocura.Platform.Messaging.Publishing;
 using Algocura.Search.Api.Data;
 using Algocura.Search.Api.Domain;
 using Algocura.Search.Api.Events;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
 namespace Algocura.Search.Api.Controllers;
 
+[Authorize(Roles = "Service,Administrator")]
 [ApiController]
 [Route("api/v1/search/synchronization")]
 public sealed class SearchSynchronizationController(

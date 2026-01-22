@@ -4,6 +4,7 @@ using Algocura.CompoundCatalog.Api.Domain;
 using Algocura.CompoundCatalog.Api.Events;
 using Algocura.CompoundCatalog.Api.Mapping;
 using Algocura.Platform.Messaging.Publishing;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -12,6 +13,7 @@ namespace Algocura.CompoundCatalog.Api.Controllers;
 /// <summary>
 /// Manages compounds registered in the Algocura drug-discovery platform.
 /// </summary>
+[Authorize(Roles = "Scientist,Reviewer,Administrator")]
 [ApiController]
 [Route("api/v1/compounds")]
 [Produces("application/json")]
