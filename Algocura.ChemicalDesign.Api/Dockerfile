@@ -16,7 +16,8 @@ COPY ["Algocura.Platform.Messaging/Algocura.Platform.Messaging.csproj", "Algocur
 COPY ["Algocura.Platform.Security/Algocura.Platform.Security.csproj", "Algocura.Platform.Security/"]
 
 # Restore inside the Linux container.
-RUN dotnet restore \
+RUN --mount=type=cache,id=chemical-design,target=/root/.nuget/packages \
+    dotnet restore \
     "Algocura.ChemicalDesign.Api/Algocura.ChemicalDesign.Api.csproj"
 
 # Copy source files. The repository-root .dockerignore prevents host
@@ -25,7 +26,8 @@ COPY . .
 
 WORKDIR /src/Algocura.ChemicalDesign.Api
 
-RUN dotnet publish \
+RUN --mount=type=cache,id=chemical-design,target=/root/.nuget/packages \
+    dotnet publish \
     "Algocura.ChemicalDesign.Api.csproj" \
     --configuration Release \
     --output /app/publish \

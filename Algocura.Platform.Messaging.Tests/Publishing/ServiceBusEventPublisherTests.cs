@@ -58,7 +58,7 @@ public sealed class ServiceBusEventPublisherTests
                 correlationId,
                 Arg.Is<IReadOnlyDictionary<string, object>>(
                       properties =>
-        properties.Count == 3 &&
+        properties != null && properties.Count == 3 &&
         Equals(
             properties["eventVersion"],
             "1.0") &&

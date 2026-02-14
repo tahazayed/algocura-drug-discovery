@@ -99,6 +99,59 @@ public sealed class ReportDefinitionsController(
             response);
     }
 
+    [HttpPut("{id:guid}")]
+    public async Task<ActionResult<ReportDefinitionResponse>> Update(
+        Guid id,
+        UpdateReportDefinitionRequest request,
+        CancellationToken cancellationToken = default)
+    {
+        var item = await db.ReportDefinitions
+            .SingleOrDefaultAsync(x => x.Id == id, cancellationToken);
+
+        if (item is null)
+        {
+            return NotFound();
+        }
+
+        item.Name = request.Name.Trim();
+        item.Description = request.Description?.Trim();
+        item.ReportType = request.ReportType.Trim();
+        item.DefaultParametersJson = request.DefaultParametersJson;
+        item.Status = request.Status;
+        item.UpdatedByUserId = SystemUsers.SystemUserId;
+        item.UpdatedAtUtc = DateTimeOffset.UtcNow;
+
+        await db.SaveChangesAsync(cancellationToken);
+
+        return Ok(new ReportDefinitionResponse(
+            item.Id,
+            item.Name,
+            item.Description,
+            item.ReportType,
+            item.Status,
+            item.CreatedAtUtc,
+            item.UpdatedAtUtc));
+    }
+
+    [HttpDelete("{id:guid}")]
+    public async Task<IActionResult> Delete(
+        Guid id,
+        CancellationToken cancellationToken = default)
+    {
+        var item = await db.ReportDefinitions
+            .SingleOrDefaultAsync(x => x.Id == id, cancellationToken);
+
+        if (item is null)
+        {
+            return NotFound();
+        }
+
+        db.ReportDefinitions.Remove(item);
+        await db.SaveChangesAsync(cancellationToken);
+
+        return NoContent();
+    }
+
     [HttpPost("{id:guid}/runs")]
     public async Task<ActionResult<ReportRunResponse>> Run(
         Guid id,

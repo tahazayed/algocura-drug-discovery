@@ -85,6 +85,7 @@ public sealed class AssaySynchronizationControllerTests
         await publisher.Received(1).PublishAsync(
             Arg.Is<AssaySnapshot>(
                 integrationEvent =>
+                    integrationEvent != null &&
                     integrationEvent.AssayId ==
                     publishedAssay.Id &&
                     integrationEvent.ScreeningId ==
@@ -157,6 +158,7 @@ public sealed class AssaySynchronizationControllerTests
         await publisher.Received(1).PublishAsync(
             Arg.Is<AssaySnapshot>(
                 integrationEvent =>
+                    integrationEvent != null &&
                     integrationEvent.AssayId ==
                     assay.Id),
             Arg.Any<string?>(),

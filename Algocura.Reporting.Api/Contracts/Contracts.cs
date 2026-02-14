@@ -8,6 +8,13 @@ public sealed record CreateReportDefinitionRequest(
     string ReportType,
     string? DefaultParametersJson);
 
+public sealed record UpdateReportDefinitionRequest(
+    string Name,
+    string? Description,
+    string ReportType,
+    string? DefaultParametersJson,
+    ReportDefinitionStatus Status);
+
 public sealed record RunReportRequest(
     string? Name,
     string? ParametersJson);

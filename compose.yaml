@@ -138,6 +138,8 @@ services:
       Auditing__StampCreatedAndUpdatedFields: "true"
       Jwt__SigningKey: "${JWT_SIGNING_KEY}"
       Jwt__ClockSkewMinutes: "5"
+      Cors__AllowedOrigins__0: "http://localhost:5173"
+      Cors__AllowedOrigins__1: "http://localhost:7014"
     depends_on:
       sqlserver:
         condition: service_healthy
@@ -177,6 +179,8 @@ services:
       Auditing__StampCreatedAndUpdatedFields: "true"
       Jwt__SigningKey: "${JWT_SIGNING_KEY}"
       Jwt__ClockSkewMinutes: "5"
+      Cors__AllowedOrigins__0: "http://localhost:5173"
+      Cors__AllowedOrigins__1: "http://localhost:7014"
     depends_on:
       sqlserver:
         condition: service_healthy
@@ -216,6 +220,8 @@ services:
       Auditing__StampCreatedAndUpdatedFields: "true"
       Jwt__SigningKey: "${JWT_SIGNING_KEY}"
       Jwt__ClockSkewMinutes: "5"
+      Cors__AllowedOrigins__0: "http://localhost:5173"
+      Cors__AllowedOrigins__1: "http://localhost:7014"
     depends_on:
       sqlserver:
         condition: service_healthy
@@ -255,6 +261,8 @@ services:
       Auditing__StampCreatedAndUpdatedFields: "true"
       Jwt__SigningKey: "${JWT_SIGNING_KEY}"
       Jwt__ClockSkewMinutes: "5"
+      Cors__AllowedOrigins__0: "http://localhost:5173"
+      Cors__AllowedOrigins__1: "http://localhost:7014"
     depends_on:
       sqlserver:
         condition: service_healthy
@@ -291,6 +299,8 @@ services:
       Auditing__StampCreatedAndUpdatedFields: "true"
       Jwt__SigningKey: "${JWT_SIGNING_KEY}"
       Jwt__ClockSkewMinutes: "5"
+      Cors__AllowedOrigins__0: "http://localhost:5173"
+      Cors__AllowedOrigins__1: "http://localhost:7014"
     depends_on:
       sqlserver:
         condition: service_healthy
@@ -327,6 +337,8 @@ services:
       Auditing__StampCreatedAndUpdatedFields: "true"
       Jwt__SigningKey: "${JWT_SIGNING_KEY}"
       Jwt__ClockSkewMinutes: "5"
+      Cors__AllowedOrigins__0: "http://localhost:5173"
+      Cors__AllowedOrigins__1: "http://localhost:7014"
     depends_on:
       sqlserver:
         condition: service_healthy
@@ -363,6 +375,8 @@ services:
       Auditing__StampCreatedAndUpdatedFields: "true"
       Jwt__SigningKey: "${JWT_SIGNING_KEY}"
       Jwt__ClockSkewMinutes: "5"
+      Cors__AllowedOrigins__0: "http://localhost:5173"
+      Cors__AllowedOrigins__1: "http://localhost:7014"
     depends_on:
       sqlserver:
         condition: service_healthy
@@ -399,6 +413,8 @@ services:
       Auditing__StampCreatedAndUpdatedFields: "true"
       Jwt__SigningKey: "${JWT_SIGNING_KEY}"
       Jwt__ClockSkewMinutes: "5"
+      Cors__AllowedOrigins__0: "http://localhost:5173"
+      Cors__AllowedOrigins__1: "http://localhost:7014"
     depends_on:
       sqlserver:
         condition: service_healthy
@@ -435,6 +451,8 @@ services:
       Auditing__StampCreatedAndUpdatedFields: "true"
       Jwt__SigningKey: "${JWT_SIGNING_KEY}"
       Jwt__ClockSkewMinutes: "5"
+      Cors__AllowedOrigins__0: "http://localhost:5173"
+      Cors__AllowedOrigins__1: "http://localhost:7014"
     depends_on:
       sqlserver:
         condition: service_healthy
@@ -471,6 +489,8 @@ services:
       Auditing__StampCreatedAndUpdatedFields: "true"
       Jwt__SigningKey: "${JWT_SIGNING_KEY}"
       Jwt__ClockSkewMinutes: "5"
+      Cors__AllowedOrigins__0: "http://localhost:5173"
+      Cors__AllowedOrigins__1: "http://localhost:7014"
     depends_on:
       sqlserver:
         condition: service_healthy
@@ -507,6 +527,8 @@ services:
       Auditing__StampCreatedAndUpdatedFields: "true"
       Jwt__SigningKey: "${JWT_SIGNING_KEY}"
       Jwt__ClockSkewMinutes: "5"
+      Cors__AllowedOrigins__0: "http://localhost:5173"
+      Cors__AllowedOrigins__1: "http://localhost:7014"
     depends_on:
       sqlserver:
         condition: service_healthy
@@ -543,6 +565,8 @@ services:
       Auditing__StampCreatedAndUpdatedFields: "true"
       Jwt__SigningKey: "${JWT_SIGNING_KEY}"
       Jwt__ClockSkewMinutes: "5"
+      Cors__AllowedOrigins__0: "http://localhost:5173"
+      Cors__AllowedOrigins__1: "http://localhost:7014"
     depends_on:
       sqlserver:
         condition: service_healthy
@@ -574,7 +598,7 @@ services:
       Logging__LogLevel__Microsoft__EntityFrameworkCore: "Information"
       Logging__LogLevel__Azure__Messaging__ServiceBus: "Information"
       Auditing__ServiceName: "Algocura.Identity.Api"
-      Auditing__PublishEntityAuditEvents: "true"
+      Auditing__PublishEntityAuditEvents: "false"
       Auditing__StampCreatedAndUpdatedFields: "true"
       Jwt__SigningKey: "${JWT_SIGNING_KEY}"
       Jwt__ClockSkewMinutes: "5"
@@ -582,6 +606,8 @@ services:
       Seed__ScientistPassword: "${SEED_USER_PASSWORD}"
       Seed__ReviewerPassword: "${SEED_USER_PASSWORD}"
       Seed__ServicePassword: "${SEED_USER_PASSWORD}"
+      Cors__AllowedOrigins__0: "http://localhost:5173"
+      Cors__AllowedOrigins__1: "http://localhost:7014"
     depends_on:
       sqlserver:
         condition: service_healthy
