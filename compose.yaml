@@ -584,7 +584,7 @@ services:
     image: algocura/algocura-identity-api:dev
     container_name: identity-api
     ports:
-      - "7013:8080"
+      - "7013:8080" 
     environment:
       ASPNETCORE_ENVIRONMENT: "Development"
       ASPNETCORE_URLS: http://+:8080
@@ -615,7 +615,60 @@ services:
         condition: service_completed_successfully
     
     restart: unless-stopped
- 
+
+  identity-api-wait:
+    image: curlimages/curl:8.12.1
+    container_name: identity-api-wait
+    depends_on:
+      identity-api:
+        condition: service_started
+    entrypoint: ["/bin/sh", "-c"]
+    command:
+      - |
+        echo "Waiting for Identity API..."
+        sleep 20
+
+        until curl \
+          --silent \
+          --show-error \
+          --fail \
+          http://identity-api:8080/health; do
+          echo "Identity API is not ready. Retrying in 5 seconds..."
+          sleep 5
+        done
+
+        echo "Identity API is ready."
+    restart: "no"
+    
+  frontend:
+    build:
+      context: .
+      dockerfile: Algocura.FrontEnd/Dockerfile
+      target: final
+      args:
+        VITE_IDENTITY_API_URL: "http://localhost:7013"
+        VITE_LITERATURE_API_URL: "http://localhost:7001"
+        VITE_TARGET_DISCOVERY_API_URL: "http://localhost:7002"
+        VITE_CHEMICAL_DESIGN_API_URL: "http://localhost:7003"
+        VITE_COMPOUND_CATALOG_API_URL: "http://localhost:7004"
+        VITE_SCREENING_API_URL: "http://localhost:7005"
+        VITE_ASSAY_MANAGEMENT_API_URL: "http://localhost:7007"
+        VITE_AI_DISCOVERY_API_URL: "http://localhost:7006"
+        VITE_WORKFLOW_API_URL: "http://localhost:7008"
+        VITE_NOTIFICATION_API_URL: "http://localhost:7009"
+        VITE_SEARCH_API_URL: "http://localhost:7010"
+        VITE_REPORTING_API_URL: "http://localhost:7011"
+        VITE_AUDIT_API_URL: "http://localhost:7012"
+    image: algocura/algocura-frontend:dev
+    container_name: frontend
+    ports:
+      - "7014:8080"        
+    depends_on:
+      identity-api-wait:
+        condition: service_completed_successfully
+        
+    restart: unless-stopped
+    
 volumes:
   sqlserver-data:
   azurite-data:
