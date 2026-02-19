@@ -3,15 +3,14 @@
     "Namespaces": [
       {
         "Name": "sbemulatorns",
-        "Queues": [
-        ],
+        "Queues": [],
         "Topics": [
           {
             "Name": "algocura-events",
             "Properties": {
               "DefaultMessageTimeToLive": "PT1H",
               "DuplicateDetectionHistoryTimeWindow": "PT20S",
-              "RequiresDuplicateDetection": false
+              "RequiresDuplicateDetection": true
             },
             "Subscriptions": [
               {
@@ -20,7 +19,20 @@
                   "DefaultMessageTimeToLive": "PT1H",
                   "DeadLetteringOnMessageExpiration": false,
                   "MaxDeliveryCount": 10
-                }
+                },
+                "Rules": [
+                  {
+                    "Name": "LiteratureIntelligenceSnapshot-filter",
+                    "Properties": {
+                      "FilterType": "Correlation",
+                      "CorrelationFilter": {
+                        "Properties": {
+                          "eventType": "LiteratureIntelligenceSnapshot"
+                        }
+                      }
+                    }
+                  }
+                ]
               },
               {
                 "Name": "chemical-design-api",
@@ -28,7 +40,20 @@
                   "DefaultMessageTimeToLive": "PT1H",
                   "DeadLetteringOnMessageExpiration": false,
                   "MaxDeliveryCount": 10
-                }
+                },
+                "Rules": [
+                  {
+                    "Name": "TargetDiscoverySnapshot-filter",
+                    "Properties": {
+                      "FilterType": "Correlation",
+                      "CorrelationFilter": {
+                        "Properties": {
+                          "eventType": "TargetDiscoverySnapshot"
+                        }
+                      }
+                    }
+                  }
+                ]
               },
               {
                 "Name": "screening-api",
@@ -36,15 +61,53 @@
                   "DefaultMessageTimeToLive": "PT1H",
                   "DeadLetteringOnMessageExpiration": false,
                   "MaxDeliveryCount": 10
-                }
-              },
-              {
-                "Name": "compound-catalog-api",
-                "Properties": {
-                  "DefaultMessageTimeToLive": "PT1H",
-                  "DeadLetteringOnMessageExpiration": false,
-                  "MaxDeliveryCount": 10
-                }
+                },
+                "Rules": [
+                  {
+                    "Name": "CompoundRegistered-filter",
+                    "Properties": {
+                      "FilterType": "Correlation",
+                      "CorrelationFilter": {
+                        "Properties": {
+                          "eventType": "CompoundRegistered"
+                        }
+                      }
+                    }
+                  },
+                  {
+                    "Name": "CompoundUpdated-filter",
+                    "Properties": {
+                      "FilterType": "Correlation",
+                      "CorrelationFilter": {
+                        "Properties": {
+                          "eventType": "CompoundUpdated"
+                        }
+                      }
+                    }
+                  },
+                  {
+                    "Name": "CompoundDeleted-filter",
+                    "Properties": {
+                      "FilterType": "Correlation",
+                      "CorrelationFilter": {
+                        "Properties": {
+                          "eventType": "CompoundDeleted"
+                        }
+                      }
+                    }
+                  },
+                  {
+                    "Name": "CompoundStatusChanged-filter",
+                    "Properties": {
+                      "FilterType": "Correlation",
+                      "CorrelationFilter": {
+                        "Properties": {
+                          "eventType": "CompoundStatusChanged"
+                        }
+                      }
+                    }
+                  }
+                ]
               },
               {
                 "Name": "ai-discovery-api",
@@ -52,7 +115,64 @@
                   "DefaultMessageTimeToLive": "PT1H",
                   "DeadLetteringOnMessageExpiration": false,
                   "MaxDeliveryCount": 10
-                }
+                },
+                "Rules": [
+                  {
+                    "Name": "CompoundRegistered-filter",
+                    "Properties": {
+                      "FilterType": "Correlation",
+                      "CorrelationFilter": {
+                        "Properties": {
+                          "eventType": "CompoundRegistered"
+                        }
+                      }
+                    }
+                  },
+                  {
+                    "Name": "CompoundUpdated-filter",
+                    "Properties": {
+                      "FilterType": "Correlation",
+                      "CorrelationFilter": {
+                        "Properties": {
+                          "eventType": "CompoundUpdated"
+                        }
+                      }
+                    }
+                  },
+                  {
+                    "Name": "CompoundDeleted-filter",
+                    "Properties": {
+                      "FilterType": "Correlation",
+                      "CorrelationFilter": {
+                        "Properties": {
+                          "eventType": "CompoundDeleted"
+                        }
+                      }
+                    }
+                  },
+                  {
+                    "Name": "ScreeningCompleted-filter",
+                    "Properties": {
+                      "FilterType": "Correlation",
+                      "CorrelationFilter": {
+                        "Properties": {
+                          "eventType": "ScreeningCompleted"
+                        }
+                      }
+                    }
+                  },
+                  {
+                    "Name": "CompletedScreeningSnapshot-filter",
+                    "Properties": {
+                      "FilterType": "Correlation",
+                      "CorrelationFilter": {
+                        "Properties": {
+                          "eventType": "CompletedScreeningSnapshot"
+                        }
+                      }
+                    }
+                  }
+                ]
               },
               {
                 "Name": "assay-management-api",
@@ -60,7 +180,20 @@
                   "DefaultMessageTimeToLive": "PT1H",
                   "DeadLetteringOnMessageExpiration": false,
                   "MaxDeliveryCount": 10
-                }
+                },
+                "Rules": [
+                  {
+                    "Name": "CompletedScreeningSnapshot-filter",
+                    "Properties": {
+                      "FilterType": "Correlation",
+                      "CorrelationFilter": {
+                        "Properties": {
+                          "eventType": "CompletedScreeningSnapshot"
+                        }
+                      }
+                    }
+                  }
+                ]
               },
               {
                 "Name": "workflow-api",
@@ -68,7 +201,97 @@
                   "DefaultMessageTimeToLive": "PT1H",
                   "DeadLetteringOnMessageExpiration": false,
                   "MaxDeliveryCount": 10
-                }
+                },
+                "Rules": [
+                  {
+                    "Name": "LiteratureIntelligenceSnapshot-filter",
+                    "Properties": {
+                      "FilterType": "Correlation",
+                      "CorrelationFilter": {
+                        "Properties": {
+                          "eventType": "LiteratureIntelligenceSnapshot"
+                        }
+                      }
+                    }
+                  },
+                  {
+                    "Name": "TargetDiscoverySnapshot-filter",
+                    "Properties": {
+                      "FilterType": "Correlation",
+                      "CorrelationFilter": {
+                        "Properties": {
+                          "eventType": "TargetDiscoverySnapshot"
+                        }
+                      }
+                    }
+                  },
+                  {
+                    "Name": "ChemicalDesignSnapshot-filter",
+                    "Properties": {
+                      "FilterType": "Correlation",
+                      "CorrelationFilter": {
+                        "Properties": {
+                          "eventType": "ChemicalDesignSnapshot"
+                        }
+                      }
+                    }
+                  },
+                  {
+                    "Name": "CompoundCatalogSnapshot-filter",
+                    "Properties": {
+                      "FilterType": "Correlation",
+                      "CorrelationFilter": {
+                        "Properties": {
+                          "eventType": "CompoundCatalogSnapshot"
+                        }
+                      }
+                    }
+                  },
+                  {
+                    "Name": "CompletedScreeningSnapshot-filter",
+                    "Properties": {
+                      "FilterType": "Correlation",
+                      "CorrelationFilter": {
+                        "Properties": {
+                          "eventType": "CompletedScreeningSnapshot"
+                        }
+                      }
+                    }
+                  },
+                  {
+                    "Name": "AssaySnapshot-filter",
+                    "Properties": {
+                      "FilterType": "Correlation",
+                      "CorrelationFilter": {
+                        "Properties": {
+                          "eventType": "AssaySnapshot"
+                        }
+                      }
+                    }
+                  },
+                  {
+                    "Name": "PredictionCompleted-filter",
+                    "Properties": {
+                      "FilterType": "Correlation",
+                      "CorrelationFilter": {
+                        "Properties": {
+                          "eventType": "PredictionCompleted"
+                        }
+                      }
+                    }
+                  },
+                  {
+                    "Name": "AiDiscoverySnapshot-filter",
+                    "Properties": {
+                      "FilterType": "Correlation",
+                      "CorrelationFilter": {
+                        "Properties": {
+                          "eventType": "AiDiscoverySnapshot"
+                        }
+                      }
+                    }
+                  }
+                ]
               },
               {
                 "Name": "notification-api",
@@ -76,7 +299,42 @@
                   "DefaultMessageTimeToLive": "PT1H",
                   "DeadLetteringOnMessageExpiration": false,
                   "MaxDeliveryCount": 10
-                }
+                },
+                "Rules": [
+                  {
+                    "Name": "AssayCompleted-filter",
+                    "Properties": {
+                      "FilterType": "Correlation",
+                      "CorrelationFilter": {
+                        "Properties": {
+                          "eventType": "AssayCompleted"
+                        }
+                      }
+                    }
+                  },
+                  {
+                    "Name": "TargetSelected-filter",
+                    "Properties": {
+                      "FilterType": "Correlation",
+                      "CorrelationFilter": {
+                        "Properties": {
+                          "eventType": "TargetSelected"
+                        }
+                      }
+                    }
+                  },
+                  {
+                    "Name": "WorkflowCompleted-filter",
+                    "Properties": {
+                      "FilterType": "Correlation",
+                      "CorrelationFilter": {
+                        "Properties": {
+                          "eventType": "WorkflowCompleted"
+                        }
+                      }
+                    }
+                  }
+                ]
               },
               {
                 "Name": "search-api",
@@ -84,15 +342,427 @@
                   "DefaultMessageTimeToLive": "PT1H",
                   "DeadLetteringOnMessageExpiration": false,
                   "MaxDeliveryCount": 10
-                }
-              },
-              {
-                "Name": "reporting-api",
-                "Properties": {
-                  "DefaultMessageTimeToLive": "PT1H",
-                  "DeadLetteringOnMessageExpiration": false,
-                  "MaxDeliveryCount": 10
-                }
+                },
+                "Rules": [
+                  {
+                    "Name": "PublicationRegistered-filter",
+                    "Properties": {
+                      "FilterType": "Correlation",
+                      "CorrelationFilter": {
+                        "Properties": {
+                          "eventType": "PublicationRegistered"
+                        }
+                      }
+                    }
+                  },
+                  {
+                    "Name": "LiteratureEvidenceDiscovered-filter",
+                    "Properties": {
+                      "FilterType": "Correlation",
+                      "CorrelationFilter": {
+                        "Properties": {
+                          "eventType": "LiteratureEvidenceDiscovered"
+                        }
+                      }
+                    }
+                  },
+                  {
+                    "Name": "LiteratureIntelligenceSnapshot-filter",
+                    "Properties": {
+                      "FilterType": "Correlation",
+                      "CorrelationFilter": {
+                        "Properties": {
+                          "eventType": "LiteratureIntelligenceSnapshot"
+                        }
+                      }
+                    }
+                  },
+                  {
+                    "Name": "TargetHypothesisProposed-filter",
+                    "Properties": {
+                      "FilterType": "Correlation",
+                      "CorrelationFilter": {
+                        "Properties": {
+                          "eventType": "TargetHypothesisProposed"
+                        }
+                      }
+                    }
+                  },
+                  {
+                    "Name": "TargetAssessmentCreated-filter",
+                    "Properties": {
+                      "FilterType": "Correlation",
+                      "CorrelationFilter": {
+                        "Properties": {
+                          "eventType": "TargetAssessmentCreated"
+                        }
+                      }
+                    }
+                  },
+                  {
+                    "Name": "TargetAssessmentCompleted-filter",
+                    "Properties": {
+                      "FilterType": "Correlation",
+                      "CorrelationFilter": {
+                        "Properties": {
+                          "eventType": "TargetAssessmentCompleted"
+                        }
+                      }
+                    }
+                  },
+                  {
+                    "Name": "TargetSelected-filter",
+                    "Properties": {
+                      "FilterType": "Correlation",
+                      "CorrelationFilter": {
+                        "Properties": {
+                          "eventType": "TargetSelected"
+                        }
+                      }
+                    }
+                  },
+                  {
+                    "Name": "TargetDiscoverySnapshot-filter",
+                    "Properties": {
+                      "FilterType": "Correlation",
+                      "CorrelationFilter": {
+                        "Properties": {
+                          "eventType": "TargetDiscoverySnapshot"
+                        }
+                      }
+                    }
+                  },
+                  {
+                    "Name": "ChemicalDesignProjectCreated-filter",
+                    "Properties": {
+                      "FilterType": "Correlation",
+                      "CorrelationFilter": {
+                        "Properties": {
+                          "eventType": "ChemicalDesignProjectCreated"
+                        }
+                      }
+                    }
+                  },
+                  {
+                    "Name": "StructureSearchCompleted-filter",
+                    "Properties": {
+                      "FilterType": "Correlation",
+                      "CorrelationFilter": {
+                        "Properties": {
+                          "eventType": "StructureSearchCompleted"
+                        }
+                      }
+                    }
+                  },
+                  {
+                    "Name": "CandidateSelectedForRegistration-filter",
+                    "Properties": {
+                      "FilterType": "Correlation",
+                      "CorrelationFilter": {
+                        "Properties": {
+                          "eventType": "CandidateSelectedForRegistration"
+                        }
+                      }
+                    }
+                  },
+                  {
+                    "Name": "ChemicalDesignSnapshot-filter",
+                    "Properties": {
+                      "FilterType": "Correlation",
+                      "CorrelationFilter": {
+                        "Properties": {
+                          "eventType": "ChemicalDesignSnapshot"
+                        }
+                      }
+                    }
+                  },
+                  {
+                    "Name": "CompoundRegistered-filter",
+                    "Properties": {
+                      "FilterType": "Correlation",
+                      "CorrelationFilter": {
+                        "Properties": {
+                          "eventType": "CompoundRegistered"
+                        }
+                      }
+                    }
+                  },
+                  {
+                    "Name": "CompoundUpdated-filter",
+                    "Properties": {
+                      "FilterType": "Correlation",
+                      "CorrelationFilter": {
+                        "Properties": {
+                          "eventType": "CompoundUpdated"
+                        }
+                      }
+                    }
+                  },
+                  {
+                    "Name": "CompoundDeleted-filter",
+                    "Properties": {
+                      "FilterType": "Correlation",
+                      "CorrelationFilter": {
+                        "Properties": {
+                          "eventType": "CompoundDeleted"
+                        }
+                      }
+                    }
+                  },
+                  {
+                    "Name": "CompoundStatusChanged-filter",
+                    "Properties": {
+                      "FilterType": "Correlation",
+                      "CorrelationFilter": {
+                        "Properties": {
+                          "eventType": "CompoundStatusChanged"
+                        }
+                      }
+                    }
+                  },
+                  {
+                    "Name": "ScreeningCreated-filter",
+                    "Properties": {
+                      "FilterType": "Correlation",
+                      "CorrelationFilter": {
+                        "Properties": {
+                          "eventType": "ScreeningCreated"
+                        }
+                      }
+                    }
+                  },
+                  {
+                    "Name": "ScreeningStarted-filter",
+                    "Properties": {
+                      "FilterType": "Correlation",
+                      "CorrelationFilter": {
+                        "Properties": {
+                          "eventType": "ScreeningStarted"
+                        }
+                      }
+                    }
+                  },
+                  {
+                    "Name": "ScreeningCompleted-filter",
+                    "Properties": {
+                      "FilterType": "Correlation",
+                      "CorrelationFilter": {
+                        "Properties": {
+                          "eventType": "ScreeningCompleted"
+                        }
+                      }
+                    }
+                  },
+                  {
+                    "Name": "ScreeningFailed-filter",
+                    "Properties": {
+                      "FilterType": "Correlation",
+                      "CorrelationFilter": {
+                        "Properties": {
+                          "eventType": "ScreeningFailed"
+                        }
+                      }
+                    }
+                  },
+                  {
+                    "Name": "ScreeningCancelled-filter",
+                    "Properties": {
+                      "FilterType": "Correlation",
+                      "CorrelationFilter": {
+                        "Properties": {
+                          "eventType": "ScreeningCancelled"
+                        }
+                      }
+                    }
+                  },
+                  {
+                    "Name": "CompletedScreeningSnapshot-filter",
+                    "Properties": {
+                      "FilterType": "Correlation",
+                      "CorrelationFilter": {
+                        "Properties": {
+                          "eventType": "CompletedScreeningSnapshot"
+                        }
+                      }
+                    }
+                  },
+                  {
+                    "Name": "AssayCreated-filter",
+                    "Properties": {
+                      "FilterType": "Correlation",
+                      "CorrelationFilter": {
+                        "Properties": {
+                          "eventType": "AssayCreated"
+                        }
+                      }
+                    }
+                  },
+                  {
+                    "Name": "AssayCompleted-filter",
+                    "Properties": {
+                      "FilterType": "Correlation",
+                      "CorrelationFilter": {
+                        "Properties": {
+                          "eventType": "AssayCompleted"
+                        }
+                      }
+                    }
+                  },
+                  {
+                    "Name": "AssaySnapshot-filter",
+                    "Properties": {
+                      "FilterType": "Correlation",
+                      "CorrelationFilter": {
+                        "Properties": {
+                          "eventType": "AssaySnapshot"
+                        }
+                      }
+                    }
+                  },
+                  {
+                    "Name": "PredictionCreated-filter",
+                    "Properties": {
+                      "FilterType": "Correlation",
+                      "CorrelationFilter": {
+                        "Properties": {
+                          "eventType": "PredictionCreated"
+                        }
+                      }
+                    }
+                  },
+                  {
+                    "Name": "PredictionStarted-filter",
+                    "Properties": {
+                      "FilterType": "Correlation",
+                      "CorrelationFilter": {
+                        "Properties": {
+                          "eventType": "PredictionStarted"
+                        }
+                      }
+                    }
+                  },
+                  {
+                    "Name": "PredictionCompleted-filter",
+                    "Properties": {
+                      "FilterType": "Correlation",
+                      "CorrelationFilter": {
+                        "Properties": {
+                          "eventType": "PredictionCompleted"
+                        }
+                      }
+                    }
+                  },
+                  {
+                    "Name": "PredictionFailed-filter",
+                    "Properties": {
+                      "FilterType": "Correlation",
+                      "CorrelationFilter": {
+                        "Properties": {
+                          "eventType": "PredictionFailed"
+                        }
+                      }
+                    }
+                  },
+                  {
+                    "Name": "CandidatePrioritized-filter",
+                    "Properties": {
+                      "FilterType": "Correlation",
+                      "CorrelationFilter": {
+                        "Properties": {
+                          "eventType": "CandidatePrioritized"
+                        }
+                      }
+                    }
+                  },
+                  {
+                    "Name": "AdaptivePredictionCompleted-filter",
+                    "Properties": {
+                      "FilterType": "Correlation",
+                      "CorrelationFilter": {
+                        "Properties": {
+                          "eventType": "AdaptivePredictionCompleted"
+                        }
+                      }
+                    }
+                  },
+                  {
+                    "Name": "WorkflowCreated-filter",
+                    "Properties": {
+                      "FilterType": "Correlation",
+                      "CorrelationFilter": {
+                        "Properties": {
+                          "eventType": "WorkflowCreated"
+                        }
+                      }
+                    }
+                  },
+                  {
+                    "Name": "WorkflowStageCompleted-filter",
+                    "Properties": {
+                      "FilterType": "Correlation",
+                      "CorrelationFilter": {
+                        "Properties": {
+                          "eventType": "WorkflowStageCompleted"
+                        }
+                      }
+                    }
+                  },
+                  {
+                    "Name": "WorkflowCompleted-filter",
+                    "Properties": {
+                      "FilterType": "Correlation",
+                      "CorrelationFilter": {
+                        "Properties": {
+                          "eventType": "WorkflowCompleted"
+                        }
+                      }
+                    }
+                  },
+                  {
+                    "Name": "WorkflowSnapshot-filter",
+                    "Properties": {
+                      "FilterType": "Correlation",
+                      "CorrelationFilter": {
+                        "Properties": {
+                          "eventType": "WorkflowSnapshot"
+                        }
+                      }
+                    }
+                  },
+                  {
+                    "Name": "NotificationDelivered-filter",
+                    "Properties": {
+                      "FilterType": "Correlation",
+                      "CorrelationFilter": {
+                        "Properties": {
+                          "eventType": "NotificationDelivered"
+                        }
+                      }
+                    }
+                  },
+                  {
+                    "Name": "NotificationDeliveryFailed-filter",
+                    "Properties": {
+                      "FilterType": "Correlation",
+                      "CorrelationFilter": {
+                        "Properties": {
+                          "eventType": "NotificationDeliveryFailed"
+                        }
+                      }
+                    }
+                  },
+                  {
+                    "Name": "NotificationSnapshot-filter",
+                    "Properties": {
+                      "FilterType": "Correlation",
+                      "CorrelationFilter": {
+                        "Properties": {
+                          "eventType": "NotificationSnapshot"
+                        }
+                      }
+                    }
+                  }
+                ]
               },
               {
                 "Name": "audit-api",
@@ -100,7 +770,20 @@
                   "DefaultMessageTimeToLive": "PT1H",
                   "DeadLetteringOnMessageExpiration": false,
                   "MaxDeliveryCount": 10
-                }
+                },
+                "Rules": [
+                  {
+                    "Name": "EntityAuditEvent-filter",
+                    "Properties": {
+                      "FilterType": "Correlation",
+                      "CorrelationFilter": {
+                        "Properties": {
+                          "eventType": "EntityAuditEvent"
+                        }
+                      }
+                    }
+                  }
+                ]
               }
             ]
           }

@@ -1,6 +1,6 @@
 services:
   sqlserver:
-    image: mcr.microsoft.com/mssql/server:2022-latest
+    image: mcr.microsoft.com/mssql/server:2025-latest
     container_name: sqlserver
     hostname: sqlserver
 
@@ -107,6 +107,68 @@ services:
         echo "Service Bus Emulator is ready."
     restart: "no"
 
+  audit-api:
+    build:
+      context: .
+      dockerfile: Algocura.Audit.Api/Dockerfile
+      target: final
+
+    image: algocura/algocura-audit-api:dev
+    container_name: audit-api
+    ports:
+      - "7012:8080"
+    environment:
+      ASPNETCORE_ENVIRONMENT: "Development"
+      ASPNETCORE_URLS: http://+:8080
+      ConnectionStrings__AuditDatabase: "Server=sqlserver,1433;Database=AlgocuraAudit;User Id=sa;Password=${SQL_SA_PASSWORD};TrustServerCertificate=True;Encrypt=True;ConnectRetryCount=5;ConnectRetryInterval=5;"
+      ServiceBus__UseEmulator: "true"
+      ServiceBus__ConnectionString: "Endpoint=sb://servicebus-emulator;SharedAccessKeyName=RootManageSharedAccessKey;SharedAccessKey=SAS_KEY_VALUE;UseDevelopmentEmulator=true;"
+      ServiceBus__FullyQualifiedNamespace: ""
+      ServiceBus__TopicName: "algocura-events"
+      ServiceBus__SubscriptionName: "audit-api"      
+      Logging__LogLevel__Default: "Information"
+      Logging__LogLevel__Microsoft__AspNetCore: "Warning"
+      Logging__LogLevel__Microsoft__EntityFrameworkCore: "Information"
+      Logging__LogLevel__Azure__Messaging__ServiceBus: "Information"
+      Auditing__ServiceName: "Algocura.Audit.Api"
+      Auditing__PublishEntityAuditEvents: "false"
+      Auditing__StampCreatedAndUpdatedFields: "true"
+      Jwt__SigningKey: "${JWT_SIGNING_KEY}"
+      Jwt__ClockSkewMinutes: "5"
+      Cors__AllowedOrigins__0: "http://localhost:5173"
+      Cors__AllowedOrigins__1: "http://localhost:7014"
+    depends_on:
+      sqlserver:
+        condition: service_healthy
+      servicebus-wait:
+        condition: service_completed_successfully
+    
+    restart: unless-stopped
+    
+  audit-api-wait:
+    image: curlimages/curl:8.12.1
+    container_name: audit-api-wait
+    depends_on:
+      audit-api:
+        condition: service_started
+    entrypoint: ["/bin/sh", "-c"]
+    command:
+      - |
+        echo "Waiting for Audit API..."
+        sleep 20
+
+        until curl \
+          --silent \
+          --show-error \
+          --fail \
+          http://audit-api:8080/health; do
+          echo "Audit API is not ready. Retrying in 5 seconds..."
+          sleep 5
+        done
+
+        echo "Audit API is ready."
+    restart: "no"
+    
   literature-intelligence-api:
     build:
       context: .
@@ -143,7 +205,7 @@ services:
     depends_on:
       sqlserver:
         condition: service_healthy
-      servicebus-wait:
+      audit-api-wait:
         condition: service_completed_successfully
 
     restart: unless-stopped
@@ -184,7 +246,7 @@ services:
     depends_on:
       sqlserver:
         condition: service_healthy
-      servicebus-wait:
+      audit-api-wait:
         condition: service_completed_successfully
 
     restart: unless-stopped
@@ -225,7 +287,7 @@ services:
     depends_on:
       sqlserver:
         condition: service_healthy
-      servicebus-wait:
+      audit-api-wait:
         condition: service_completed_successfully
 
     restart: unless-stopped
@@ -266,7 +328,7 @@ services:
     depends_on:
       sqlserver:
         condition: service_healthy
-      servicebus-wait:
+      audit-api-wait:
         condition: service_completed_successfully
 
     restart: unless-stopped
@@ -304,7 +366,7 @@ services:
     depends_on:
       sqlserver:
         condition: service_healthy
-      servicebus-wait:
+      audit-api-wait:
         condition: service_completed_successfully
     
     restart: unless-stopped
@@ -342,7 +404,7 @@ services:
     depends_on:
       sqlserver:
         condition: service_healthy
-      servicebus-wait:
+      audit-api-wait:
         condition: service_completed_successfully
     
     restart: unless-stopped
@@ -380,7 +442,7 @@ services:
     depends_on:
       sqlserver:
         condition: service_healthy
-      servicebus-wait:
+      audit-api-wait:
         condition: service_completed_successfully
     
     restart: unless-stopped
@@ -418,7 +480,7 @@ services:
     depends_on:
       sqlserver:
         condition: service_healthy
-      servicebus-wait:
+      audit-api-wait:
         condition: service_completed_successfully
     
     restart: unless-stopped
@@ -456,7 +518,7 @@ services:
     depends_on:
       sqlserver:
         condition: service_healthy
-      servicebus-wait:
+      audit-api-wait:
         condition: service_completed_successfully
     
     restart: unless-stopped
@@ -494,7 +556,7 @@ services:
     depends_on:
       sqlserver:
         condition: service_healthy
-      servicebus-wait:
+      audit-api-wait:
         condition: service_completed_successfully
     
     restart: unless-stopped
@@ -532,45 +594,7 @@ services:
     depends_on:
       sqlserver:
         condition: service_healthy
-      servicebus-wait:
-        condition: service_completed_successfully
-    
-    restart: unless-stopped
-   
-  audit-api:
-    build:
-      context: .
-      dockerfile: Algocura.Audit.Api/Dockerfile
-      target: final
-
-    image: algocura/algocura-audit-api:dev
-    container_name: audit-api
-    ports:
-      - "7012:8080"
-    environment:
-      ASPNETCORE_ENVIRONMENT: "Development"
-      ASPNETCORE_URLS: http://+:8080
-      ConnectionStrings__AuditDatabase: "Server=sqlserver,1433;Database=AlgocuraAudit;User Id=sa;Password=${SQL_SA_PASSWORD};TrustServerCertificate=True;Encrypt=True;ConnectRetryCount=5;ConnectRetryInterval=5;"
-      ServiceBus__UseEmulator: "true"
-      ServiceBus__ConnectionString: "Endpoint=sb://servicebus-emulator;SharedAccessKeyName=RootManageSharedAccessKey;SharedAccessKey=SAS_KEY_VALUE;UseDevelopmentEmulator=true;"
-      ServiceBus__FullyQualifiedNamespace: ""
-      ServiceBus__TopicName: "algocura-events"
-      ServiceBus__SubscriptionName: "audit-api"      
-      Logging__LogLevel__Default: "Information"
-      Logging__LogLevel__Microsoft__AspNetCore: "Warning"
-      Logging__LogLevel__Microsoft__EntityFrameworkCore: "Information"
-      Logging__LogLevel__Azure__Messaging__ServiceBus: "Information"
-      Auditing__ServiceName: "Algocura.Audit.Api"
-      Auditing__PublishEntityAuditEvents: "false"
-      Auditing__StampCreatedAndUpdatedFields: "true"
-      Jwt__SigningKey: "${JWT_SIGNING_KEY}"
-      Jwt__ClockSkewMinutes: "5"
-      Cors__AllowedOrigins__0: "http://localhost:5173"
-      Cors__AllowedOrigins__1: "http://localhost:7014"
-    depends_on:
-      sqlserver:
-        condition: service_healthy
-      servicebus-wait:
+      audit-api-wait:
         condition: service_completed_successfully
     
     restart: unless-stopped
@@ -611,7 +635,7 @@ services:
     depends_on:
       sqlserver:
         condition: service_healthy
-      servicebus-wait:
+      audit-api-wait:
         condition: service_completed_successfully
     
     restart: unless-stopped
