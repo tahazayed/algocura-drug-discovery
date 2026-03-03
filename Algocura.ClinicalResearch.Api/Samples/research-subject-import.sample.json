@@ -1,0 +1,28 @@
+{
+  "subjects": [
+    {
+      "externalSubjectId": "DEMO-CASE-001",
+      "ageAtDiagnosis": 63,
+      "sex": "Female",
+      "primarySite": "Lung",
+      "diseaseStage": "Stage IIIA",
+      "vitalStatus": "Alive",
+      "diagnosis": "Synthetic demonstration record - lung adenocarcinoma",
+      "treatmentSummary": "Synthetic demonstration value; replace with mapped public dataset content.",
+      "molecularFeaturesJson": "{\"EGFR\":\"Mutation\",\"TP53\":\"Mutation\"}",
+      "additionalAttributesJson": "{\"demo\":true}"
+    },
+    {
+      "externalSubjectId": "DEMO-CASE-002",
+      "ageAtDiagnosis": 55,
+      "sex": "Male",
+      "primarySite": "Lung",
+      "diseaseStage": "Stage II",
+      "vitalStatus": "Alive",
+      "diagnosis": "Synthetic demonstration record",
+      "treatmentSummary": null,
+      "molecularFeaturesJson": "{\"KRAS\":\"Mutation\"}",
+      "additionalAttributesJson": "{\"demo\":true}"
+    }
+  ]
+}

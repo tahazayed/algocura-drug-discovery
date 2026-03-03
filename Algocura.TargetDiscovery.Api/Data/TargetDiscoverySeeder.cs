@@ -9,7 +9,7 @@ public static class TargetDiscoverySeeder
         new(
             2026,
             1,
-            1,
+            11,
             0,
             0,
             0,

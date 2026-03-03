@@ -2,7 +2,7 @@
 
 The **Algocura Drug Discovery Platform** is a cloud-native, event-driven microservices platform designed to support an end-to-end computational drug discovery workflow.
 
-The platform begins with scientific literature analysis and target hypothesis generation, continues through target discovery and chemical design, and then proceeds to compound registration, screening, and AI-assisted candidate prioritization. Literature Intelligence, Target Discovery, Chemical Design, Compound Catalog, Screening, Assay Management, AI Discovery, Workflow, Notification, Search, Reporting, Audit, and Identity are currently implemented. Shared auditing and messaging infrastructure is provided by Algocura.Platform.Auditing and Algocura.Platform.Messaging.
+The platform begins with scientific literature analysis and target hypothesis generation, continues through target discovery and chemical design, and then proceeds to compound registration, screening, and AI-assisted candidate prioritization. Literature Intelligence, Target Discovery, Chemical Design, Compound Catalog, Screening, Assay Management, AI Discovery, Clinical Research, Workflow, Notification, Search, Reporting, Audit, and Identity are currently implemented. Shared auditing and messaging infrastructure is provided by Algocura.Platform.Auditing and Algocura.Platform.Messaging.
 
 Each microservice owns its data and communicates asynchronously through Azure Service Bus while exposing REST APIs for synchronous operations.
 
@@ -21,6 +21,7 @@ This repository contains multiple independently deployable microservices. Each s
 | Screening API | [Algocura.Screening.Api](./Algocura.Screening.Api/README.md) |
 | AI Discovery API | [Algocura.AIDiscovery.Api](./Algocura.AIDiscovery.Api/README.md) |
 | Assay Management API | [Algocura.AssayManagement.Api](./Algocura.AssayManagement.Api/README.md) |
+| Clinical Research API | [Algocura.ClinicalResearch.Api](./Algocura.ClinicalResearch.Api/README.md) |
 | Workflow API | [Algocura.Workflow.Api](./Algocura.Workflow.Api/README.md) |
 | Notification API | [Algocura.Notification.Api](./Algocura.Notification.Api/README.md) |
 | Reporting API | [Algocura.Reporting.Api](./Algocura.Reporting.Api/README.md) |
@@ -49,6 +50,25 @@ Screening API
 Assay Management API
         ↓
 AI Discovery API
+
+                         Clinical / Translational Research Track
+Public biomedical data  ─────────────────────────────────────────────┐
+TCIA / NBIA imaging data ────────────────────────────────────────────┤
+Hypothetical research parameters ────────────────────────────────────┤
+                                                                    ▼
+                                                       Clinical Research API
+                                                                    │
+                         ┌──────────────────────────────────────────┼─────────────────────────────────────┐
+                         ▼                                          ▼                                     ▼
+                Dataset provenance                        Imaging retrieval / curation          Research-subject import
+                         │                                          │                                     │
+                         └──────────────────────────────┬───────────┴─────────────────────────────────────┘
+                                                        ▼
+                                           Experimental research workflows
+                                                        │
+                              ┌─────────────────────────┴─────────────────────────┐
+                              ▼                                                   ▼
+                  Immunotherapy-response estimate                    Simulated follow-up CT
 ```
 
 The workflow is designed to support the following progression:
@@ -64,53 +84,80 @@ The workflow is designed to support the following progression:
 9. Capture measurements, replicates, quality-control data, and compound-level results.
 10. Rank and prioritize lead compounds using AI-assisted analysis.
 
+In parallel with the core drug-discovery progression, the Clinical Research API supports translational and biomedical research workflows that:
+
+11. Register public or de-identified biomedical research datasets while preserving source and study provenance.
+12. Import and upsert research-subject records with demographic, disease, treatment, molecular, and study-specific attributes.
+13. Retrieve and curate public cancer-imaging series through TCIA/NBIA.
+14. Execute research-only experimental response-scoring workflows.
+15. Generate simulated follow-up CT research visualizations for exploratory workflow demonstrations.
+
+Clinical Research is currently a parallel research track and is not one of the seven stages managed by the existing discovery `Workflow API` state machine.
+
 ---
 
 # Solution Architecture
 
 ```text
-                                      +----------------------+
-                                      |      API Gateway     |
-                                      | (Azure APIM / YARP)  |
-                                      +----------+-----------+
-                                                 |
-        ---------------------------------------------------------------------------------------------------------
-        |                    |                    |                    |                    |                    |
-        v                    v                    v                    v                    v                    v
-
-+--------------------+ +--------------------+ +--------------------+ +--------------------+ +----------------+ +----------------+
-| Literature         | | Target             | | Chemical           | | Compound           | | Screening      | | AI Discovery   |
-| Intelligence API   | | Discovery API      | | Design API         | | Catalog API        | | API            | | API            |
-+---------+----------+ +---------+----------+ +---------+----------+ +---------+----------+ +--------+-------+ +--------+-------+
-          |                      |                      |                      |                     |                  |
-          ----------------------------------------------------------------------------------------------------------
+                                              +----------------------+
+                                              |      API Gateway     |
+                                              | (Azure APIM / YARP)  |
+                                              +----------+-----------+
                                                          |
-                                                         v
-                                             +--------------------------+
-                                             |    Azure Service Bus     |
-                                             |  Topic: algocura-events  |
-                                             +------------+-------------+
-                                                          |
-        ---------------------------------------------------------------------------------------------------------
-        |                    |                    |                    |                    |                    |
-        v                    v                    v                    v                    v                    v
+        -------------------------------------------------------------------------------------------------------------------------------
+        |                    |                    |                    |                    |                    |                     |
+        v                    v                    v                    v                    v                    v                     v
 
-+--------------------+ +--------------------+ +--------------------+ +--------------------+ +----------------+ +----------------+
-| Assay              | | Workflow           | | Notification       | | Reporting          | | Search         | | Audit          |
-| Management API     | | API                | | API                | | API                | | API            | | API            |
-+--------------------+ +--------------------+ +--------------------+ +--------------------+ +----------------+ +----------------+
++--------------------+ +--------------------+ +--------------------+ +--------------------+ +----------------+ +----------------+ +--------------------+
+| Literature         | | Target             | | Chemical           | | Compound           | | Screening      | | AI Discovery   | | Clinical Research  |
+| Intelligence API   | | Discovery API      | | Design API         | | Catalog API        | | API            | | API            | | API                |
++---------+----------+ +---------+----------+ +---------+----------+ +---------+----------+ +--------+-------+ +--------+-------+ +---------+----------+
+          |                      |                      |                      |                     |                  |                   |
+          -----------------------------------------------------------------------------------------------------------------------------
+                                                                  |
+                                                                  v
+                                                      +--------------------------+
+                                                      |    Azure Service Bus     |
+                                                      |  Topic: algocura-events  |
+                                                      +------------+-------------+
+                                                                   |
+        -------------------------------------------------------------------------------------------------------------------------------
+        |                    |                    |                    |                    |                    |                     |
+        v                    v                    v                    v                    v                    v                     v
 
-                                                          |
-                                                          v
-                                      +--------------------------------------+
-                                      |        Infrastructure Layer          |
-                                      +--------------------------------------+
-                                      | SQL Server (database per service)    |
-                                      | Entity Framework Core                |
-                                      | Azure Blob Storage                   |
-                                      | Azure Service Bus Emulator           |
-                                      | Docker Compose                       |
-                                      +--------------------------------------+
++--------------------+ +--------------------+ +--------------------+ +--------------------+ +----------------+ +----------------+ +--------------------+
+| Assay              | | Workflow           | | Notification       | | Reporting          | | Search         | | Audit          | | Identity           |
+| Management API     | | API                | | API                | | API                | | API            | | API            | | API                |
++--------------------+ +--------------------+ +--------------------+ +--------------------+ +----------------+ +----------------+ +--------------------+
+
+                                                                   |
+                                                                   v
+                                              +--------------------------------------+
+                                              |        Infrastructure Layer          |
+                                              +--------------------------------------+
+                                              | SQL Server (database per service)    |
+                                              | Entity Framework Core                |
+                                              | Azure Blob Storage                   |
+                                              | Azure Service Bus Emulator           |
+                                              | Docker Compose                       |
+                                              +--------------------------------------+
+
+Clinical Research external research-data path:
+
+The Cancer Imaging Archive (TCIA / NBIA API)
+                   |
+                   v
+        Clinical Research API
+                   |
+        +----------+----------------------+-------------------------+
+        |                                 |                         |
+        v                                 v                         v
+Dataset / subject provenance      Imaging retrieval & curation   Experimental scoring
+        |                                 |                         |
+        +---------------------------------+-------------------------+
+                                          |
+                                          v
+                             Research-only analytical outputs
 ```
 
 ---
@@ -126,6 +173,7 @@ The workflow is designed to support the following progression:
 | Screening API | Virtual screening, candidate evaluation, ranking, and synchronization | [README](./Algocura.Screening.Api/README.md) |
 | AI Discovery API | AI-assisted compound prioritization, prediction models, screening projection synchronization, and lead ranking | [README](./Algocura.AIDiscovery.Api/README.md) |
 | Assay Management API | Completed-screening synchronization, assay creation, measurements, replicates, quality control, result calculation, publication, and synchronization | [README](./Algocura.AssayManagement.Api/README.md) |
+| Clinical Research API | Biomedical research dataset registration, research-subject import/upsert with provenance, TCIA/NBIA imaging-series retrieval and curation, experimental immunotherapy-response scoring, and simulated follow-up CT research visualization | [README](./Algocura.ClinicalResearch.Api/README.md) |
 | Workflow API | End-to-end workflow creation, stage tracking, event correlation, orchestration state, failure handling, cancellation, idempotent event processing, and synchronization | [README](./Algocura.Workflow.Api/README.md) |
 | Search API | Event-driven unified search projections, metadata filtering, free-text search, document lifecycle management, and index synchronization | [README](./Algocura.Search.Api/README.md) |
 | Notification API | Event-driven notification rules, manual notifications, delivery attempts, dispatch state, cancellation, and synchronization | [README](./Algocura.Notification.Api/README.md) |
@@ -164,7 +212,7 @@ Algocura.Platform.Auditing
         └── Audit publisher abstraction
 ```
 
-Domain services retain ownership of their service-specific integration events and message-processing logic. Common Azure Service Bus transport, publishing, configuration, and consumer lifecycle behavior are provided by `Algocura.Platform.Messaging`.
+Domain services retain ownership of their service-specific integration events and message-processing logic. This includes the Clinical Research events `ClinicalDatasetRegistered`, `ClinicalDatasetUpdated`, `ClinicalDatasetStatusChanged`, `ClinicalDatasetDeleted`, `ResearchSubjectsImported`, `ImagingSeriesRetrieved`, `ImmunotherapyResponseEstimated`, and `FollowUpCtSimulated`. Common Azure Service Bus transport, publishing, configuration, and consumer lifecycle behavior are provided by `Algocura.Platform.Messaging`.
 
 The standard publishing path is:
 
@@ -321,6 +369,39 @@ Literature Intelligence API
                                                                     ├── Executes prediction models
                                                                     ├── Ranks lead compounds
                                                                     └── Produces prediction results
+
+
+External biomedical research sources
+        │
+        ├── Public research datasets
+        ├── TCIA / NBIA imaging metadata and DICOM series
+        └── Hypothetical research parameters
+                 │
+                 ▼
+        Clinical Research API
+                 │
+                 ├── Registers datasets and preserves provenance
+                 ├── Imports / upserts research subjects
+                 ├── Retrieves and curates imaging series
+                 ├── Produces experimental immunotherapy-response estimates
+                 ├── Produces simulated follow-up CT research visualizations
+                 ├── Publishes ClinicalDatasetRegistered
+                 ├── Publishes ClinicalDatasetUpdated
+                 ├── Publishes ClinicalDatasetStatusChanged
+                 ├── Publishes ClinicalDatasetDeleted
+                 ├── Publishes ResearchSubjectsImported
+                 ├── Publishes ImagingSeriesRetrieved
+                 ├── Publishes ImmunotherapyResponseEstimated
+                 └── Publishes FollowUpCtSimulated
+                             │
+                             ▼
+                      Azure Service Bus
+                             │
+                  ┌──────────┴───────────┐
+                  ▼                      ▼
+             Workflow API           Search API
+        selected workflow events   supported clinical events
+
 
 All platform services
         │
@@ -487,6 +568,63 @@ The data model includes IC50, EC50, Ki, and Kd fields, but the current implement
 
 ---
 
+# Clinical Research Workflow
+
+The Clinical Research API currently supports two related research-only workflows.
+
+## Biomedical dataset and research-subject workflow
+
+```text
+Register public/de-identified research dataset
+        ↓
+Preserve source and study provenance
+        ↓
+Import research-subject records
+        ↓
+Upsert by dataset + external subject identifier
+        ↓
+Store demographic, disease, treatment, molecular, and study-specific attributes
+        ↓
+Publish Clinical Research integration events
+```
+
+The service supports dataset lifecycle management and research-subject import while preserving the relationship between imported records and their originating dataset. Imports are idempotent at the `(ClinicalDatasetId, ExternalSubjectId)` level and update existing records instead of duplicating them.
+
+## Imaging and immunotherapy research prototype
+
+```text
+Query public TCIA/NBIA imaging-series metadata
+        ↓
+Filter/curate by modality, body part, and image count
+        ↓
+Download selected public DICOM series
+        ↓
+Combine imaging context with hypothetical research parameters
+        ↓
+Estimate experimental immunotherapy-response score
+        ↓
+Provide initial rendered CT image + lesion ROI
+        ↓
+Generate simulated follow-up CT visualization
+```
+
+The imaging workflow is an architectural and research prototype. The immunotherapy-response estimator uses illustrative deterministic coefficients and is not clinically fitted or validated. The follow-up CT simulator transforms a manually identified lesion region to create a synthetic research visualization; it is not a trained medical-image prediction model and must not be used for patient-care decisions.
+
+Clinical Research publishes the following integration events:
+
+```text
+ClinicalDatasetRegistered
+ClinicalDatasetUpdated
+ClinicalDatasetStatusChanged
+ClinicalDatasetDeleted
+ResearchSubjectsImported
+ImagingSeriesRetrieved
+ImmunotherapyResponseEstimated
+FollowUpCtSimulated
+```
+
+---
+
 # Workflow Orchestration
 
 The Workflow API currently supports:
@@ -517,7 +655,9 @@ Complete workflow
 
 The Workflow API owns orchestration state only. It does not directly call another service's database and does not perform scientific calculations.
 
-Each workflow contains the following stages:
+Clinical Research is implemented as a separate, parallel research workflow. The current Workflow API state machine still contains seven drug-discovery stages and does not yet define `ClinicalResearch` as an eighth stage. Clinical Research can publish integration events to `algocura-events`; adding those events to a Service Bus subscription does not by itself add a new Workflow API stage.
+
+Each discovery workflow contains the following stages:
 
 ```text
 LiteratureIntelligence
@@ -630,6 +770,8 @@ Workflow
 Notification
 ```
 
+Clinical Research publishes integration events that can be routed to the `search-api` subscription, but Clinical Research is not listed above as an indexed document type until corresponding Search API event handlers/mappings and projections are implemented. Service Bus filters alone do not create searchable Clinical Research documents.
+
 The search endpoint supports free-text search together with filters for document type, disease name, gene symbol, compound name, InChIKey, workflow identifier, document status, minimum score, and pagination.
 
 The current implementation uses SQL Server projections and `Contains` filtering. It does not provide stemming, fuzzy matching, linguistic analysis, semantic ranking, vector search, or distributed indexing.
@@ -668,6 +810,8 @@ DiscoveryFunnel
 `PlatformSummary` reports summarize the reporting projections available across the platform, including completed workflow counts.
 
 `DiscoveryFunnel` reports can filter by disease name and gene symbol and summarize progression through literature, selected targets, and prediction-stage candidates.
+
+Clinical Research currently owns its operational research data in its own database. The existing Reporting API does not automatically include Clinical Research datasets, research subjects, imaging runs, immunotherapy-response estimates, or follow-up CT simulations unless dedicated reporting projections/consumers are added.
 
 Report results are persisted as `ReportRun` and `ReportMetric` records. Reporting data remains read-optimized and isolated from operational service databases; the Reporting API does not query another microservice's database directly.
 
@@ -735,7 +879,7 @@ Audit ingestion is idempotent. `EventId` is the primary key, so replaying the sa
 
 To avoid an audit feedback loop, the Audit API stamps its own persistence metadata but does not publish audit events for `AuditRecord` inserts.
 
-For centralized audit history to receive live events, producing services must enable `PublishEntityAuditEvents` and use the shared Service Bus audit publisher.
+For centralized audit history to receive live events, producing services must enable `PublishEntityAuditEvents` and use the shared Service Bus audit publisher. The same requirement applies to Clinical Research: its domain integration events are separate from `EntityAuditEvent`, and centralized entity-level audit history is available only when the Clinical Research EF Core/auditing pipeline is configured to publish those audit events.
 
 
 ---
@@ -765,6 +909,11 @@ AI Discovery API
 
 Assay Management API
     SQL Server
+
+Clinical Research API
+    SQL Server
+    ├── Clinical datasets and source/study provenance
+    └── Research-subject records and research workflow state
 
 Workflow API
     SQL Server
@@ -808,6 +957,10 @@ Services maintain only the local projections required for their responsibilities
 | Literature Analysis | Deterministic prototype with future biomedical NLP integration |
 | Chemical Structure Search | Deterministic prototype with future ChemAxon or validated cheminformatics integration |
 | Assay Analysis | Deterministic result calculator with future validated dose-response and binding analysis |
+| Clinical Research | Public/de-identified dataset provenance, research-subject import/upsert, and research-only biomedical workflow support |
+| Cancer Imaging Integration | TCIA/NBIA public imaging-series metadata retrieval, filtering/curation, and DICOM-series download |
+| Immunotherapy Research Scoring | Deterministic experimental prototype with illustrative coefficients; not clinically fitted or validated |
+| Follow-up CT Simulation | Synthetic ROI-based research visualization from a rendered CT image; not a trained medical-image prediction model |
 | Workflow Orchestration | Event-correlated state machine with idempotent event receipts |
 | Notification Delivery | Deterministic logging dispatcher with future provider-specific integrations |
 | Search Indexing | SQL Server projections with future Azure AI Search, Elasticsearch, or OpenSearch integration |
@@ -845,6 +998,19 @@ Algocura.DrugDiscovery
 │
 ├── Algocura.AssayManagement.Api
 │   └── README.md
+│
+├── Algocura.ClinicalResearch.Api
+│   ├── Controllers
+│   ├── Contracts
+│   ├── Data
+│   ├── Domain
+│   ├── Events
+│   ├── Services
+│   ├── Samples
+│   └── README.md
+│
+├── Algocura.ClinicalResearch.Api.Tests
+│   └── Controllers
 │
 ├── Algocura.Workflow.Api
 │   └── README.md
@@ -897,12 +1063,15 @@ Local development uses Docker Compose to provision the following infrastructure 
 - Screening API
 - Assay Management API
 - AI Discovery API
+- Clinical Research API
 - Workflow API
 - Notification API
 - Search API
 - Reporting API
 - Audit API
 - Identity API
+
+Clinical Research participates in the same local infrastructure model: SQL Server for service-owned persistence and Azure Service Bus for integration-event publication. Its imaging-research workflow additionally communicates with the external public TCIA/NBIA API when imaging metadata or DICOM series are requested.
 
 Additional microservices will be added to the Docker Compose environment as they are implemented.
 
@@ -930,7 +1099,22 @@ reporting-api
 audit-api
 ```
 
-Each consuming service owns a dedicated subscription. This allows services to process events independently while sharing the same integration-event topic.
+Each consuming service owns a dedicated subscription. This allows services to process events independently while sharing the same integration-event topic. Clinical Research is currently a publisher on `algocura-events` and therefore does not require a `clinical-research-api` subscription unless it later consumes events from other services.
+
+Clinical Research publishes:
+
+```text
+ClinicalDatasetRegistered
+ClinicalDatasetUpdated
+ClinicalDatasetStatusChanged
+ClinicalDatasetDeleted
+ResearchSubjectsImported
+ImagingSeriesRetrieved
+ImmunotherapyResponseEstimated
+FollowUpCtSimulated
+```
+
+The root `servicebus-config.json` can route selected Clinical Research events to downstream subscriptions such as `workflow-api` and `search-api`. A filter only makes the message available to that subscription; the consuming API must also implement a matching handler before the event changes workflow state or creates a search projection.
 
 The `target-discovery-api`, `chemical-design-api`, `compound-catalog-api`, `screening-api`, `assay-management-api`, `ai-discovery-api`, `workflow-api`, `notification-api`, `search-api`, `reporting-api`, and `audit-api` subscriptions are used by their corresponding implemented consumers.
 
@@ -1016,6 +1200,16 @@ The platform currently supports:
 - Search document archive and restore
 - Search index snapshot publication
 - Search synchronization endpoints
+- Clinical research dataset registration and lifecycle management
+- Research dataset source/study provenance
+- Research-subject import and idempotent upsert
+- Patient/research attributes for demographic, disease, treatment, molecular, and study-specific data
+- Public TCIA/NBIA imaging-series metadata retrieval
+- Imaging-series filtering and curation
+- Public DICOM-series download by SeriesInstanceUID
+- Experimental immunotherapy-response research scoring
+- Synthetic follow-up CT research visualization using a manually identified lesion ROI
+- Clinical Research integration-event publication
 - AI-assisted prototype prediction workflows
 - Candidate scoring and prioritization
 - Read-optimized reporting projections
@@ -1067,6 +1261,9 @@ The platform currently supports:
 - Idempotent event consumption
 - Workflow correlation using workflow identifiers
 - Event-receipt deduplication
+- Biomedical research-data provenance
+- Research-only separation from clinical decision-making
+- Explicit validation boundaries for experimental biomedical models
 - Explicit synchronization endpoints
 - RESTful APIs
 - OpenAPI-first development
@@ -1094,6 +1291,7 @@ The platform currently supports:
 | Screening API | Virtual screening, candidate evaluation, ranking, and synchronization | ✅ Implemented | [README](./Algocura.Screening.Api/README.md) | 2026-01-09 |
 | AI Discovery API | Prediction workflows, candidate prioritization, and lead ranking | ✅ Implemented | [README](./Algocura.AIDiscovery.Api/README.md) | 2026-01-10 |
 | Assay Management API | Completed-screening synchronization, assay measurements, quality control, result calculation, publication, and synchronization | ✅ Implemented | [README](./Algocura.AssayManagement.Api/README.md) | 2026-01-12 |
+| Clinical Research API | Research dataset provenance, subject import/upsert, public cancer-imaging integration, experimental response scoring, and simulated follow-up CT research visualization | ✅ Implemented prototype | [README](./Algocura.ClinicalResearch.Api/README.md) | 2026-02-20 |
 | Workflow API | End-to-end workflow orchestration, stage tracking, event correlation, idempotent processing, failure handling, cancellation, and synchronization | ✅ Implemented | [README](./Algocura.Workflow.Api/README.md) | 2026-01-13 |
 | Notification API | Event-driven notification rules, manual notifications, delivery tracking, dispatch state, cancellation, and synchronization | ✅ Implemented | [README](./Algocura.Notification.Api/README.md) | 2026-01-13 |
 | Reporting API | Reporting projections, report definitions, report execution, persisted metrics, platform summaries, discovery-funnel analytics, and synchronization | ✅ Implemented | [README](./Algocura.Reporting.Api/README.md) | 2026-01-16 |
@@ -1102,4 +1300,5 @@ The platform currently supports:
 | Identity API | Authentication, authorization, user and role management, and identity lifecycle operations | ✅ Implemented | [README](./Algocura.Identity.Api/README.md) | 2026-01-19 |
 | Platform Auditing | Shared EF Core entity auditing, audit metadata, interceptors, and audit-event contracts | ✅ Implemented | [README](./Algocura.Platform.Auditing/README.md) | 2026-01-19 |
 | Platform Messaging | Shared Azure Service Bus configuration, publishing, audit-event transport, integration-event contracts, and consumer infrastructure | ✅ Implemented | [README](./Algocura.Platform.Messaging/README.md) | 2026-01-19 |
+| Clinical Research API Tests | Unit tests for dataset registration, research-subject import/upsert, and imaging-research controller workflows | ✅ Implemented | — | 2026-02-20 |
 | Platform Messaging Tests | Unit tests for shared messaging contracts, options, publishers, consumer helpers, and dependency injection | ✅ Implemented | [README](./Algocura.Platform.Messaging.Tests/README.md) | 2026-01-19 |

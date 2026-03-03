@@ -106,6 +106,20 @@ const notificationFields: FormFieldDefinition[] = [
   text("correlationId", "Correlation ID")
 ];
 
+const clinicalDatasetFields: FormFieldDefinition[] = [
+  text("name", "Dataset Name", true),
+  text("sourceName", "Source Name", true, "For example: NCI GDC, cBioPortal, institutional research repository."),
+  text("sourceUri", "Source URI", false, "URL or persistent identifier used to preserve provenance."),
+  text("studyCode", "Study Code"),
+  text("diseaseArea", "Disease Area"),
+  textarea("description", "Description"),
+  select("status", "Status", [
+    { label: "Draft", value: 1 },
+    { label: "Ready", value: 2 },
+    { label: "Archived", value: 3 }
+  ])
+];
+
 const reportingCreateFields: FormFieldDefinition[] = [
   text("name", "Name", true),
   textarea("description", "Description"),
@@ -182,6 +196,15 @@ export const services: ServiceDefinition[] = [
     allowedRoles: scientificRoles, category: "Operations",
     crud: { create: true, createRoles: scientificRoles,
       createTemplate: { sourceEventType: "", sourceService: "", subject: "", body: "", priority: 2, channel: 1, recipient: "", correlationId: "" }, createFields: notificationFields }
+  },
+  {
+    key: "clinical-research", name: "Clinical Research", shortName: "Clinical Dataset",
+    description: "Public/de-identified biomedical datasets, patient-level research records, and provenance.",
+    baseUrl: env.VITE_CLINICAL_RESEARCH_API_URL ?? "http://localhost:7015", route: "/clinical-research", primaryEndpoint: "/api/v1/clinical-datasets",
+    allowedRoles: scientificRoles, category: "Discovery",
+    crud: { create: true, edit: true, delete: true, createRoles: scientificRoles, editRoles: scientificRoles, deleteRoles: scientificRoles,
+      createTemplate: { name: "", sourceName: "", sourceUri: "", studyCode: "", diseaseArea: "", description: "", status: 1 },
+      createFields: clinicalDatasetFields, editFields: clinicalDatasetFields }
   },
   {
     key: "search", name: "Search", shortName: "Search", description: "Cross-domain search across discovery projections.",

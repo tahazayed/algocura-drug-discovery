@@ -4,6 +4,7 @@ import { RequireRole } from "../auth/RequireRole";
 import { serviceByKey, services } from "../config/services";
 import { AppShell } from "../layout/AppShell";
 import { DashboardPage } from "../pages/DashboardPage";
+import { ClinicalResearchPage } from "../pages/ClinicalResearchPage";
 import { ForbiddenPage } from "../pages/ForbiddenPage";
 import { GenericServicePage } from "../pages/GenericServicePage";
 import { LoginPage } from "../pages/LoginPage";
@@ -28,7 +29,8 @@ export function AppRoutes() {
             .filter(
               (service) =>
                 service.key !== "search" &&
-                service.key !== "reporting"
+                service.key !== "reporting" &&
+                service.key !== "clinical-research"
             )
             .map((service) => (
               <Route
@@ -45,6 +47,15 @@ export function AppRoutes() {
                 }
               />
             ))}
+
+          <Route
+            path="clinical-research"
+            element={
+              <RequireRole roles={serviceByKey["clinical-research"].allowedRoles}>
+                <ClinicalResearchPage service={serviceByKey["clinical-research"]} />
+              </RequireRole>
+            }
+          />
 
           <Route
             path="reporting"

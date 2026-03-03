@@ -6,7 +6,7 @@ namespace Algocura.Reporting.Api.Data;
 public static class ReportingSeeder
 {
     private static readonly DateTimeOffset SeedTimestamp =
-        new(2026, 1, 1, 0, 0, 0, TimeSpan.Zero);
+        new(2026, 1, 16, 0, 0, 0, TimeSpan.Zero);
 
     public static readonly Guid PlatformSummaryDefinitionId =
         Guid.Parse("a1000000-0000-0000-0000-000000000001");

@@ -10,7 +10,7 @@ public static class CompoundCatalogSeeder
         CancellationToken cancellationToken = default)
     {
         DateTimeOffset timestamp =
-            new(2026, 1, 1, 0, 0, 0, TimeSpan.Zero);
+            new(2026, 1, 4, 0, 0, 0, TimeSpan.Zero);
 
         var compounds = new[]
         {

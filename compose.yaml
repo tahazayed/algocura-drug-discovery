@@ -640,6 +640,42 @@ services:
     
     restart: unless-stopped
 
+  clinical-research-api:
+    build:
+      context: .
+      dockerfile: Algocura.ClinicalResearch.Api/Dockerfile
+      target: final
+
+    image: algocura/algocura-clinical-research-api:dev
+    container_name: clinical-research-api
+    ports:
+      - "7015:8080"
+    environment:
+      ASPNETCORE_ENVIRONMENT: "Development"
+      ASPNETCORE_URLS: http://+:8080
+      ConnectionStrings__ClinicalResearchDatabase: "Server=sqlserver,1433;Database=AlgocuraClinicalResearch;User Id=sa;Password=${SQL_SA_PASSWORD};TrustServerCertificate=True;Encrypt=True;ConnectRetryCount=5;ConnectRetryInterval=5;"
+      ServiceBus__UseEmulator: "true"
+      ServiceBus__ConnectionString: "Endpoint=sb://servicebus-emulator;SharedAccessKeyName=RootManageSharedAccessKey;SharedAccessKey=SAS_KEY_VALUE;UseDevelopmentEmulator=true;"
+      ServiceBus__FullyQualifiedNamespace: ""
+      ServiceBus__TopicName: "algocura-events"
+      Logging__LogLevel__Default: "Information"
+      Logging__LogLevel__Microsoft__AspNetCore: "Warning"
+      Logging__LogLevel__Microsoft__EntityFrameworkCore: "Information"
+      Logging__LogLevel__Azure__Messaging__ServiceBus: "Information"
+      Auditing__ServiceName: "Algocura.ClinicalResearch.Api"
+      Auditing__PublishEntityAuditEvents: "true"
+      Auditing__StampCreatedAndUpdatedFields: "true"
+      Jwt__SigningKey: "${JWT_SIGNING_KEY}"
+      Jwt__ClockSkewMinutes: "5"
+      Cors__AllowedOrigins__0: "http://localhost:5173"
+      Cors__AllowedOrigins__1: "http://localhost:7014"
+    depends_on:
+      sqlserver:
+        condition: service_healthy
+      audit-api-wait:
+        condition: service_completed_successfully
+    restart: unless-stopped
+
   identity-api-wait:
     image: curlimages/curl:8.12.1
     container_name: identity-api-wait
@@ -683,6 +719,7 @@ services:
         VITE_SEARCH_API_URL: "http://localhost:7010"
         VITE_REPORTING_API_URL: "http://localhost:7011"
         VITE_AUDIT_API_URL: "http://localhost:7012"
+        VITE_CLINICAL_RESEARCH_API_URL: "http://localhost:7015"
     image: algocura/algocura-frontend:dev
     container_name: frontend
     ports:

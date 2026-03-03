@@ -9,7 +9,7 @@ public static class ChemicalDesignSeeder
         new(
             2026,
             1,
-            1,
+            12,
             0,
             0,
             0,

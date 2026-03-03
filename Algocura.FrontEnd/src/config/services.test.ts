@@ -18,4 +18,12 @@ describe("service operation authorization", () => {
   it("keeps identity administration restricted to administrators", () => {
     expect(serviceByKey.identity.allowedRoles).toEqual(["Administrator"]);
   });
+  it("configures the clinical research service for scientific roles", () => {
+    const clinicalResearch = serviceByKey["clinical-research"];
+    expect(clinicalResearch.baseUrl).toContain("7015");
+    expect(clinicalResearch.primaryEndpoint).toBe("/api/v1/clinical-datasets");
+    expect(clinicalResearch.crud?.create).toBe(true);
+    expect(clinicalResearch.allowedRoles).toEqual(["Scientist", "Reviewer", "Administrator"]);
+  });
+
 });

@@ -290,6 +290,50 @@
                         }
                       }
                     }
+                  },
+                  {
+                    "Name": "ResearchSubjectsImported-filter",
+                    "Properties": {
+                      "FilterType": "Correlation",
+                      "CorrelationFilter": {
+                        "Properties": {
+                          "eventType": "ResearchSubjectsImported"
+                        }
+                      }
+                    }
+                  },
+                  {
+                    "Name": "ImagingSeriesRetrieved-filter",
+                    "Properties": {
+                      "FilterType": "Correlation",
+                      "CorrelationFilter": {
+                        "Properties": {
+                          "eventType": "ImagingSeriesRetrieved"
+                        }
+                      }
+                    }
+                  },
+                  {
+                    "Name": "ImmunotherapyResponseEstimated-filter",
+                    "Properties": {
+                      "FilterType": "Correlation",
+                      "CorrelationFilter": {
+                        "Properties": {
+                          "eventType": "ImmunotherapyResponseEstimated"
+                        }
+                      }
+                    }
+                  },
+                  {
+                    "Name": "FollowUpCtSimulated-filter",
+                    "Properties": {
+                      "FilterType": "Correlation",
+                      "CorrelationFilter": {
+                        "Properties": {
+                          "eventType": "FollowUpCtSimulated"
+                        }
+                      }
+                    }
                   }
                 ]
               },
@@ -758,6 +802,94 @@
                       "CorrelationFilter": {
                         "Properties": {
                           "eventType": "NotificationSnapshot"
+                        }
+                      }
+                    }
+                  },
+                  {
+                    "Name": "ClinicalDatasetRegistered-filter",
+                    "Properties": {
+                      "FilterType": "Correlation",
+                      "CorrelationFilter": {
+                        "Properties": {
+                          "eventType": "ClinicalDatasetRegistered"
+                        }
+                      }
+                    }
+                  },
+                  {
+                    "Name": "ClinicalDatasetUpdated-filter",
+                    "Properties": {
+                      "FilterType": "Correlation",
+                      "CorrelationFilter": {
+                        "Properties": {
+                          "eventType": "ClinicalDatasetUpdated"
+                        }
+                      }
+                    }
+                  },
+                  {
+                    "Name": "ClinicalDatasetStatusChanged-filter",
+                    "Properties": {
+                      "FilterType": "Correlation",
+                      "CorrelationFilter": {
+                        "Properties": {
+                          "eventType": "ClinicalDatasetStatusChanged"
+                        }
+                      }
+                    }
+                  },
+                  {
+                    "Name": "ClinicalDatasetDeleted-filter",
+                    "Properties": {
+                      "FilterType": "Correlation",
+                      "CorrelationFilter": {
+                        "Properties": {
+                          "eventType": "ClinicalDatasetDeleted"
+                        }
+                      }
+                    }
+                  },
+                  {
+                    "Name": "ResearchSubjectsImported-filter",
+                    "Properties": {
+                      "FilterType": "Correlation",
+                      "CorrelationFilter": {
+                        "Properties": {
+                          "eventType": "ResearchSubjectsImported"
+                        }
+                      }
+                    }
+                  },
+                  {
+                    "Name": "ImagingSeriesRetrieved-filter",
+                    "Properties": {
+                      "FilterType": "Correlation",
+                      "CorrelationFilter": {
+                        "Properties": {
+                          "eventType": "ImagingSeriesRetrieved"
+                        }
+                      }
+                    }
+                  },
+                  {
+                    "Name": "ImmunotherapyResponseEstimated-filter",
+                    "Properties": {
+                      "FilterType": "Correlation",
+                      "CorrelationFilter": {
+                        "Properties": {
+                          "eventType": "ImmunotherapyResponseEstimated"
+                        }
+                      }
+                    }
+                  },
+                  {
+                    "Name": "FollowUpCtSimulated-filter",
+                    "Properties": {
+                      "FilterType": "Correlation",
+                      "CorrelationFilter": {
+                        "Properties": {
+                          "eventType": "FollowUpCtSimulated"
                         }
                       }
                     }

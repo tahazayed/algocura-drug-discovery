@@ -7,7 +7,7 @@ namespace Algocura.Identity.Api.Data;
 public static class IdentitySeeder
 {
     private static readonly DateTimeOffset SeedTimestamp =
-        new(2026, 1, 1, 0, 0, 0, TimeSpan.Zero);
+        new(2026, 1, 19, 0, 0, 0, TimeSpan.Zero);
 
     private static readonly Guid ScientistUserId =
         Guid.Parse("00000000-0000-0000-0001-000000000001");

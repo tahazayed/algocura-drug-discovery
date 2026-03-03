@@ -12,6 +12,8 @@
   <Project Path="Algocura.Audit.Api/Algocura.Audit.Api.csproj" />
   <Project Path="Algocura.ChemicalDesign.Api.Tests/Algocura.ChemicalDesign.Api.Tests.csproj" />
   <Project Path="Algocura.ChemicalDesign.Api/Algocura.ChemicalDesign.Api.csproj" />
+  <Project Path="Algocura.ClinicalResearch.Api.Tests/Algocura.ClinicalResearch.Api.Tests.csproj" />
+  <Project Path="Algocura.ClinicalResearch.Api/Algocura.ClinicalResearch.Api.csproj" />
   <Project Path="Algocura.CompoundCatalog.Api.Tests/Algocura.CompoundCatalog.Api.Tests.csproj" />
   <Project Path="Algocura.CompoundCatalog.Api/Algocura.CompoundCatalog.Api.csproj" />
   <Project Path="Algocura.Identity.Api.Tests/Algocura.Identity.Api.Tests.csproj" />
