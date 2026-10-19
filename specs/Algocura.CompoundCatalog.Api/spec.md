@@ -12,7 +12,7 @@ The **Algocura Compound Catalog API** is a cloud-native RESTful microservice tha
 
 It provides CRUD operations, search and filtering capabilities, publishes integration events through Azure Service Bus, and enables downstream microservices to consume consistent compound information.
 
-For an overview of the complete platform architecture, see the [Solution README](../README.md).
+For an overview of the complete platform architecture, see the [Solution README](../../README.md).
 
 ---
 
@@ -349,7 +349,7 @@ Future enhancements include:
 
 | Document | Description |
 |----------|-------------|
-| [Solution README](../README.md) | Overall platform architecture and microservices |
+| [Solution README](../../README.md) | Overall platform architecture and microservices |
 | OpenAPI Specification | http://localhost:7001/openapi/v1.json |
 
 ---

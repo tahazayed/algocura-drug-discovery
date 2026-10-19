@@ -13,20 +13,20 @@ Each FR below is an **observed module-level capability**, not a complete stateme
 
 | ID | Domain | Evidence | API endpoint mentions |
 |---|---|---|---|
-| 01 | Algocura.AIDiscovery.Api | [Technical spec](../../specs/Algocura.AIDiscovery.Api/spec.md) | 0 documented endpoint mentions |
-| 02 | Algocura.AssayManagement.Api | [Technical spec](../../specs/Algocura.AssayManagement.Api/spec.md) | 10 documented endpoint mentions |
-| 03 | Algocura.Audit.Api | [Technical spec](../../specs/Algocura.Audit.Api/spec.md) | 0 documented endpoint mentions |
-| 04 | Algocura.ChemicalDesign.Api | [Technical spec](../../specs/Algocura.ChemicalDesign.Api/spec.md) | 13 documented endpoint mentions |
-| 05 | Algocura.ClinicalResearch.Api | [Technical spec](../../specs/Algocura.ClinicalResearch.Api/spec.md) | 7 documented endpoint mentions |
-| 06 | Algocura.CompoundCatalog.Api | [Technical spec](../../specs/Algocura.CompoundCatalog.Api/spec.md) | 0 documented endpoint mentions |
-| 07 | Algocura.Identity.Api | [Technical spec](../../specs/Algocura.Identity.Api/spec.md) | 0 documented endpoint mentions |
-| 08 | Algocura.LiteratureIntelligence.Api | [Technical spec](../../specs/Algocura.LiteratureIntelligence.Api/spec.md) | 12 documented endpoint mentions |
-| 09 | Algocura.Notification.Api | [Technical spec](../../specs/Algocura.Notification.Api/spec.md) | 11 documented endpoint mentions |
-| 10 | Algocura.Reporting.Api | [Technical spec](../../specs/Algocura.Reporting.Api/spec.md) | 0 documented endpoint mentions |
-| 11 | Algocura.Screening.Api | [Technical spec](../../specs/Algocura.Screening.Api/spec.md) | 0 documented endpoint mentions |
-| 12 | Algocura.Search.Api | [Technical spec](../../specs/Algocura.Search.Api/spec.md) | 5 documented endpoint mentions |
-| 13 | Algocura.TargetDiscovery.Api | [Technical spec](../../specs/Algocura.TargetDiscovery.Api/spec.md) | 11 documented endpoint mentions |
-| 14 | Algocura.Workflow.Api | [Technical spec](../../specs/Algocura.Workflow.Api/spec.md) | 8 documented endpoint mentions |
+| 01 | Algocura.AIDiscovery.Api | [Technical spec](../specs/Algocura.AIDiscovery.Api/spec.md) | 0 documented endpoint mentions |
+| 02 | Algocura.AssayManagement.Api | [Technical spec](../specs/Algocura.AssayManagement.Api/spec.md) | 10 documented endpoint mentions |
+| 03 | Algocura.Audit.Api | [Technical spec](../specs/Algocura.Audit.Api/spec.md) | 0 documented endpoint mentions |
+| 04 | Algocura.ChemicalDesign.Api | [Technical spec](../specs/Algocura.ChemicalDesign.Api/spec.md) | 13 documented endpoint mentions |
+| 05 | Algocura.ClinicalResearch.Api | [Technical spec](../specs/Algocura.ClinicalResearch.Api/spec.md) | 7 documented endpoint mentions |
+| 06 | Algocura.CompoundCatalog.Api | [Technical spec](../specs/Algocura.CompoundCatalog.Api/spec.md) | 0 documented endpoint mentions |
+| 07 | Algocura.Identity.Api | [Technical spec](../specs/Algocura.Identity.Api/spec.md) | 0 documented endpoint mentions |
+| 08 | Algocura.LiteratureIntelligence.Api | [Technical spec](../specs/Algocura.LiteratureIntelligence.Api/spec.md) | 12 documented endpoint mentions |
+| 09 | Algocura.Notification.Api | [Technical spec](../specs/Algocura.Notification.Api/spec.md) | 11 documented endpoint mentions |
+| 10 | Algocura.Reporting.Api | [Technical spec](../specs/Algocura.Reporting.Api/spec.md) | 0 documented endpoint mentions |
+| 11 | Algocura.Screening.Api | [Technical spec](../specs/Algocura.Screening.Api/spec.md) | 0 documented endpoint mentions |
+| 12 | Algocura.Search.Api | [Technical spec](../specs/Algocura.Search.Api/spec.md) | 5 documented endpoint mentions |
+| 13 | Algocura.TargetDiscovery.Api | [Technical spec](../specs/Algocura.TargetDiscovery.Api/spec.md) | 11 documented endpoint mentions |
+| 14 | Algocura.Workflow.Api | [Technical spec](../specs/Algocura.Workflow.Api/spec.md) | 8 documented endpoint mentions |
 
 ## 4. Cross-cutting requirements
 - **Identity and authorization:** retain observed security mechanisms; verify actual permission matrices against `AUTHORIZATION.md` and service contracts.
